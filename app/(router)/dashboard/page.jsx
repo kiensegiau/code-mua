@@ -1,44 +1,37 @@
 "use client"
-import { useUser } from '@clerk/nextjs'
 import React, { useEffect, useState } from 'react'
 import SideBanners from '../courses/_components/SideBanners';
 import WelcomeBannerDashboard from './_components/WelcomeBannerDashboard';
 import InProgressCourseList from './_components/InProgressCourseList';
 import GlobalApi from '@/app/_utils/GlobalApi';
+import { useAuth } from '@/app/_context/AuthContext';
 
 function Dashboard() {
-  const {user}=useUser();
-  const [userEnrolledCourses,setUserEnrolledCourse]=useState([]);
-  useEffect(()=>{
-    user&&getAllUserEnrolledCourses();
-  },[user])
+  const { user } = useAuth();
+  const [userEnrolledCourses, setUserEnrolledCourse] = useState([]);
 
-  /**
-   * Get All User Enrolled Course List
-   */
-  const getAllUserEnrolledCourses=()=>{
-    GlobalApi.getUserAllEnrolledCourseList(user.primaryEmailAddress.emailAddress).then(resp=>{
+  useEffect(() => {
+    user && getAllUserEnrolledCourses();
+  }, [user])
+
+  const getAllUserEnrolledCourses = () => {
+    GlobalApi.getUserAllEnrolledCourseList(user.email).then(resp => {
       console.log(resp);
-      setUserEnrolledCourse(resp.userEnrollCourses);
+      setUserEnrolledCourse(resp);
     })
   }
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-4 p-5 gap-5'>
-      {/* Left Container  */}
       <div className='col-span-3'>
-          {/* Banner  */}
-            <WelcomeBannerDashboard user={user}/>
-          {/* In Progress Course List  */}
-            <InProgressCourseList userEnrolledCourses={userEnrolledCourses}/>
-        
+        <WelcomeBannerDashboard user={user} />
+        <InProgressCourseList userEnrolledCourses={userEnrolledCourses} />
       </div>
-      {/* Right Container */}
-      <div className=' '>
-        <SideBanners/>
+      <div className=''>
+        <SideBanners />
       </div>
     </div>
   )
 }
 
-export default Dashboard
+export default Dashboard;

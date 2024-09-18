@@ -1,326 +1,66 @@
 "use client"
-import { UserMemberContext } from '@/app/_context/UserMemberContext';
-import GlobalApi from '@/app/_utils/GlobalApi';
-import { useUser } from '@clerk/nextjs';
-import axios from 'axios';
-import { Loader } from 'lucide-react';
-import Image from 'next/image';
-import Script from 'next/script';
-import React, { useContext, useEffect, useState } from 'react'
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/app/_utils/firebase';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
 
-function TubegurujiPro() {
+export default function SignUp() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
 
-    const [subscriptionId,setSubscriptionId]=useState(null)
-    const [loader,setLoader]=useState(false);
-    const {user}=useUser();
-  const {isMember,setIsMember}=useContext(UserMemberContext)
-
-    /**
-     * To Create Subscription ID
-     * @param {*} planId 
-     */
-    const createSubscription=async(planId)=>{
-        setLoader(true)
-        console.log(planId)
-        axios.post("/api/create-subscription",JSON.stringify({
-            plan_id:planId
-        })).then(resp=>{
-            console.log(resp.data);
-            setLoader(false)
-            setSubscriptionId(resp.data.id)
-            
-        })
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast.success('Đăng ký thành công!');
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Lỗi đăng ký:', error);
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('Email này đã được sử dụng. Vui lòng sử dụng email khác.');
+      } else {
+        toast.error('Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại.');
+      }
     }
+  };
 
-    useEffect(()=>{
-        subscriptionId&&makePayment();
-    },[subscriptionId])
-
-    const makePayment=()=>{
-        console.log(subscriptionId);
-        const options={
-            key:process.env.NEXT_PUBLIC_RAZORPAY_LIVE_KEY,
-            subscription_id:subscriptionId,
-            name:'Tubeguruji Academy',
-            description:'Tubeguruju Pro Membership',
-            image:'https://www.tubeguruji.com/logo2.jpg',
-            handler:async(resp)=>{
-                console.log(resp);
-                if(resp)
-                {
-                    addNewMember(resp?.razorpay_payment_id)
-                }
-            },
-            theme:{
-                color:'#7D41E1'
-            }
-        }
-
-        const rzp=new window.Razorpay(options);
-        rzp.open();
-    }
-
-
-    const addNewMember=(paymentId)=>{
-        GlobalApi.addNewMember(user.primaryEmailAddress.emailAddress,
-            paymentId).then(resp=>{
-                console.log(resp);
-                if(resp)
-                {
-                    toast('Payment Successfull!!!');
-                }
-            },(error)=>{
-                toast('Some Error Happend');
-
-            })
-    }
-
-
-    return (
-        <div>
-            <Script
-            id="razorpay-checkout-js"
-             src="https://checkout.razorpay.com/v1/checkout.js"></Script>
-
-            <div className="mx-auto max-w-3xl px-2 py-4 sm:px-6 sm:py-12 lg:px-8">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-center md:gap-8">
-
-
-                    <div
-                        className="rounded-2xl border
-                         border-gray-200 p-6
-                         hover:border-primary cursor-pointer
-                          bg-white shadow-sm sm:px-8 lg:p-12"
-                    >
-                        <div className="text-center">
-                            <h2 className="text-lg font-medium text-gray-900">
-                                Monthly
-                                <span className="sr-only">Plan</span>
-                            </h2>
-
-                            <p className="mt-2 sm:mt-4" >
-                                <strong className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                                    4.99$
-                                </strong>
-
-                                <span className="text-sm font-medium text-gray-700">/month</span>
-                            </p>
-                        </div>
-
-                        <ul className="mt-6 space-y-2">
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Access to All Courses </span>
-                            </li>
-
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Free Source Code </span>
-                            </li>
-
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Free App Membership </span>
-                            </li>
-
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Email & Instagram DM support </span>
-                            </li>
-                        </ul>
-
-                      {!isMember?  <button
-                            onClick={()=>createSubscription(process.env.NEXT_PUBLIC_MONTHLY_PLAN)}
-                            className="mt-8 block w-full rounded-full border
-                              bg-primary px-12 py-3 
-                             text-center text-sm font-medium
-                             
-                              text-white hover:ring-1 hover:ring-indigo-600
-                               focus:outline-none focus:ring 
-                               active:text-indigo-500"
-                        >
-                         {loader? <span className='text-center w-full'><Loader className='animate-spin'/></span>  
-                          :<span>Get Started</span>}
-                        </button>:
-                        <h2 className=' p-2 border rounded-full text-center mt-5
-                        border-green-700 bg-green-300 text-green-700'>
-                            You are Already Member</h2>}
-                    </div>
-                    <div
-                        className="rounded-2xl border
-                         border-gray-200 p-6
-                          shadow-sm sm:px-8 lg:p-12
-                          bg-white
-                          hover:border-primary cursor-pointer
-                          "
-                    >
-                        <div className="text-center">
-                            <h2 className="text-lg font-medium text-gray-900">
-                                Yearly
-                                <span className="sr-only">Plan</span>
-                            </h2>
-
-                            <p className="mt-2 sm:mt-4">
-                                <strong className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                                    39.99$
-                                </strong>
-
-                                <span className="text-sm font-medium text-gray-700">/month</span>
-                            </p>
-                        </div>
-
-                        <ul className="mt-6 space-y-2">
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Access to All Courses </span>
-                            </li>
-
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Free Source Code </span>
-                            </li>
-
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Free App Membership </span>
-                            </li>
-
-                            <li className="flex items-center gap-1">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="1.5"
-                                    stroke="currentColor"
-                                    className="h-5 w-5 text-indigo-700"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-
-                                <span className="text-gray-700"> Email & Instagram DM support </span>
-                            </li>
-                        </ul>
-
-                        <button
-                            onClick={()=>createSubscription(process.env.NEXT_PUBLIC_YEARLY_PLAN)}
-                            className="mt-8 block rounded-full border
-                              bg-primary px-12 py-3 
-                             text-center text-sm font-medium
-                              text-white hover:ring-1 hover:ring-indigo-600 focus:outline-none focus:ring active:text-indigo-500"
-                        >
-                             {loader? <span><Loader className='animate-spin'/></span>  
-                          :<span>Get Started</span>}
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <p className='text-center'>Get your first month half price when you use 
-            the code <strong>TUBEGURUJI</strong> (monthly plan only).</p>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Tạo tài khoản mới
+        </h1>
+        <form onSubmit={handleSignUp}>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Địa chỉ email"
+            className="w-full p-2 mb-4 border rounded"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mật khẩu"
+            className="w-full p-2 mb-4 border rounded"
+          />
+          <button
+            type="submit"
+            className="w-full p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Đăng ký
+          </button>
+        </form>
+        <div className="mt-4 text-center">
+          <Link href="/sign-in" className="text-sm text-indigo-600 hover:text-indigo-800">
+            Đã có tài khoản? Đăng nhập
+          </Link>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
-
-export default TubegurujiPro

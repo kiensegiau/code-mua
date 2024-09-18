@@ -1,13 +1,13 @@
 "use client"
 import GlobalApi from '@/app/_utils/GlobalApi'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from '@/app/_context/AuthContext';
 import React, { useEffect, useState } from 'react'
 import CourseVideoDescription from '../../course-preview/[courseId]/_components/CourseVideoDescription';
 import CourseContentSection from '../../course-preview/[courseId]/_components/CourseContentSection';
 import { toast } from 'sonner';
 
 function WatchCourse({params}) {
-  const {user}=useUser();
+  const {user}=useAuth();
   const [courseInfo,setCourseInfo]=useState([]);
   const [completedChapter,setCompletedChapter]=useState([])
   const [activeChapterIndex,setActiveChapterIndex]=useState(0);

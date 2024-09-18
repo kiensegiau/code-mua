@@ -1,14 +1,17 @@
 import { UserMemberContext } from '@/app/_context/UserMemberContext';
 import GlobalApi from '@/app/_utils/GlobalApi';
 import { Button } from '@/components/ui/button'
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/app/_context/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect } from 'react'
 import { toast } from "sonner"
+import { db } from '@/app/_utils/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
 function CourseEnrollSection({courseInfo,isUserAlreadyEnrolled}) {
     // const membership=false;
-    const {user}=useUser();
+    const {user}=useAuth();
   const {isMember,setIsMember}=useContext(UserMemberContext)
 
     const router=useRouter();

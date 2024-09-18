@@ -1,13 +1,13 @@
 "use client"
-import { useUser } from '@clerk/nextjs'
-import { BadgeCheck, BadgeIcon, BookOpen, GraduationCap, LayoutDashboard, LayoutGrid, Mail } from 'lucide-react'
+import { useAuth } from '@/app/_context/AuthContext'
+import { BadgeCheck, BadgeIcon, BookOpen, GraduationCap, LayoutDashboard, LayoutGrid, Mail, User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect } from 'react'
 
 function SideNav() {
-  const {user}=useUser();
+  const {user}=useAuth();
   const menu=[
     {
       id:8,
@@ -52,6 +52,13 @@ function SideNav() {
       icon:Mail,
       path:'/newsletter',
       auth:true
+    },
+    {
+      id: 6,
+      name: 'Cá nhân',
+      icon: User,
+      path: '/profile',
+      auth: true
     }
   ]
 
@@ -69,7 +76,7 @@ function SideNav() {
         {/* Menu List  */}
         <div className='mt-5'>
           {menu.map((item,index)=>item.auth&&(
-            <Link href={item.path}>
+            <Link key={index} href={item.path}>
             <div className={`group flex gap-3
             mt-2 p-3 text-[18px] items-center
              text-gray-500 cursor-pointer
