@@ -5,73 +5,104 @@ import CourseVideoDescription from './_components/CourseVideoDescription'
 import GlobalApi from '@/app/_utils/GlobalApi'
 import CourseEnrollSection from './_components/CourseEnrollSection'
 import CourseContentSection from './_components/CourseContentSection'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from '@/app/_context/AuthContext'
 import WatchOnYoutube from './_components/WatchOnYoutube'
 import Sources from './_components/Sources'
+import { logToServer } from '@/app/_utils/logger'
+import Image from 'next/image'
+import { UserMemberContext } from '@/app/_context/UserMemberContext'
 
 function CoursePreview({params}) {
     
-    const {user}=useUser();
-    const [courseInfo,setCourseInfo]=useState();
-    const [isUserAlreadyEnrolled,setIsUserAlreadyEnrolled]=useState();
-    useEffect(()=>{
-        params&&getCourseInfoById();
-    },[params])
+    const { user } = useAuth();
+    const [courseInfo, setCourseInfo] = useState(null);
+    const [isUserAlreadyEnrolled, setIsUserAlreadyEnrolled] = useState(false);
 
-    useEffect(()=>{
-      courseInfo&&user&&checkUserEnrolledToCourse();
-    },[courseInfo,user])
-    /**
-     * used to get Course Info By Slug/Id Name
-     */
-    const getCourseInfoById=()=>{
-        GlobalApi.getCourseById(params?.courseId).then(resp=>{
-            setCourseInfo(resp?.courseList);
-            
-        })
-    }
-
-    /**
-     * To CHeck user already enrolled to course
-     */
-    const checkUserEnrolledToCourse=()=>{
-      GlobalApi.checkUserEnrolledToCourse(courseInfo.slug,user.primaryEmailAddress.emailAddress)
-      .then(resp=>{
-        console.log(resp)
-        if(resp?.userEnrollCourses)
-        {
-          
-            setIsUserAlreadyEnrolled(resp?.userEnrollCourses[0]?.id);
+    useEffect(() => {
+        if (params) {
+            getCourseInfoById();
         }
-      })
+    }, [params]);
+
+    useEffect(() => {
+        if (courseInfo && user) {
+            checkUserEnrolledToCourse();
+        }
+    }, [courseInfo, user]);
+
+    const getCourseInfoById = () => {
+        GlobalApi.getCourseById(params?.courseId).then(resp => {
+            setCourseInfo(resp);
+            logToServer('Đã nhận thông tin khóa học', {
+                courseId: params?.courseId,
+                courseInfo: resp
+            });
+        }).catch(error => {
+            logToServer('Lỗi khi lấy thông tin khóa học', {
+                courseId: params?.courseId,
+                error: error.message
+            });
+        });
     }
-  return courseInfo&&(
-    <div className='grid grid-cols-1 md:grid-cols-3 p-5 gap-3'>
-       {/* Title Video, Description */}
-       
-       <div className='col-span-2 bg-white p-3'>
-            <CourseVideoDescription courseInfo={courseInfo} />
-       </div>
 
-       {/* Course Content  */}
-       <div>
+    const checkUserEnrolledToCourse = () => {
+        if (user && user.email && courseInfo && courseInfo.id) {
+            // Temporary placeholder
+            console.log('Checking if user is enrolled:', user.email, courseInfo.id);
+            // TODO: Implement actual check once GlobalApi is fixed
+            setIsUserAlreadyEnrolled(false);
+        }
+    }
 
-            {/* Enroll Section for Chapter Course   */}
-            {courseInfo.chapter?.length>0 
-            ?<CourseEnrollSection courseInfo={courseInfo}
-            isUserAlreadyEnrolled={isUserAlreadyEnrolled}/>
-            :
-              <WatchOnYoutube courseInfo={courseInfo}/>}
-            
-              {/* Sources Like Github, Demo, Youtube  */}
-              <Sources courseInfo={courseInfo}/>
+    if (!courseInfo) {
+        return <div>Đang tải...</div>;
+    }
 
-              {/* Course Content /Chapters section  */}
-           {courseInfo.chapter?.length>0 && <CourseContentSection courseInfo={courseInfo}
-            isUserAlreadyEnrolled={isUserAlreadyEnrolled} />}
-       </div>
-    </div>
-  )
+    return (
+        <UserMemberContext.Provider value={{ isMember: false, setIsMember: () => {} }}>
+            <div className='grid grid-cols-1 md:grid-cols-3 p-5 gap-5'>
+                <div className='col-span-2 bg-white p-5 rounded-lg shadow'>
+                    <Image 
+                        src={courseInfo.imageUrl && courseInfo.imageUrl.startsWith('http') 
+                            ? courseInfo.imageUrl 
+                            : '/default-course-image.jpg'}
+                        alt={courseInfo.title || 'Course banner'}
+                        width={800}
+                        height={400}
+                        className='w-full h-64 object-cover rounded-lg mb-5'
+                    />
+                    <h1 className='text-3xl font-bold mb-3'>{courseInfo.title}</h1>
+                    <p className='text-gray-600 mb-4'>{courseInfo.description}</p>
+                    <div className='flex items-center mb-4'>
+                        <span className='mr-4'>
+                            <strong>Giảng viên:</strong> {courseInfo.teacher}
+                        </span>
+                        <span className='mr-4'>
+                            <strong>Cấp độ:</strong> {courseInfo.level}
+                        </span>
+                        <span>
+                            <strong>Thời lượng:</strong> {courseInfo.duration} giờ
+                        </span>
+                    </div>
+                    <CourseVideoDescription courseInfo={courseInfo} />
+                </div>
+
+                <div className='col-span-1'>
+                    <CourseEnrollSection 
+                        courseInfo={courseInfo}
+                        isUserAlreadyEnrolled={isUserAlreadyEnrolled}
+                    />
+                    <Sources courseInfo={courseInfo} />
+                    {courseInfo.chapter?.length > 0 && (
+                        <CourseContentSection 
+                            courseInfo={courseInfo}
+                            isUserAlreadyEnrolled={isUserAlreadyEnrolled} 
+                        />
+                    )}
+                </div>
+            </div>
+        </UserMemberContext.Provider>
+    )
 }
 
 export default CoursePreview

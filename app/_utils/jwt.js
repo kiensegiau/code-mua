@@ -2,10 +2,6 @@ import jwt from 'jsonwebtoken';
 
 const ACCESS_TOKEN_SECRET = process.env.NEXT_PUBLIC_ACCESS_TOKEN_SECRET || 'your-access-token-secret';
 const REFRESH_TOKEN_SECRET = process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET || 'your-refresh-token-secret';
-
-console.log('ACCESS_TOKEN_SECRET:', ACCESS_TOKEN_SECRET);
-console.log('REFRESH_TOKEN_SECRET:', REFRESH_TOKEN_SECRET);
-
 export const generateTokens = async (user) => {
   try {
     const response = await fetch('/api/auth/generate-token', {
