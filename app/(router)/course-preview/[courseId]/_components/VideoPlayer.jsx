@@ -1,19 +1,32 @@
-import React from 'react'
+import React, { forwardRef, useEffect } from 'react'
+import ReactPlayer from 'react-player'
 
-function VideoPlayer({videoUrl,poster}) {
-  console.log(videoUrl)
+const VideoPlayer = forwardRef(({ videoUrl, poster }, ref) => {
+  console.log('VideoPlayer received props:', { videoUrl, poster });
+  
+  useEffect(() => {
+    console.log('VideoPlayer useEffect triggered');
+  }, [videoUrl]);
+
   return (
-    <video
-    width={1000}
-    height={250}
-    controls
-    key={videoUrl}
-    className='rounded-sm'
-    poster={poster}
-    >
-        <source src={videoUrl} type='video/mp4' />
-    </video>
+    <div className='player-wrapper'>
+      {videoUrl ? (
+        <ReactPlayer
+          ref={ref}
+          className='react-player'
+          url={videoUrl}
+          width='100%'
+          height='100%'
+          controls={true}
+          light={poster}
+        />
+      ) : (
+        <div className='flex items-center justify-center h-full bg-gray-200 text-gray-500'>
+          Không có video
+        </div>
+      )}
+    </div>
   )
-}
+});
 
 export default VideoPlayer

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 function WatchCourse({params}) {
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [activeLesson, setActiveLesson] = useState(null);
 
   useEffect(() => {
     if (params.courseId) {
@@ -66,6 +67,7 @@ function WatchCourse({params}) {
         <CourseVideoDescription 
           courseInfo={courseInfo}
           activeChapterIndex={activeChapterIndex}
+          activeLesson={activeLesson}
           watchMode={true}
         />
       </div>
@@ -75,6 +77,7 @@ function WatchCourse({params}) {
           isUserAlreadyEnrolled={true}
           watchMode={true}
           setActiveChapterIndex={(index) => setActiveChapterIndex(index)}
+          setActiveLesson={handleActiveLessonChange}
         />
       </div>
     </div>

@@ -4,7 +4,8 @@ import { BadgeCheck, BadgeIcon, BookOpen, GraduationCap, LayoutDashboard, Layout
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect } from 'react'
+import React, { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 function SideNav() {
   const {user}=useAuth();
