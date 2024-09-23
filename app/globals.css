@@ -74,7 +74,12 @@ body{
     --ring: 212.7 26.8% 83.9%;
   }
 }
- 
+ .ant-collapse-content-box{
+  padding: 0px !important;
+ }
+ .ant-list-item-meta{
+  padding:0 16px  !important;
+ }
 @layer base {
   * {
     @apply border-border;
