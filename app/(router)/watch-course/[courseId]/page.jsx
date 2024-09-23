@@ -12,10 +12,8 @@ function WatchCourse({params}) {
   const [activeLesson, setActiveLesson] = useState(null);
 
   useEffect(() => {
-    if (params.courseId) {
-      getCourseInfoById();
-    }
-  }, [params.courseId]);
+    getCourseInfoById();
+  }, []);
 
   const getCourseInfoById = async () => {
     try {
@@ -62,8 +60,8 @@ function WatchCourse({params}) {
   }
 
   return (
-    <div className='grid grid-cols-1 md:grid-cols-3 p-5 gap-3'>
-      <div className='col-span-2 bg-white p-3'> 
+    <div className='flex flex-col items-center p-5'>
+      <div className='w-full max-w-4xl bg-white p-3 rounded-lg shadow'>
         <CourseVideoDescription 
           courseInfo={courseInfo}
           activeChapterIndex={activeChapterIndex}
@@ -71,13 +69,13 @@ function WatchCourse({params}) {
           watchMode={true}
         />
       </div>
-      <div>
+      <div className='w-full max-w-4xl mt-5'>
         <CourseContentSection 
           courseInfo={courseInfo}
           isUserAlreadyEnrolled={true}
           watchMode={true}
           setActiveChapterIndex={(index) => setActiveChapterIndex(index)}
-          setActiveLesson={handleActiveLessonChange}
+          setActiveLesson={setActiveLesson}
         />
       </div>
     </div>

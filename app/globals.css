@@ -1,7 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+.fixed-size {
+  width: 100%; /* Đặt chiều rộng cố định */
+  height: 360px; /* Đặt chiều cao cố định */
+  max-width: 100%; /* Đảm bảo khung không vượt quá chiều rộng của container */
+  max-height: 100%; /* Đảm bảo khung không vượt quá chiều cao của container */
+}
 body{
   background-color: #f3f5f7;
   font-family: 'Roboto', sans-serif;
@@ -86,4 +91,12 @@ body{
 .hide-clerk-footer .cl-footerAction,
 .hide-clerk-footer .cl-footerPages {
   display: none !important;
+}
+
+.button {
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #4F46E5;
 }

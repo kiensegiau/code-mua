@@ -6,6 +6,7 @@ import CourseVideoDescription from './_components/CourseVideoDescription'
 import CourseContentSection from './_components/CourseContentSection'
 import Image from 'next/image'
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import CourseHeader from './_components/CourseHeader';
 
 const storage = getStorage();
 
@@ -71,33 +72,37 @@ function CoursePreview({params}) {
     }
 
     return (
-        <div className='grid grid-cols-1 md:grid-cols-3 p-5 gap-5'>
-            <div className='col-span-2 bg-white p-5 rounded-lg shadow'>
-               
-                <h1 className='text-3xl font-bold mb-3'>{courseInfo.title}</h1>
-                <p className='text-gray-600 mb-4'>{courseInfo.description}</p>
-                <div className='flex items-center mb-4'>
-                    <span className='mr-4'>
-                        <strong>Giảng viên:</strong> {courseInfo.teacher}
-                    </span>
-                    
+        <div className="flex flex-col h-screen">
+            <CourseHeader courseInfo={courseInfo} />
+            <div className="flex-1 grid grid-cols-12 gap-4 p-4">
+                <div className="col-span-9 grid grid-rows-6 gap-4">
+                    <div className="row-span-5">
+                        <CourseVideoDescription 
+                            courseInfo={courseInfo}
+                            activeChapterIndex={activeChapterIndex}
+                            activeLesson={activeLesson}
+                            watchMode={true}
+                        />
+                    </div>
+                    <div className="row-span-1 bg-white p-4 rounded-lg shadow">
+                        <h1 className='text-3xl font-bold mb-3'>{courseInfo.title}</h1>
+                        <p className='text-gray-600 mb-4'>{courseInfo.description}</p>
+                        <div className='flex items-center mb-4'>
+                            <span className='mr-4'>
+                                <strong>Giảng viên:</strong> {courseInfo.teacher}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <CourseVideoDescription 
-                    courseInfo={courseInfo}
-                    activeChapterIndex={activeChapterIndex}
-                    activeLesson={activeLesson}
-                    watchMode={true}
-                />
-            </div>
-
-            <div className='col-span-1'>
-                <CourseContentSection 
-                    courseInfo={courseInfo}
-                    isUserAlreadyEnrolled={true}
-                    watchMode={false}
-                    setActiveChapterIndex={(index) => setActiveChapterIndex(index)}
-                    setActiveLesson={setActiveLesson}
-                />
+                <div className="col-span-3">
+                    <CourseContentSection 
+                        courseInfo={courseInfo}
+                        isUserAlreadyEnrolled={true}
+                        watchMode={false}
+                        setActiveChapterIndex={(index) => setActiveChapterIndex(index)}
+                        setActiveLesson={setActiveLesson}
+                    />
+                </div>
             </div>
         </div>
     )

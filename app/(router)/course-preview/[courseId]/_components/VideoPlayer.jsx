@@ -9,7 +9,7 @@ const VideoPlayer = forwardRef(({ videoUrl, poster }, ref) => {
   }, [videoUrl]);
 
   return (
-    <div className='player-wrapper'>
+    <div className='player-wrapper fixed-size'>
       {videoUrl ? (
         <ReactPlayer
           ref={ref}
@@ -21,7 +21,7 @@ const VideoPlayer = forwardRef(({ videoUrl, poster }, ref) => {
           light={poster}
         />
       ) : (
-        <div className='flex items-center justify-center h-full bg-gray-200 text-gray-500'>
+        <div className='flex items-center justify-center h-full bg-black text-gray-500'>
           Không có video
         </div>
       )}

@@ -6,13 +6,12 @@ import Header from './_components/Header'
 function layout({children}) {
   return (
     <div>
-        <div className='md:w-64  
-        md:block hidden 
-        fixed'>
-            <SideNav/>
+        <div
+       >
+            {/* <SideNav/> */}
         </div>
-        <div className='md:ml-64'>
-            <Header/>
+        <div>
+            {/* <Header/> */}
         {children}
         </div>
     </div>

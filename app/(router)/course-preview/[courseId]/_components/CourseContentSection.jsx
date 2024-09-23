@@ -67,6 +67,7 @@ function CourseContentSection({ courseInfo, isUserAlreadyEnrolled, watchMode, se
                   </span>
                   <span className="font-medium text-gray-700">{chapter.title}</span>
                 </span>
+                <span className="text-sm text-gray-500">{chapter.lessons.length} bài học</span>
                 {activeChapterIndex === chapterIndex ? '▼' : '▶'}
               </div>
               {activeChapterIndex === chapterIndex && (

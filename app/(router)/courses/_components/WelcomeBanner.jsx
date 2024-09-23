@@ -10,8 +10,8 @@ function WelcomeBanner() {
         height={130}/>
         <div>
             <h2 className='font-bold text-[29px]'>
-                Welcome to <span className='text-primary'>TubeGuruji</span> Academy</h2>
-            <h2 className='text-gray-500'>Explore, Learn and Build All Real Life Projects</h2>
+                Chào mừng đến <span className='text-primary'>ShareAcademy</span></h2>
+            <h2 className='text-gray-500'>Khóa học chi tiết đầy đủ, dễ hiểu, dễ làm</h2>
         </div>
     </div>
   )

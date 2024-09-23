@@ -46,36 +46,29 @@ function CourseList() {
   });
 
   return (
-    <div className='p-5 bg-white rounded-lg mt-3'>
-      <div className='flex items-center justify-between'>
+    <div className='flex flex-col h-full'>
+      <div className='flex items-center justify-between p-5 bg-white rounded-t-lg'>
         <h2 className='text-[20px] font-bold text-primary'>Tất cả khóa học</h2>
-        <Select onValueChange={setFilter} defaultValue="all">
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Lọc" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="paid">Trả phí</SelectItem>
-            <SelectItem value="free">Miễn phí</SelectItem>
-          </SelectContent>
-        </Select>
+        
       </div>
-      <div className='grid grid-cols-2 lg:grid-cols-3 gap-4 mt-4'>
-        {loading ? (
-          [1,2,3,4,5,6].map((item, index) => (
-            <div key={index} className='w-full h-[240px] rounded-xl m-2 bg-slate-200 animate-pulse'></div>
-          ))
-        ) : filteredCourses.length > 0 ? (
-          filteredCourses.map((course) => (
-            <Link href={`/course-preview/${course.id}`} key={course.id}>
-              <div>
-                <CourseItem course={course} />
-              </div>
-            </Link>
-          ))
-        ) : (
-          <p>Không có khóa học nào.</p>
-        )}
+      <div className='flex-1 overflow-auto p-5 bg-white rounded-b-lg'>
+        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+          {loading ? (
+            [1,2,3,4,5,6].map((item, index) => (
+              <div key={index} className='w-full h-[240px] rounded-xl m-2 bg-slate-200 animate-pulse'></div>
+            ))
+          ) : filteredCourses.length > 0 ? (
+            filteredCourses.map((course) => (
+              <Link href={`/course-preview/${course.id}`} key={course.id}>
+                <div>
+                  <CourseItem course={course} />
+                </div>
+              </Link>
+            ))
+          ) : (
+            <p>Không có khóa học nào.</p>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -12,14 +12,14 @@ function SideNav() {
   const menu=[
     {
       id:8,
-      name:'Dashboard',
+      name:'Bảng điều khiển',
       icon:LayoutDashboard,
       path:'/dashboard',
       auth:user
     },
     {
       id:1,
-      name:'All Courses',
+      name:'Tất cả khóa học',
       icon:BookOpen,
       path:'/courses',
       auth:true
@@ -34,7 +34,7 @@ function SideNav() {
     },
     {
       id:4,
-      name:'Store',
+      name:'Cửa hàng',
       icon:LayoutGrid,
       path:'/store',
       auth:true
@@ -42,14 +42,14 @@ function SideNav() {
     
     // {
     //   id:3,
-    //   name:'Be Instructor',
+    //   name:'Trở thành giảng viên',
     //   icon:GraduationCap,
     //   path:'/instructor',
     //   auth:true
     // },
     {
       id:5,
-      name:'Newsletter',
+      name:'Bản tin',
       icon:Mail,
       path:'/newsletter',
       auth:true
@@ -72,7 +72,7 @@ function SideNav() {
         width={170} height={80} />
 
         <hr className='mt-7'></hr>
-        {/* Menu List  */}
+        {/* Danh sách menu  */}
         <div className='mt-5'>
           {menu.map((item,index)=>item.auth&&(
             <Link key={index} href={item.path}>
