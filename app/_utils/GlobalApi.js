@@ -1,6 +1,6 @@
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, runTransaction, collection, query, where, getDocs, addDoc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
-import { collection, query, where, getDocs, addDoc, doc, getDoc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
-
 const GlobalApi = {
   getAllCourseList: async () => {
     const coursesRef = collection(db, 'courses');
@@ -69,16 +69,43 @@ const GlobalApi = {
 
   enrollCourse: async (userId, courseId) => {
     try {
-      const enrollmentRef = doc(db, 'users', userId, 'enrollments', courseId);
-      const newEnrollment = {
-        courseId: courseId,
-        enrollmentDate: new Date(),
-        status: 'active'
-      };
-      await setDoc(enrollmentRef, newEnrollment);
-      return courseId;
+      const userRef = doc(db, 'users', userId);
+      const courseRef = doc(db, 'courses', courseId);
+
+      const userDoc = await getDoc(userRef);
+      const courseDoc = await getDoc(courseRef);
+
+      if (!userDoc.exists()) {
+        console.error('Không tìm thấy người dùng với ID:', userId);
+        throw new Error("Không tìm thấy thông tin người dùng");
+      }
+
+      if (!courseDoc.exists()) {
+        console.error('Không tìm thấy khóa học với ID:', courseId);
+        throw new Error("Không tìm thấy thông tin khóa học");
+      }
+
+      await runTransaction(db, async (transaction) => {
+        const enrolledCourses = userDoc.data().enrolledCourses || [];
+        const enrolledUsers = courseDoc.data().enrolledUsers || [];
+
+        if (!enrolledCourses.includes(courseId)) {
+          transaction.update(userRef, {
+            enrolledCourses: [...enrolledCourses, courseId]
+          });
+        }
+
+        if (!enrolledUsers.includes(userId)) {
+          transaction.update(courseRef, {
+            enrolledUsers: [...enrolledUsers, userId]
+          });
+        }
+      });
+
+      console.log('Đăng ký khóa học thành công');
+      return true;
     } catch (error) {
-      console.error('Lỗi khi đăng ký khóa học:', error);
+      console.error("Lỗi khi đăng ký khóa học:", error);
       throw error;
     }
   },
