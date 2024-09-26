@@ -19,6 +19,7 @@ function CourseList() {
 
   useEffect(() => {
     getAllCourses();
+    
   }, []);
 
   const getAllCourses = async () => {

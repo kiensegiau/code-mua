@@ -5,7 +5,7 @@ dotenv.config();
 const nextConfig = {
     reactStrictMode: false,
     images:{
-        domains:['media.graphassets.com']
+        domains:['media.graphassets.com', 'cdn.dribbble.com']
     },
     env: {
         NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,

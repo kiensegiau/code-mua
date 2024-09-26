@@ -4,31 +4,22 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { verifyAccessToken, verifyRefreshToken, generateTokens } from '../_utils/jwt';
 import { doc, getDoc } from 'firebase/firestore';
 const AuthContext = createContext();
+import GlobalApi from '../_utils/GlobalApi';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId) => {
-    try {
-      const docRef = doc(db, 'users', userId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setProfile(docSnap.data());
-      } else {
-        console.log("Không tìm thấy thông tin người dùng");
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin profile:", error);
-    }
-  };
-
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        await fetchProfile(user.uid);
+        const userProfile = await GlobalApi.getUserProfile(user.uid);
+        if (userProfile) {
+          setProfile(userProfile);
+        }
       } else {
         setProfile(null);
       }

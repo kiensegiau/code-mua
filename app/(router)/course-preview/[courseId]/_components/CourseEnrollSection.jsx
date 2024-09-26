@@ -7,12 +7,14 @@ import React, { useEffect, useContext } from 'react'
 import { toast } from "sonner"
 import { db } from '@/app/_utils/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { UserMemberContext } from '@/app/_context/UserMemberContext'
+import UserMemberContext from '@/app/_context/UserMemberContext';  // Điều chỉnh đường dẫn nếu cần
 
 function CourseEnrollSection({courseInfo,isUserAlreadyEnrolled}) {
     // const membership=false;
-    const {user}=useAuth();
-  const {isMember,setIsMember}=useContext(UserMemberContext)
+    const {user} = useAuth();
+    const userMemberContext = useContext(UserMemberContext);
+    const {isMember = false, setIsMember = () => {}} = userMemberContext ?? {};
+
 
     const router=useRouter();
 
@@ -20,17 +22,26 @@ function CourseEnrollSection({courseInfo,isUserAlreadyEnrolled}) {
       console.log("isUserAlreadyEnrolled",isUserAlreadyEnrolled)
     },[isUserAlreadyEnrolled])
     // Enroll to the Course
-    const onEnrollCourse = () => {
-      if (user && user.email) {
-        GlobalApi.enrollToCourse(courseInfo?.slug, user.email).then(resp => {
-          console.log(resp);
-          if (resp) {
+    const onEnrollCourse = async () => {
+      if (user && user.uid) {
+        try {
+          const isEnrolled = await GlobalApi.isUserEnrolled(user.uid, courseInfo.id);
+          if (isEnrolled) {
+            toast.info("Bạn đã đăng ký khóa học này rồi");
+            return;
+          }
+          
+          const enrollmentId = await GlobalApi.enrollCourse(user.uid, courseInfo.id);
+          if (enrollmentId) {
             toast.success("Đăng ký khóa học thành công", {
               description: "Bạn đã đăng ký khóa học này",
             });
-            router.push('/watch-course/' + resp.createUserEnrollCourse.id);
+            router.push('/watch-course/' + courseInfo.id);
           }
-        });
+        } catch (error) {
+          console.error("Lỗi khi đăng ký khóa học:", error);
+          toast.error("Đã xảy ra lỗi khi đăng ký khóa học. Vui lòng thử lại.");
+        }
       } else {
         toast.error("Vui lòng đăng nhập để đăng ký khóa học");
       }
@@ -42,11 +53,13 @@ function CourseEnrollSection({courseInfo,isUserAlreadyEnrolled}) {
             Đăng ký khóa học
         </h2>
 
-        {user && (courseInfo.free || isUserAlreadyEnrolled) ? (
+        {user ? (
           <div className='flex flex-col gap-3 mt-3'>
-            <h2 className='text-white font-light'>Bắt đầu học và xây dựng dự án ngay bây giờ</h2>
+            <h2 className='text-white font-light'>
+              {isUserAlreadyEnrolled ? 'Bạn đã đăng ký khóa học này' : 'Bắt đầu học và xây dựng dự án ngay bây giờ'}
+            </h2>
             {isUserAlreadyEnrolled ? (
-              <Link href={'/watch-course/' + isUserAlreadyEnrolled}>
+              <Link href={'/watch-course/' + courseInfo.id}>
                 <Button className="bg-white text-primary hover:bg-white hover:text-primary">
                   Tiếp tục học
                 </Button>
@@ -60,23 +73,14 @@ function CourseEnrollSection({courseInfo,isUserAlreadyEnrolled}) {
               </Button>
             )}
           </div>
-        ) : !user ? (
-          <div className='flex flex-col gap-3 mt-3'>
-            <h2 className='text-white font-light'>Đăng ký ngay để bắt đầu học và xây dựng dự án</h2>
-            <Link href={'/sign-in'}>
-              <Button className="bg-white text-primary hover:bg-white hover:text-primary">
-                Đăng nhập để đăng ký
-              </Button>
-            </Link>
-          </div>
         ) : (
           <div className='flex flex-col gap-3 mt-3'>
-            <h2 className='text-white font-light'>
-              Mua gói thành viên hàng tháng và truy cập tất cả các khóa học
-            </h2>
-            <Button className="bg-white text-primary hover:bg-white hover:text-primary">
-              Mua gói thành viên chỉ với 69.000 VND
-            </Button>
+            <h2 className='text-white font-light'>Đăng nhập để đăng ký khóa học</h2>
+            <Link href={'/sign-in'}>
+              <Button className="bg-white text-primary hover:bg-white hover:text-primary">
+                Đăng nhập
+              </Button>
+            </Link>
           </div>
         )}
     </div>

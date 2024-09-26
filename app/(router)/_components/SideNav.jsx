@@ -25,14 +25,6 @@ function SideNav() {
       auth:true
     },
     {
-      id:2,
-      name:'Tubeguruji Pro',
-      icon:BadgeCheck,
-      path:'/tubeguruji-pro',
-      auth:true
-
-    },
-    {
       id:4,
       name:'Cửa hàng',
       icon:LayoutGrid,
@@ -60,20 +52,22 @@ function SideNav() {
       icon: User,
       path: '/profile',
       auth: true
+    },
+    {
+      id: 7,
+      name: 'Khóa học của tôi',
+      icon: BookOpen,
+      path: '/my-courses',
+      auth: true
     }
   ]
 
   const path=usePathname();
 
   return (
-    <div className='p-5 bg-white 
+    <div className='px-5 pb-5 bg-white 
     shadow-sm border h-screen'>
-        <Image src='/logo.svg' alt='logo'
-        width={170} height={80} />
-
-        <hr className='mt-7'></hr>
-        {/* Danh sách menu  */}
-        <div className='mt-5'>
+        <div>
           {menu.map((item,index)=>item.auth&&(
             <Link key={index} href={item.path}>
             <div className={`group flex gap-3

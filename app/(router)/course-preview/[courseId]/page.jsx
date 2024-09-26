@@ -1,111 +1,244 @@
-"use client"
-import { useEffect, useState } from 'react'
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '@/app/_utils/firebase';
-import CourseVideoDescription from './_components/CourseVideoDescription'
-import CourseContentSection from './_components/CourseContentSection'
-import Image from 'next/image'
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
-import CourseHeader from './_components/CourseHeader';
+"use client";
+import { useEffect, useState } from "react";
+import { Collapse, Button, List } from "antd";
+import { PlayCircleOutlined, QuestionCircleOutlined, UnorderedListOutlined, ClockCircleOutlined, LaptopOutlined, CheckOutlined } from "@ant-design/icons";
+import "antd/dist/reset.css";
+// Đảm bảo rằng bạn đã cấu hình Tailwind CSS
+import Header from "../../_components/Header";
+import Sidebar from "../../_components/SideNav";
+import { useAuth } from '@/app/_context/AuthContext';
+import GlobalApi from '@/app/_utils/GlobalApi';
+import { toast } from "sonner";
+import CourseEnrollSection from './_components/CourseEnrollSection';
+import Image from 'next/image';
 
-const storage = getStorage();
+const { Panel } = Collapse;
 
-function CoursePreview({params}) {
-    const [courseInfo, setCourseInfo] = useState(null);
-    const [activeChapterIndex, setActiveChapterIndex] = useState(0);
-    const [activeLesson, setActiveLesson] = useState(null);
+function WatchCourse({ params }) {
+  const [courseInfo, setCourseInfo] = useState(null);
+  const [activeLesson, setActiveLesson] = useState(null);
+  const { user } = useAuth();
+  const [isUserEnrolled, setIsUserEnrolled] = useState(false);
+  const [activeChapterIndex, setActiveChapterIndex] = useState(null);
 
-    useEffect(() => {
-        if (params?.courseId) {
-            getCourseInfoById();
-        }
-    }, [params?.courseId]);
-
-    const getCourseInfoById = async () => {
-        try {
-            const courseRef = doc(db, 'courses', params.courseId);
-            const courseSnap = await getDoc(courseRef);
-
-            if (courseSnap.exists()) {
-                const courseData = { id: courseSnap.id, ...courseSnap.data() };
-                
-                // Lấy thông tin về các chương
-                const chaptersSnapshot = await getDocs(collection(db, 'courses', params.courseId, 'chapters'));
-                const chaptersData = await Promise.all(chaptersSnapshot.docs.map(async (chapterDoc) => {
-                    const chapterData = { id: chapterDoc.id, ...chapterDoc.data() };
-                    
-                    // Lấy thông tin về các bài học trong chương
-                    const lessonsSnapshot = await getDocs(collection(db, 'courses', params.courseId, 'chapters', chapterDoc.id, 'lessons'));
-                    chapterData.lessons = await Promise.all(lessonsSnapshot.docs.map(async (lessonDoc) => {
-                        const lessonData = { id: lessonDoc.id, ...lessonDoc.data() };
-                        if (lessonData.files && Array.isArray(lessonData.files)) {
-                            const videoFile = lessonData.files.find(file => file.type.startsWith('video/'));
-                            if (videoFile && videoFile.url) {
-                                lessonData.videoUrl = videoFile.url;
-                            }
-                        }
-                        console.log('Dữ liệu bài học:', JSON.stringify(lessonData, null, 2));
-                        return lessonData;
-                    }));
-                    
-                    return chapterData;
-                }));
-                
-                courseData.chapters = chaptersData.sort((a, b) => a.order - b.order);
-                setCourseInfo(courseData);
-                console.log('Dữ liệu khóa học sau khi xử lý:', JSON.stringify(courseData, null, 2));
-            } else {
-                console.error("Không tìm thấy khóa học");
+  useEffect(() => {
+    const fetchCourseInfo = async () => {
+      try {
+        const course = await GlobalApi.getCourseById(params.courseId);
+        setCourseInfo(course);
+        console.log("Dữ liệu khóa học:", course);
+        if (course && course.chapters) {
+          console.log("Dữ liệu các chương:", course.chapters);
+          course.chapters.forEach((chapter, index) => {
+            // console.log(`Chương ${index + 1}:`, chapter);
+            if (chapter.lessons && Array.isArray(chapter.lessons)) {
+              // console.log(`Bài học trong chương ${index + 1}:`, chapter.lessons);
             }
-        } catch (error) {
-            console.error("Lỗi khi lấy thông tin khóa học:", error);
+          });
         }
+        if (user) {
+          const enrolled = await GlobalApi.isUserEnrolled(user.uid, params.courseId);
+          setIsUserEnrolled(enrolled);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin khóa học:", error);
+        toast.error("Không thể tải thông tin khóa học");
+      }
     };
 
-    const handleActiveLessonChange = (lesson) => {
-        console.log('handleActiveLessonChange called with:', lesson);
-        setActiveLesson(lesson);
-    };
+    fetchCourseInfo();
+  }, [params.courseId, user]);
 
-    if (!courseInfo) {
-        return <div>Đang tải...</div>;
+  if (!courseInfo) {
+    return <div>Đang tải...</div>;
+  }
+
+  const handleLessonClick = async (chapterIndex, lessonIndex, lesson) => {
+    console.log("Chương được chọn:", chapterIndex);
+    console.log("Bài học được chọn:", lesson);
+    setActiveChapterIndex(chapterIndex);
+
+    try {
+      const fullLessonData = await GlobalApi.getLessonData(courseInfo.id, courseInfo.chapters[chapterIndex].id, lesson.id);
+      console.log("Dữ liệu đầy đủ của bài học:", fullLessonData);
+      setActiveLesson(fullLessonData);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu bài học:", error);
+      toast.error("Không thể tải dữ liệu bài học");
     }
+  };
 
-    return (
-        <div className="flex flex-col h-screen">
-            <CourseHeader courseInfo={courseInfo} />
-            <div className="flex-1 grid grid-cols-12 gap-4 p-4">
-                <div className="col-span-9 grid grid-rows-6 gap-4">
-                    <div className="row-span-5">
-                        <CourseVideoDescription 
-                            courseInfo={courseInfo}
-                            activeChapterIndex={activeChapterIndex}
-                            activeLesson={activeLesson}
-                            watchMode={true}
-                        />
+  const handleChapterClick = async (chapterIndex) => {
+    console.log("Chương được chọn:", chapterIndex);
+    setActiveChapterIndex(chapterIndex);
+
+    if (chapterIndex !== null && courseInfo.chapters[chapterIndex]) {
+      const chapter = courseInfo.chapters[chapterIndex];
+      if (!chapter.lessons || !Array.isArray(chapter.lessons) || chapter.lessons.length === 0) {
+        try {
+          const chapterLessons = await GlobalApi.getChapterLessons(courseInfo.id, chapter.id);
+          console.log("Dữ liệu bài học của chương:", chapterLessons);
+          const updatedChapters = [...courseInfo.chapters];
+          updatedChapters[chapterIndex] = { ...chapter, lessons: chapterLessons };
+          setCourseInfo({ ...courseInfo, chapters: updatedChapters });
+        } catch (error) {
+          console.error("Lỗi khi lấy dữ liệu bài học của chương:", error);
+          toast.error("Không thể tải danh sách bài học");
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex flex-1">
+        <Sidebar />
+        <div className="flex flex-col md:flex-row justify-center p-5 bg-white flex-1">
+          <div className="w-full md:w-2/3 p-6 mr-0 md:mr-4 mb-4 md:mb-0">
+            <h1 className="text-3xl font-bold mb-2">{courseInfo.title}</h1>
+            <p className="text-gray-600 mb-6">{courseInfo.description}</p>
+            
+            <h2 className="text-2xl font-bold mb-4">Bạn sẽ học được gì?</h2>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+              {/* Thêm danh sách các điểm học được */}
+              <li className="flex items-center">
+                <CheckOutlined className="text-green-500 mr-2" />
+                Hiểu chi tiết về các khái niệm cơ bản trong JS
+              </li>
+              {/* Thêm các mục khác tương tự */}
+            </ul>
+
+            <h2 className="text-2xl font-bold mb-4">Nội dung khóa học</h2>
+            {courseInfo && courseInfo.chapters ? (
+              <p className="text-gray-600 mb-4">
+                {courseInfo.chapters.length} chương • 
+                {courseInfo.chapters.reduce((acc, chapter) => acc + (chapter.lessons && Array.isArray(chapter.lessons) ? chapter.lessons.length : 0), 0)} bài học • 
+                Thời lượng {courseInfo.duration || 'Chưa xác định'}
+              </p>
+            ) : (
+              <p className="text-gray-600 mb-4">Đang tải nội dung khóa học...</p>
+            )}
+            <Collapse 
+              accordion 
+              expandIconPosition="end"
+              onChange={(key) => handleChapterClick(key[0] !== undefined ? Number(key[0]) : null)}
+            >
+              {courseInfo.chapters && courseInfo.chapters.map((chapter, index) => (
+                <Panel
+                  header={
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">{`${index + 1}. ${chapter.title}`}</span>
+                      <span className="text-gray-500">
+                        {chapter.lessons && Array.isArray(chapter.lessons) ? `${chapter.lessons.length} bài học` : 'Không có bài học'}
+                      </span>
                     </div>
-                    <div className="row-span-1 bg-white p-4 rounded-lg shadow">
-                        <h1 className='text-3xl font-bold mb-3'>{courseInfo.title}</h1>
-                        <p className='text-gray-600 mb-4'>{courseInfo.description}</p>
-                        <div className='flex items-center mb-4'>
-                            <span className='mr-4'>
-                                <strong>Giảng viên:</strong> {courseInfo.teacher}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-span-3">
-                    <CourseContentSection 
-                        courseInfo={courseInfo}
-                        isUserAlreadyEnrolled={true}
-                        watchMode={false}
-                        setActiveChapterIndex={(index) => setActiveChapterIndex(index)}
-                        setActiveLesson={setActiveLesson}
+                  }
+                  key={index}
+                >
+                  {chapter.lessons && Array.isArray(chapter.lessons) ? (
+                    <List
+                      itemLayout="horizontal"
+                      dataSource={chapter.lessons}
+                      renderItem={(lesson, lessonIndex) => (
+                        <List.Item
+                          onClick={() => handleLessonClick(index, lessonIndex, lesson)}
+                          className={`cursor-pointer hover:bg-gray-100 ${
+                            activeLesson && activeLesson.id === lesson.id ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <List.Item.Meta
+                            avatar={<PlayCircleOutlined className={`${
+                              activeLesson && activeLesson.id === lesson.id ? 'text-blue-500' : 'text-gray-400'
+                            }`} />}
+                            title={
+                              <div className="flex justify-between">
+                                <span>{lesson.title}</span>
+                                <span className="text-gray-400">{lesson.duration || 'N/A'}</span>
+                              </div>
+                            }
+                            description={
+                              <div className="text-sm text-gray-500">
+                                {lesson.description && lesson.description.length > 100
+                                  ? `${lesson.description.substring(0, 100)}...`
+                                  : lesson.description}
+                              </div>
+                            }
+                          />
+                        </List.Item>
+                      )}
                     />
+                  ) : (
+                    <p>Không có bài học trong chương này.</p>
+                  )}
+                </Panel>
+              ))}
+            </Collapse>
+          </div>
+          
+          <div className="w-full md:w-1/3">
+            <div className="bg-gradient-to-br from-blue-400 to-blue-600 overflow-hidden rounded-2xl shadow-lg max-w-[428px] mx-auto border-4 border-white">
+              <div className="relative aspect-[16/9]">
+                {courseInfo.previewImageUrl && (
+                  <Image
+                    src={courseInfo.previewImageUrl}
+                    alt={courseInfo.title}
+                    layout="fill"
+                    objectFit="cover"
+                  />
+                )}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <PlayCircleOutlined className="text-3xl text-blue-500" />
+                  </div>
                 </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/60 to-transparent">
+                  <h2 className="text-2xl font-bold mb-1">{courseInfo.title}</h2>
+                  <p className="text-lg">Xem giới thiệu khóa học</p>
+                </div>
+              </div>
             </div>
+            
+            <div className="bg-white p-6 flex flex-col items-center">
+              <h3 className="text-3xl font-normal text-orange-500 mb-4 text-center">
+                {courseInfo.price > 0 ? `${courseInfo.price.toLocaleString()} VND` : 'Miễn phí'}
+              </h3>
+              <CourseEnrollSection 
+                courseInfo={courseInfo}
+                isUserAlreadyEnrolled={isUserEnrolled}
+              />
+              <ul className="list-none pl-[5.5rem] pr-4 py-2 text-gray-600 w-full">
+                <li className="mb-2 flex items-center">
+                  <span className="mr-2 text-gray-400 font-bold text-lg">
+                    <QuestionCircleOutlined />
+                  </span>
+                  {courseInfo.level}
+                </li>
+                <li className="mb-2 flex items-center">
+                  <span className="mr-2 text-gray-400 font-bold text-lg">
+                    <UnorderedListOutlined />
+                  </span>
+                  <span>Tổng số <strong>{courseInfo.totalLessons}</strong> bài học</span>
+                </li>
+                <li className="mb-2 flex items-center">
+                  <span className="mr-2 text-gray-400 font-bold text-lg">
+                    <ClockCircleOutlined />
+                  </span>
+                  <span>Thời lượng <strong>{courseInfo.duration}</strong></span>
+                </li>
+                <li className="mb-2 flex items-center">
+                  <span className="mr-2 text-gray-400 font-bold text-lg">
+                    <LaptopOutlined />
+                  </span>
+                  Học mọi lúc, mọi nơi
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-    )
+      </div>
+    </div>
+  );
 }
 
-export default CoursePreview
+export default WatchCourse;

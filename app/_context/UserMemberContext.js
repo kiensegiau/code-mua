@@ -1,3 +1,8 @@
-import { createContext, useContext } from "react";
+import { createContext } from 'react';
 
-export const UserMemberContext=createContext(null);
+const UserMemberContext = createContext({
+  isMember: false,
+  setIsMember: () => {}
+});
+
+export default UserMemberContext;
