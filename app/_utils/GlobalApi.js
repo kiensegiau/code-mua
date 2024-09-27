@@ -1,6 +1,6 @@
-import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { doc, getDoc, runTransaction, collection, query, where, getDocs, addDoc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+
 const GlobalApi = {
   getAllCourseList: async () => {
     const coursesRef = collection(db, 'courses');
@@ -69,16 +69,18 @@ const GlobalApi = {
 
   enrollCourse: async (userId, courseId) => {
     try {
-      const userRef = doc(db, 'users', userId);
-      const courseRef = doc(db, 'courses', courseId);
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where("uid", "==", userId));
+      const querySnapshot = await getDocs(q);
 
-      const userDoc = await getDoc(userRef);
-      const courseDoc = await getDoc(courseRef);
-
-      if (!userDoc.exists()) {
-        console.error('Không tìm thấy người dùng với ID:', userId);
+      if (querySnapshot.empty) {
+        console.error('Không tìm thấy người dùng với UID:', userId);
         throw new Error("Không tìm thấy thông tin người dùng");
       }
+
+      const userDoc = querySnapshot.docs[0];
+      const courseRef = doc(db, 'courses', courseId);
+      const courseDoc = await getDoc(courseRef);
 
       if (!courseDoc.exists()) {
         console.error('Không tìm thấy khóa học với ID:', courseId);
@@ -86,18 +88,21 @@ const GlobalApi = {
       }
 
       await runTransaction(db, async (transaction) => {
-        const enrolledCourses = userDoc.data().enrolledCourses || [];
+        const userData = userDoc.data();
+        const enrolledCourses = userData.enrolledCourses || [];
         const enrolledUsers = courseDoc.data().enrolledUsers || [];
+
+        const userRef = doc(db, 'users', userDoc.id);
 
         if (!enrolledCourses.includes(courseId)) {
           transaction.update(userRef, {
-            enrolledCourses: [...enrolledCourses, courseId]
+            enrolledCourses: arrayUnion(courseId)
           });
         }
 
         if (!enrolledUsers.includes(userId)) {
           transaction.update(courseRef, {
-            enrolledUsers: [...enrolledUsers, userId]
+            enrolledUsers: arrayUnion(userId)
           });
         }
       });
@@ -112,14 +117,20 @@ const GlobalApi = {
 
   isUserEnrolled: async (userId, courseId) => {
     try {
-      const enrollmentRef = collection(db, 'enrollments');
-      const q = query(enrollmentRef, 
-        where('userId', '==', userId),
-        where('courseId', '==', courseId),
-        where('status', '==', 'active')
-      );
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where("uid", "==", userId));
       const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
+
+      if (querySnapshot.empty) {
+        console.error('Không tìm thấy người dùng với UID:', userId);
+        return false;
+      }
+
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const enrolledCourses = userData.enrolledCourses || [];
+      
+      return enrolledCourses.includes(courseId);
     } catch (error) {
       console.error('Lỗi khi kiểm tra đăng ký khóa học:', error);
       throw error;
