@@ -155,11 +155,20 @@ const GlobalApi = {
 
   getEnrolledCourses: async (userId) => {
     try {
-      const enrollmentsRef = collection(db, 'users', userId, 'enrollments');
-      const enrollmentsSnapshot = await getDocs(enrollmentsRef);
-      
-      const enrolledCourses = await Promise.all(enrollmentsSnapshot.docs.map(async (enrollmentDoc) => {
-        const courseId = enrollmentDoc.id;
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where("uid", "==", userId));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.error('Không tìm thấy người dùng với UID:', userId);
+        return [];
+      }
+
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const enrolledCourseIds = userData.enrolledCourses || [];
+
+      const enrolledCourses = await Promise.all(enrolledCourseIds.map(async (courseId) => {
         const courseRef = doc(db, 'courses', courseId);
         const courseSnap = await getDoc(courseRef);
         if (courseSnap.exists()) {
@@ -180,6 +189,7 @@ const GlobalApi = {
       throw error;
     }
   },
+ 
 
   getLessonData: async (courseId, chapterId, lessonId) => {
     console.log('Bắt đầu lấy dữ liệu bài học:', { courseId, chapterId, lessonId });

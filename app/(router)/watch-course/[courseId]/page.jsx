@@ -1,14 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Collapse, List, Spin } from "antd";
-import { PageHeader } from "@ant-design/pro-layout";
-import { PlayCircleOutlined, QuestionCircleOutlined, UnorderedListOutlined, ClockCircleOutlined, LaptopOutlined } from "@ant-design/icons";
-import "antd/dist/reset.css";
-import Header from "../../_components/Header";
-import Sidebar from "../../_components/SideNav";
-import GlobalApi from '@/app/_utils/GlobalApi';
+import { PlayCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { toast } from "sonner";
+import GlobalApi from "../../../_utils/GlobalApi";
 import CourseVideoPlayer from './components/CourseVideoPlayer';
+import Link from "next/link";
+import { useRouter } from 'next/navigation'; // Thêm import này
 
 const { Panel } = Collapse;
 
@@ -16,6 +14,9 @@ function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const router = useRouter(); // Thêm hook useRouter
 
   useEffect(() => {
     const fetchCourseInfo = async () => {
@@ -36,96 +37,124 @@ function WatchCourse({ params }) {
 
   const handleLessonClick = (lesson) => {
     setActiveLesson(lesson);
+    setIsVideoLoading(true);
+    if (lesson.files && lesson.files.length > 0) {
+      const videoFile = lesson.files.find(file => file.type === "video/mp4");
+      if (videoFile) {
+        setVideoUrl(videoFile.firebaseUrl);
+      } else {
+        setVideoUrl(null);
+      }
+    } else {
+      setVideoUrl(null);
+    }
+    setIsVideoLoading(false);
+  };
+
+  const handleLogout = () => {
+    // Thực hiện các bước đăng xuất ở đây
+    // Ví dụ: xóa token từ localStorage
+    localStorage.removeItem('token');
+    // Chuyển hướng người dùng về trang đăng nhập
+    router.push("/sign-in");
+    // Hiển thị thông báo đăng xuất thành công
+    toast.success('Đăng xuất thành công');
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-white">
         <Spin size="large" />
       </div>
     );
   }
 
   if (!courseInfo) {
-    return <div>Không tìm thấy thông tin khóa học</div>;
+    return <div className="text-center py-10 bg-white text-gray-800">Bài giảng đang được cập nhật, vui lòng quay lại sau</div>;
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <PageHeader
-        className="site-page-header"
-        onBack={() => window.history.back()}
-        title={courseInfo.title}
-        subTitle="Xem khóa học"
-      />
-      <div className="flex flex-1">
-        <Sidebar />
-        <div className="flex flex-col md:flex-row justify-center p-5 bg-white flex-1">
-          <div className="w-full md:w-2/3 p-6 mr-0 md:mr-4 mb-4 md:mb-0">
-            {activeLesson ? (
-              <CourseVideoPlayer lesson={activeLesson} />
-            ) : (
-              <div className="bg-gray-200 h-96 flex items-center justify-center text-gray-500">
-                Chọn một bài học để bắt đầu
+    <div className="flex flex-col min-h-screen h-screen bg-white">
+      <header className="bg-gray-900 text-white py-2 px-4">
+        <div className="flex items-center justify-between">
+          <Link href="/courses" className="flex items-center text-orange-500 hover:text-orange-600 transition-colors">
+            <ArrowLeftOutlined className="mr-2" />
+            <span>Quay lại danh sách khóa học</span>
+          </Link>
+          <h1 className="text-lg font-bold">
+            {courseInfo?.title?.toUpperCase()}{courseInfo?.instructor ? ` - ${courseInfo.instructor.toUpperCase()}` : ''}
+          </h1>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-300">
+              0% | 0/{courseInfo?.chapters?.reduce((total, chapter) => total + (chapter?.lessons?.length || 0), 0) || 0} BÀI HỌC
+            </span>
+            <button 
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors"
+              onClick={handleLogout}
+            >
+              ĐĂNG XUẤT
+            </button>
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 bg-white overflow-hidden">
+        <div className="h-full bg-gray-100 rounded-lg shadow-md overflow-hidden">
+          <div className="flex h-full">
+            <div className="w-3/4 bg-white h-full">
+              <div className="relative w-full h-full">
+                <CourseVideoPlayer 
+                  lesson={activeLesson} 
+                  videoUrl={videoUrl} 
+                  isLoading={isVideoLoading}
+                />
               </div>
-            )}
-            <h1 className="text-3xl font-bold mt-6 mb-2">{courseInfo.title}</h1>
-            <p className="text-gray-600 mb-6">{courseInfo.description}</p>
-            
-            <h2 className="text-2xl font-bold mb-4">Nội dung khóa học</h2>
-            {courseInfo && courseInfo.chapters ? (
-              <>
-                <p className="text-gray-600 mb-4">
-                  {courseInfo.chapters.length} chương • 
-                  {courseInfo.chapters.reduce((acc, chapter) => acc + (chapter.lessons ? chapter.lessons.length : 0), 0)} bài học • 
-                  Thời lượng {courseInfo.duration || 'Chưa xác định'}
-                </p>
-                <Collapse accordion>
+            </div>
+            <div className="w-1/4 overflow-y-auto">
+              <div className="p-4">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">Nội dung khóa học</h2>
+                <Collapse accordion className="border-0 bg-gray-100">
                   {courseInfo.chapters.map((chapter, index) => (
                     <Panel
+                      key={index}
                       header={
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold">{`${index + 1}. ${chapter.title}`}</span>
-                          <span className="text-gray-500">{chapter.lessons ? `${chapter.lessons.length} bài học` : 'Không có bài học'}</span>
+                        <div className="flex justify-between items-center text-gray-800">
+                          <span className="font-semibold">{`${index + 1}. ${chapter.title}`}</span>
+                          <span className="text-gray-500 text-sm">{chapter.lessons ? `${chapter.lessons.length} bài học` : 'Không có bài học'}</span>
                         </div>
                       }
-                      key={index}
+                      className="mb-2 rounded-lg overflow-hidden border border-gray-200 bg-white"
                     >
                       {chapter.lessons && Array.isArray(chapter.lessons) ? (
                         <List
                           itemLayout="horizontal"
                           dataSource={chapter.lessons}
-                          renderItem={(lesson) => (
+                          renderItem={(lesson, lessonIndex) => (
                             <List.Item
                               onClick={() => handleLessonClick(lesson)}
-                              className="cursor-pointer hover:bg-gray-100"
+                              className="cursor-pointer hover:bg-gray-50 py-2 px-4 transition-colors"
+                              style={{ paddingLeft: '15px' }}
                             >
-                              <List.Item.Meta
-                                avatar={<PlayCircleOutlined className="text-gray-400" />}
-                                title={
-                                  <div className="flex justify-between">
-                                    <span>{lesson.title}</span>
-                                    <span className="text-gray-400">{lesson.duration}</span>
-                                  </div>
-                                }
-                              />
+                              <div className="flex items-center space-x-3 w-full">
+                                <PlayCircleOutlined className="text-orange-500" />
+                                <div className="flex justify-between items-center w-full">
+                                  <span className="text-sm text-gray-700">{`${lessonIndex + 1}. ${lesson.title}`}</span>
+                                  <span className="text-gray-400 text-xs">{lesson.duration}</span>
+                                </div>
+                              </div>
                             </List.Item>
                           )}
                         />
                       ) : (
-                        <p>Không có bài học trong chương này.</p>
+                        <p className="text-gray-500 p-4">Không có bài học trong chương này.</p>
                       )}
                     </Panel>
                   ))}
                 </Collapse>
-              </>
-            ) : (
-              <p className="text-gray-600 mb-4">Đang tải nội dung khóa học...</p>
-            )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

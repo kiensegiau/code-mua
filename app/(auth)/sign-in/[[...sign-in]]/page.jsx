@@ -33,7 +33,7 @@ export default function SignIn() {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       toast.success('Đăng nhập thành công!');
-      router.push('/dashboard');
+      router.push('/');
     } catch (error) {
       console.error('Lỗi đăng nhập:', error);
       let errorMessage = 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.';

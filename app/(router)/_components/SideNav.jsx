@@ -10,13 +10,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 function SideNav() {
   const {user}=useAuth();
   const menu=[
-    {
-      id:8,
-      name:'Bảng điều khiển',
-      icon:LayoutDashboard,
-      path:'/dashboard',
-      auth:user
-    },
+   
     {
       id:1,
       name:'Tất cả khóa học',
