@@ -1,32 +1,23 @@
-// import React, { useEffect, useRef } from 'react';
-
-// function CourseVideoPlayer({ lesson, videoUrl, isLoading }) {
-//   const videoRef = useRef(null);
-
- import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import "@videojs/http-streaming";
 import "videojs-contrib-quality-levels";
 import "videojs-hls-quality-selector";
 
-export default function CourseVideoPlayer({ fileId, onError, autoPlay = false }) {
+export default function VideoPlayer({ fileId, onError, autoPlay = true }) {
   const videoRef = useRef(null);
   const playerRef = useRef(null);
   const [videoUrl, setVideoUrl] = useState(null);
-console.log(fileId);
 
   useEffect(() => {
     const fetchVideoUrl = async () => {
-      if (!fileId) return;
       try {
-        const response = await fetch(`/api/r2-proxy?key=${encodeURIComponent(fileId)}`);
+        const response = await fetch(fileId);
         if (!response.ok) {
           throw new Error("Không thể tải nội dung playlist");
         }
-        const url = await response.text();
-        console.log("URL video đã tải:", url); // Thêm dòng này
-        setVideoUrl(url);
+        setVideoUrl(fileId);
       } catch (error) {
         console.error("Lỗi khi tải URL video:", error);
         onError(new Error("Không thể tải video. Vui lòng thử lại sau."));
@@ -39,13 +30,12 @@ console.log(fileId);
   useEffect(() => {
     if (!videoRef.current || !videoUrl) return;
 
-    const initPlayer = () => {
+    const initializePlayer = () => {
       if (playerRef.current) {
-        playerRef.current.src({ type: "application/x-mpegURL", src: videoUrl });
-        return;
+        playerRef.current.dispose();
       }
 
-      const player = videojs(videoRef.current, {
+      playerRef.current = videojs(videoRef.current, {
         controls: true,
         fluid: true,
         responsive: true,
@@ -79,12 +69,14 @@ console.log(fileId);
         },
       });
 
-      player.src({ type: "application/x-mpegURL", src: videoUrl });
+      playerRef.current.src({
+        src: videoUrl,
+        type: "application/x-mpegURL",
+      });
 
-      player.on("error", (error) => {
+      playerRef.current.on("error", (error) => {
         console.error("Lỗi trình phát video:", error);
-        const errorDetails = player.error();
-        console.log("Chi tiết lỗi:", errorDetails);
+        const errorDetails = playerRef.current.error();
         let errorMessage = "Lỗi khi tải video";
         if (errorDetails) {
           errorMessage = getErrorMessage(errorDetails);
@@ -92,36 +84,23 @@ console.log(fileId);
         onError(new Error(errorMessage));
       });
 
-      player.on("loadedmetadata", () => {
-        console.log("Video đã tải metadata thành công");
-      });
-
-      player.hlsQualitySelector({
+      playerRef.current.hlsQualitySelector({
         displayCurrentQuality: true,
       });
-
-      playerRef.current = player;
     };
 
-    // Đảm bảo rằng video element đã được thêm vào DOM trước khi khởi tạo player
-    requestAnimationFrame(initPlayer);
+    initializePlayer();
 
     return () => {
       if (playerRef.current) {
         playerRef.current.dispose();
-        playerRef.current = null;
       }
     };
   }, [videoUrl, onError, autoPlay]);
 
   return (
-    <div data-vjs-player className="w-full h-full">
-      <video ref={videoRef} className="video-js vjs-big-play-centered w-full h-full" />
-      {!fileId && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-          <p className="text-gray-600">Chọn một bài học để xem video</p>
-        </div>
-      )}
+    <div data-vjs-player className="absolute inset-0">
+      <video ref={videoRef} className="video-js vjs-big-play-centered h-full w-full" />
     </div>
   );
 }
