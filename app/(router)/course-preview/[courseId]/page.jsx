@@ -1,25 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Collapse, Button, List } from "antd";
-import { PlayCircleOutlined, QuestionCircleOutlined, UnorderedListOutlined, ClockCircleOutlined, LaptopOutlined, CheckOutlined } from "@ant-design/icons";
+import {
+  PlayCircleOutlined,
+  QuestionCircleOutlined,
+  UnorderedListOutlined,
+  ClockCircleOutlined,
+  LaptopOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 import "antd/dist/reset.css";
 // Đảm bảo rằng bạn đã cấu hình Tailwind CSS
 import Header from "../../_components/Header";
 import Sidebar from "../../_components/SideNav";
-import { useAuth } from '@/app/_context/AuthContext';
-import GlobalApi from '@/app/_utils/GlobalApi';
+import { useAuth } from "@/app/_context/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 import { toast } from "sonner";
-import CourseEnrollSection from './_components/CourseEnrollSection';
-import Image from 'next/image';
-
-const { Panel } = Collapse;
+import CourseEnrollSection from "./_components/CourseEnrollSection";
+import Image from "next/image";
 
 function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
-  const [activeLesson, setActiveLesson] = useState(null);
   const { user } = useAuth();
   const [isUserEnrolled, setIsUserEnrolled] = useState(false);
-  const [activeChapterIndex, setActiveChapterIndex] = useState(null);
+  console.log("aaa");
 
   useEffect(() => {
     const fetchCourseInfo = async () => {
@@ -52,42 +56,7 @@ function WatchCourse({ params }) {
   if (!courseInfo) {
     return <div>Đang tải...</div>;
   }
-
-  const handleLessonClick = async (chapterIndex, lessonIndex, lesson) => {
-    console.log("Chương được chọn:", chapterIndex);
-    console.log("Bài học được chọn:", lesson);
-    setActiveChapterIndex(chapterIndex);
-
-    try {
-      const fullLessonData = await GlobalApi.getLessonData(courseInfo.id, courseInfo.chapters[chapterIndex].id, lesson.id);
-      console.log("Dữ liệu đầy đủ của bài học:", fullLessonData);
-      setActiveLesson(fullLessonData);
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu bài học:", error);
-      toast.error("Không thể tải dữ liệu bài học");
-    }
-  };
-
-  const handleChapterClick = async (chapterIndex) => {
-    console.log("Chương được chọn:", chapterIndex);
-    setActiveChapterIndex(chapterIndex);
-
-    if (chapterIndex !== null && courseInfo.chapters[chapterIndex]) {
-      const chapter = courseInfo.chapters[chapterIndex];
-      if (!chapter.lessons || !Array.isArray(chapter.lessons) || chapter.lessons.length === 0) {
-        try {
-          const chapterLessons = await GlobalApi.getChapterLessons(courseInfo.id, chapter.id);
-          console.log("Dữ liệu bài học của chương:", chapterLessons);
-          const updatedChapters = [...courseInfo.chapters];
-          updatedChapters[chapterIndex] = { ...chapter, lessons: chapterLessons };
-          setCourseInfo({ ...courseInfo, chapters: updatedChapters });
-        } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu bài học của chương:", error);
-          toast.error("Không thể tải danh sách bài học");
-        }
-      }
-    }
-  };
+  console.log(courseInfo);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -97,19 +66,13 @@ function WatchCourse({ params }) {
         <div className="flex flex-col md:flex-row justify-center p-5 bg-white flex-1">
           <div className="w-full md:w-2/3 p-6 mr-0 md:mr-4 mb-4 md:mb-0">
             <h1 className="text-3xl font-bold mb-2">{courseInfo.title}</h1>
-            <p className="text-gray-600 mb-6">{courseInfo.description}</p>
-            
-            <h2 className="text-2xl font-bold mb-4">Bạn sẽ học được gì?</h2>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-              {/* Thêm danh sách các điểm học được */}
-              <li className="flex items-center">
-                <CheckOutlined className="text-green-500 mr-2" />
-                Hiểu chi tiết về các khái niệm cơ bản trong JS
-              </li>
-              {/* Thêm các mục khác tương tự */}
-            </ul>
 
-            <h2 className="text-2xl font-bold mb-4">Nội dung khóa học</h2>
+            <h2 className="text-2xl font-bold mb-4">Mô tả khoá học</h2>
+            <div
+              dangerouslySetInnerHTML={{ __html: courseInfo.description }}
+              className="prose max-w-none mb-4"
+            />
+            {/*
             {courseInfo && courseInfo.chapters ? (
               <p className="text-gray-600 mb-4">
                 {courseInfo.chapters.length} chương • 
@@ -118,8 +81,8 @@ function WatchCourse({ params }) {
               </p>
             ) : (
               <p className="text-gray-600 mb-4">Đang tải nội dung khóa học...</p>
-            )}
-            <Collapse 
+            )} */}
+            {/* <Collapse 
               accordion 
               expandIconPosition="end"
               onChange={(key) => handleChapterClick(key[0] !== undefined ? Number(key[0]) : null)}
@@ -130,7 +93,7 @@ function WatchCourse({ params }) {
                     <div className="flex justify-between items-center">
                       <span className="font-bold">{`${index + 1}. ${chapter.title}`}</span>
                       <span className="text-gray-500">
-                        {chapter.lessons && Array.isArray(chapter.lessons) ? `${chapter.lessons.length} bài học` : 'Không có bài học'}
+                        {chapter.lessons && Array.isArray(chapter.lessons) ? `${chapter.lessons.length} bài học` : 'Không c�� bài học'}
                       </span>
                     </div>
                   }
@@ -173,9 +136,9 @@ function WatchCourse({ params }) {
                   )}
                 </Panel>
               ))}
-            </Collapse>
+            </Collapse> */}
           </div>
-          
+
           <div className="w-full md:w-1/3">
             <div className="bg-gradient-to-br from-blue-400 to-blue-600 overflow-hidden rounded-2xl shadow-lg max-w-[428px] mx-auto border-4 border-white">
               <div className="relative aspect-[16/9]">
@@ -193,17 +156,21 @@ function WatchCourse({ params }) {
                   </div>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white bg-gradient-to-t from-black/60 to-transparent">
-                  <h2 className="text-2xl font-bold mb-1">{courseInfo.title}</h2>
+                  <h2 className="text-2xl font-bold mb-1">
+                    {courseInfo.title}
+                  </h2>
                   <p className="text-lg">Xem giới thiệu khóa học</p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white p-6 flex flex-col items-center">
               <h3 className="text-3xl font-normal text-orange-500 mb-4 text-center">
-                {courseInfo.price > 0 ? `${courseInfo.price.toLocaleString()} VND` : 'Miễn phí'}
+                {courseInfo.price > 0
+                  ? `${courseInfo.price.toLocaleString()} VND`
+                  : "Miễn phí"}
               </h3>
-              <CourseEnrollSection 
+              <CourseEnrollSection
                 courseInfo={courseInfo}
                 isUserAlreadyEnrolled={isUserEnrolled}
               />
@@ -218,13 +185,17 @@ function WatchCourse({ params }) {
                   <span className="mr-2 text-gray-400 font-bold text-lg">
                     <UnorderedListOutlined />
                   </span>
-                  <span>Tổng số <strong>{courseInfo.totalLessons}</strong> bài học</span>
+                  <span>
+                    Tổng số <strong>{courseInfo.totalLessons}</strong> bài học
+                  </span>
                 </li>
                 <li className="mb-2 flex items-center">
                   <span className="mr-2 text-gray-400 font-bold text-lg">
                     <ClockCircleOutlined />
                   </span>
-                  <span>Thời lượng <strong>{courseInfo.duration}</strong></span>
+                  <span>
+                    Thời lượng <strong>{courseInfo.duration}</strong>
+                  </span>
                 </li>
                 <li className="mb-2 flex items-center">
                   <span className="mr-2 text-gray-400 font-bold text-lg">

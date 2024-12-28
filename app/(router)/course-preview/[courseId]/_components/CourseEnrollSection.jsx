@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { toast } from "sonner";
@@ -11,13 +11,13 @@ function CourseEnrollSection({ courseInfo, isUserAlreadyEnrolled }) {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  useEffect(() => {
+  const handleCourseAction = async () => {
     if (isUserAlreadyEnrolled) {
+      setIsNavigating(true);
       router.push(`/watch-course/${courseInfo.id}`);
+      return;
     }
-  }, [isUserAlreadyEnrolled, courseInfo.id, router]);
 
-  const handleEnrollCourse = async () => {
     if (!user) {
       toast.error("Vui lòng đăng nhập để đăng ký khóa học");
       router.push("/login");
@@ -25,7 +25,6 @@ function CourseEnrollSection({ courseInfo, isUserAlreadyEnrolled }) {
     }
 
     setIsEnrolling(true);
-
     try {
       await GlobalApi.enrollCourse(user.uid, courseInfo.id);
       toast.success("Đăng ký khóa học thành công!");
@@ -34,7 +33,9 @@ function CourseEnrollSection({ courseInfo, isUserAlreadyEnrolled }) {
     } catch (error) {
       console.error("Lỗi khi đăng ký khóa học:", error);
       if (error.message === "Không tìm thấy thông tin người dùng") {
-        toast.error("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
+        toast.error(
+          "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại."
+        );
       } else if (error.message === "Không tìm thấy thông tin khóa học") {
         toast.error("Không tìm thấy thông tin khóa học. Vui lòng thử lại sau.");
       } else {
@@ -48,15 +49,23 @@ function CourseEnrollSection({ courseInfo, isUserAlreadyEnrolled }) {
   return (
     <>
       <button
-        onClick={handleEnrollCourse}
-        disabled={isEnrolling || isNavigating || isUserAlreadyEnrolled}
+        onClick={handleCourseAction}
+        disabled={isEnrolling || isNavigating}
         className={`w-full py-3 px-4 rounded-full font-semibold text-white ${
           isUserAlreadyEnrolled
             ? "bg-green-500 hover:bg-green-600"
             : "bg-blue-500 hover:bg-blue-600"
-        } transition duration-300 ease-in-out ${(isEnrolling || isNavigating) ? "opacity-50 cursor-not-allowed" : ""}`}
+        } transition duration-300 ease-in-out ${
+          isEnrolling || isNavigating ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
-        {isEnrolling ? "Đang xử lý..." : isNavigating ? "Đang chuyển trang..." : (isUserAlreadyEnrolled ? "Tiếp tục học" : "Đăng ký khóa học")}
+        {isEnrolling
+          ? "Đang xử lý..."
+          : isNavigating
+          ? "Đang chuyển trang..."
+          : isUserAlreadyEnrolled
+          ? "Tiếp tục học"
+          : "Đăng ký khóa học"}
       </button>
       {isNavigating && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">

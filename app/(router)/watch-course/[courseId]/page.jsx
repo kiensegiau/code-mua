@@ -1,27 +1,40 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { Collapse, List, Spin } from "antd";
-import { PlayCircleOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  PlayCircleOutlined,
+  ArrowLeftOutlined,
+  FileTextOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 import { toast } from "sonner";
 import GlobalApi from "../../../_utils/GlobalApi";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import CourseContent from "./components/CourseContent";
 
 const { Panel } = Collapse;
 
-const VideoPlayer = dynamic(() => import('./components/VideoPlayer'), {
+const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
 });
 
 function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
+  const [activeVideo, setActiveVideo] = useState(null);
+  const [videoProgress, setVideoProgress] = useState({});
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
   const [loading, setLoading] = useState(true);
   const [videoUrl, setVideoUrl] = useState(null);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [key, setKey] = useState(0);
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("video"); // 'video' | 'document'
+  const [activeMaterial, setActiveMaterial] = useState(null);
+  const [activeChapter, setActiveChapter] = useState(null);
 
   const fetchCourseInfo = useCallback(async () => {
     try {
@@ -55,10 +68,14 @@ function WatchCourse({ params }) {
     setActiveLesson(lesson);
     setIsVideoLoading(true);
 
-    const videoFile = lesson.files?.find(file => file.type === "application/vnd.apple.mpegurl" || file.type === "video/mp4");
+    const videoFile = lesson.files?.find(
+      (file) =>
+        file.type === "application/vnd.apple.mpegurl" ||
+        file.type === "video/mp4"
+    );
     if (videoFile) {
       setVideoUrl(videoFile.r2FileId);
-      setKey(prevKey => prevKey + 1); // Tăng key để buộc VideoPlayer re-render
+      setKey((prevKey) => prevKey + 1); // Tăng key để buộc VideoPlayer re-render
     } else {
       setVideoUrl(null);
       toast.error("Không tìm thấy file video cho bài học này");
@@ -68,10 +85,132 @@ function WatchCourse({ params }) {
   }, []);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     router.push("/sign-in");
-    toast.success('Đăng xuất thành công');
+    toast.success("Đăng xuất thành công");
   }, [router]);
+
+  // Xử lý khi video kết thúc
+  const handleVideoEnd = useCallback(() => {
+    // Tìm video tiếp theo trong danh sách
+    if (activeLesson?.materials) {
+      let foundNext = false;
+      let nextVideo = null;
+
+      for (const material of activeLesson.materials) {
+        if (material.type === "video") {
+          for (let i = 0; i < material.files.length; i++) {
+            if (foundNext) {
+              nextVideo = material.files[i];
+              break;
+            }
+            if (material.files[i].r2FileId === activeVideo?.r2FileId) {
+              foundNext = true;
+            }
+          }
+        }
+      }
+
+      // Tự động chuyển sang video tiếp theo nếu có
+      if (nextVideo) {
+        setActiveVideo(nextVideo);
+        setIsPlaying(true);
+        // Lưu tiến độ video hiện tại
+        setVideoProgress((prev) => ({
+          ...prev,
+          [activeVideo.r2FileId]: 100,
+        }));
+      }
+    }
+  }, [activeLesson, activeVideo]);
+
+  // Xử lý cập nhật tiến độ xem video
+  const handleTimeUpdate = useCallback(
+    (time) => {
+      setCurrentTime(time);
+      if (activeVideo) {
+        setVideoProgress((prev) => ({
+          ...prev,
+          [activeVideo.r2FileId]: (time / activeVideo.duration) * 100,
+        }));
+      }
+    },
+    [activeVideo]
+  );
+
+  // Component hiển thị danh sách video
+  const VideoList = () => (
+    <div className="space-y-4">
+      {activeLesson?.materials?.map((material, index) => {
+        if (material.type === "video") {
+          return (
+            <div key={index} className="border rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 font-medium flex justify-between items-center">
+                <span>Video {index + 1}</span>
+                <span className="text-sm text-gray-500">
+                  {material.files.length} video
+                </span>
+              </div>
+              <div className="divide-y">
+                {material.files.map((file, fileIndex) => (
+                  <button
+                    key={fileIndex}
+                    onClick={() => {
+                      setActiveVideo(file);
+                      setIsPlaying(true);
+                    }}
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
+                      activeVideo?.r2FileId === file.r2FileId
+                        ? "bg-blue-50"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        {activeVideo?.r2FileId === file.r2FileId ? (
+                          <PlayCircleOutlined className="text-blue-500" />
+                        ) : videoProgress[file.r2FileId] === 100 ? (
+                          <CheckOutlined className="text-green-500" />
+                        ) : (
+                          <PlayCircleOutlined className="text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-grow">
+                        <div className="font-medium">{file.title}</div>
+                        <div className="text-sm text-gray-500">
+                          {file.duration}
+                        </div>
+                      </div>
+                      {videoProgress[file.r2FileId] > 0 &&
+                        videoProgress[file.r2FileId] < 100 && (
+                          <div className="flex-shrink-0 w-12 text-xs text-gray-500">
+                            {Math.round(videoProgress[file.r2FileId])}%
+                          </div>
+                        )}
+                    </div>
+                    {/* Progress bar */}
+                    {videoProgress[file.r2FileId] > 0 && (
+                      <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${
+                            videoProgress[file.r2FileId] === 100
+                              ? "bg-green-500"
+                              : "bg-blue-500"
+                          }`}
+                          style={{ width: `${videoProgress[file.r2FileId]}%` }}
+                        />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -82,14 +221,17 @@ function WatchCourse({ params }) {
   }
 
   if (!courseInfo) {
-    return <div className="text-center py-10 bg-white text-gray-800">Bài giảng đang được cập nhật, vui lòng quay lại sau</div>;
+    return (
+      <div className="text-center py-10 bg-white text-gray-800">
+        Bài giảng đang được cập nhật, vui lòng quay lại sau
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
       <div className="flex-shrink-0">
-        {/* Nội dung header */}
         <header className="bg-gray-900 text-white py-2 px-4">
           <div className="flex items-center justify-between">
             <Link
@@ -124,80 +266,81 @@ function WatchCourse({ params }) {
           </div>
         </header>
       </div>
-      
-      {/* Main content */}
-      <div className="flex flex-grow overflow-hidden">
-        {/* Video player */}
-        <div className="flex-grow relative">
-          {videoUrl ? (
-            <VideoPlayer
-              key={`${videoUrl}-${key}`}
-              fileId={videoUrl}
-              onError={(error) => toast.error(error.message)}
-              autoPlay={true}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">Vui lòng chọn một bài học để bắt đầu</p>
+
+      {/* Main content area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left side - Content viewer */}
+        <div className="flex-grow flex flex-col">
+          {/* Tab switcher */}
+          <div className="bg-white border-b">
+            <div className="flex space-x-4 px-4">
+              <button
+                onClick={() => setActiveTab("video")}
+                className={`py-3 px-4 border-b-2 font-medium ${
+                  activeTab === "video"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Video bài giảng
+              </button>
+              <button
+                onClick={() => setActiveTab("document")}
+                className={`py-3 px-4 border-b-2 font-medium ${
+                  activeTab === "document"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Tài liệu học tập
+              </button>
             </div>
-          )}
-        </div>
-        
-        {/* Sidebar */}
-        <div className="w-64 flex-shrink-0 overflow-y-auto">
-          {/* Nội dung khóa học */}
-          <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">
-              Nội dung khóa học
-            </h2>
-            <Collapse accordion className="custom-collapse border-0 bg-gray-100">
-              {courseInfo.chapters.map((chapter, index) => (
-                <Panel
-                  key={index}
-                  header={
-                    <div className="flex justify-between items-center w-full text-gray-800">
-                      <span className="font-semibold text-sm">{`${index + 1}. ${chapter.title}`}</span>
-                      <span className="text-gray-500 text-xs">
-                        {chapter.lessons ? `${chapter.lessons.length} bài học` : "Không có bài học"}
-                      </span>
-                    </div>
-                  }
-                  className="mb-1 rounded-lg overflow-hidden border border-gray-200 bg-white"
-                >
-                  {chapter.lessons && Array.isArray(chapter.lessons) ? (
-                    <List
-                      itemLayout="horizontal"
-                      dataSource={chapter.lessons}
-                      renderItem={(lesson, lessonIndex) => (
-                        <List.Item
-                          onClick={() => handleLessonClick(lesson)}
-                          className="cursor-pointer hover:bg-gray-50 py-2 px-4 transition-colors"
-                          style={{ paddingLeft: "15px" }}
-                        >
-                          <div className="flex items-center space-x-3 w-full">
-                            <PlayCircleOutlined className="text-orange-500" />
-                            <div className="flex justify-between items-center w-full">
-                              <span className="text-sm text-gray-700">{`${
-                                lessonIndex + 1
-                              }. ${lesson.title}`}</span>
-                              <span className="text-gray-400 text-xs">
-                                {lesson.duration}
-                              </span>
-                            </div>
-                          </div>
-                        </List.Item>
-                      )}
-                    />
-                  ) : (
-                    <p className="text-gray-500 p-4">
-                      Không có bài học trong chương này.
-                    </p>
-                  )}
-                </Panel>
-              ))}
-            </Collapse>
+          </div>
+
+          {/* Content viewer */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === "video" && videoUrl ? (
+              <div className="relative h-full">
+                <VideoPlayer
+                  key={`${videoUrl}-${key}`}
+                  fileId={videoUrl}
+                  onEnded={handleVideoEnd}
+                  onTimeUpdate={handleTimeUpdate}
+                  autoPlay={isPlaying}
+                  startTime={videoProgress[videoUrl] || 0}
+                />
+                {/* Video controls overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                  <div className="text-white">
+                    {activeVideo && (
+                      <>
+                        <h3 className="font-medium">{activeVideo.title}</h3>
+                        <div className="text-sm opacity-75">
+                          {Math.floor(currentTime / 60)}:
+                          {String(Math.floor(currentTime % 60)).padStart(
+                            2,
+                            "0"
+                          )}{" "}
+                          /{activeVideo.duration}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">
+                  Vui lòng chọn {activeTab === "video" ? "video" : "tài liệu"}{" "}
+                  để xem
+                </p>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Right sidebar - Thay thế CourseSidebar bằng CourseContent */}
+        <CourseContent />
       </div>
     </div>
   );
