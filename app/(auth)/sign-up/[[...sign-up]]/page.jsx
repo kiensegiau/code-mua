@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { collection, addDoc } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 import toast from 'react-hot-toast';
-import { logToServer } from '@/app/_utils/logger';
 import { generateTokens } from '@/app/_utils/jwt';
 import { motion } from 'framer-motion';
 
@@ -33,10 +32,8 @@ export default function SignUp() {
     }
 
     try {
-      logToServer('Bắt đầu đăng ký...', { email });
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      logToServer('Đăng ký thành công', { userId: user.uid });
 
       await addDoc(collection(db, 'users'), {
         uid: user.uid,
@@ -53,7 +50,6 @@ export default function SignUp() {
       toast.success('Đăng ký thành công!');
       router.push('/dashboard');
     } catch (error) {
-      logToServer('Lỗi đăng ký', { error: error.message });
       let errorMessage = 'Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại.';
       if (error instanceof FirebaseError) {
         switch (error.code) {

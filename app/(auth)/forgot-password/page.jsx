@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { logToServer } from '@/app/_utils/logger';
+
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -31,7 +31,6 @@ export default function ForgotPassword() {
       setIsEmailSent(true);
       toast.success('Email đặt lại mật khẩu đã được gửi!');
     } catch (error) {
-      logToServer('Lỗi gửi email đặt lại mật khẩu', { error: error.message });
       let errorMessage = 'Đã xảy ra lỗi khi gửi email đặt lại mật khẩu. Vui lòng thử lại.';
       switch (error.code) {
         case 'auth/invalid-email':

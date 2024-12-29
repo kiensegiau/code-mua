@@ -20,7 +20,7 @@ const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
 });
 
-function WatchCourse({ params }) {
+export default function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
   const [activeVideo, setActiveVideo] = useState(null);
@@ -63,26 +63,12 @@ function WatchCourse({ params }) {
     }
   }, [courseInfo]);
 
-  const handleLessonClick = useCallback((lesson) => {
-    console.log("Bài học được chọn:", lesson);
+  const handleLessonClick = (lesson, chapter) => {
+    console.log("Lesson clicked:", lesson);
     setActiveLesson(lesson);
-    setIsVideoLoading(true);
-
-    const videoFile = lesson.files?.find(
-      (file) =>
-        file.type === "application/vnd.apple.mpegurl" ||
-        file.type === "video/mp4"
-    );
-    if (videoFile) {
-      setVideoUrl(videoFile.r2FileId);
-      setKey((prevKey) => prevKey + 1); // Tăng key để buộc VideoPlayer re-render
-    } else {
-      setVideoUrl(null);
-      toast.error("Không tìm thấy file video cho bài học này");
-    }
-
-    setIsVideoLoading(false);
-  }, []);
+    setActiveChapter(chapter);
+    // Thêm logic chuyển hướng hoặc xử lý khác nếu cần
+  };
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
@@ -340,10 +326,13 @@ function WatchCourse({ params }) {
         </div>
 
         {/* Right sidebar - Thay thế CourseSidebar bằng CourseContent */}
-        <CourseContent />
+        <CourseContent
+          chapters={courseInfo?.chapters || []}
+          activeLesson={activeLesson}
+          activeChapter={activeChapter}
+          onLessonClick={handleLessonClick}
+        />
       </div>
     </div>
   );
 }
-
-export default WatchCourse;

@@ -9,7 +9,6 @@ import {
 import CourseItem from './CourseItem';
 import Link from 'next/link';
 import GlobalApi from '@/app/_utils/GlobalApi';
-import { logToServer } from '@/app/_utils/logger';
 import { useRouter } from 'next/navigation';
 
 function CourseList() {
@@ -24,18 +23,13 @@ function CourseList() {
 
   const getAllCourses = async () => {
     try {
-      logToServer('Bắt đầu lấy danh sách khóa học');
       const courses = await GlobalApi.getAllCourseList();
       console.log(courses);
-      logToServer('Đã nhận được danh sách khóa học', { courseCount: courses.length });
       setCourseList(courses);
-      logToServer('Đã cập nhật state courseList');
     } catch (error) {
-      logToServer('Lỗi khi lấy danh sách khóa học', { error: error.message });
       console.error("Lỗi khi lấy danh sách khóa học:", error);
     } finally {
       setLoading(false);
-      logToServer('Đã kết thúc quá trình lấy danh sách khóa học');
     }
   };
 

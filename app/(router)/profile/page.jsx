@@ -6,7 +6,6 @@ import { auth } from '@/app/_utils/firebase';
 import { motion } from 'framer-motion';
 import { PulseLoader } from 'react-spinners';
 import { useRouter } from 'next/navigation';
-import { logToServer } from '@/app/_utils/logger';
 import toast from 'react-hot-toast';
 import Header from '../_components/Header';
 import Sidebar from '../_components/SideNav';
@@ -48,7 +47,6 @@ export default function Profile() {
         toast.error('Không tìm thấy thông tin người dùng để cập nhật.');
       }
     } catch (error) {
-      logToServer("Lỗi khi cập nhật thông tin người dùng", { error: error.message, userId: user.uid });
       toast.error('Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại.');
     }
   };
@@ -67,7 +65,6 @@ export default function Profile() {
       setConfirmNewPassword('');
       toast.success('Mật khẩu đã được thay đổi thành công!');
     } catch (error) {
-      logToServer("Lỗi khi thay đổi mật khẩu", { error: error.message, userId: user.uid });
       if (error.code === 'auth/wrong-password') {
         toast.error('Mật khẩu cũ không chính xác.');
       } else {
