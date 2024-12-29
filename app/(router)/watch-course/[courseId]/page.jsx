@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Collapse, List, Spin } from "antd";
 import {
   PlayCircleOutlined,
@@ -35,6 +35,7 @@ export default function WatchCourse({ params }) {
   const [activeTab, setActiveTab] = useState("video"); // 'video' | 'document'
   const [activeMaterial, setActiveMaterial] = useState(null);
   const [activeChapter, setActiveChapter] = useState(null);
+  const courseContentRef = useRef();
 
   const fetchCourseInfo = useCallback(async () => {
     try {
@@ -63,11 +64,60 @@ export default function WatchCourse({ params }) {
     }
   }, [courseInfo]);
 
-  const handleLessonClick = (lesson, chapter) => {
-    console.log("Lesson clicked:", lesson);
+  useEffect(() => {
+    if (courseInfo) {
+      const savedState = localStorage.getItem(
+        `course_${params.courseId}_state`
+      );
+      if (savedState) {
+        const { lessonId, chapterId, videoId, currentTime } =
+          JSON.parse(savedState);
+
+        // Tìm chapter và lesson từ ID đã lưu
+        const chapter = courseInfo.chapters.find((c) => c.id === chapterId);
+        const lesson = chapter?.lessons.find((l) => l._id === lessonId);
+
+        if (lesson && chapter) {
+          setActiveLesson(lesson);
+          setActiveChapter(chapter);
+          setVideoUrl(videoId);
+          setCurrentTime(currentTime);
+
+          // Mở chapter chứa lesson đó
+          const chapterIndex = courseInfo.chapters.findIndex(
+            (c) => c.id === chapterId
+          );
+          if (chapterIndex !== -1) {
+            setExpandedChapterIndex(chapterIndex);
+            setExpandedLessonId(lesson.id);
+          }
+        }
+      }
+    }
+  }, [courseInfo, params.courseId]);
+
+  useEffect(() => {
+    if (activeLesson && activeChapter && videoUrl) {
+      const stateToSave = {
+        lessonId: activeLesson._id,
+        chapterId: activeChapter.id,
+        videoId: videoUrl,
+        currentTime: currentTime,
+      };
+      localStorage.setItem(
+        `course_${params.courseId}_state`,
+        JSON.stringify(stateToSave)
+      );
+    }
+  }, [activeLesson, activeChapter, videoUrl, currentTime, params.courseId]);
+
+  const handleLessonClick = (lesson, chapter, file) => {
     setActiveLesson(lesson);
     setActiveChapter(chapter);
-    // Thêm logic chuyển hướng hoặc xử lý khác nếu cần
+    if (file) {
+      // Xử lý play video/file được chọn
+      handlePlayFile(file);
+    }
   };
 
   const handleLogout = useCallback(() => {
@@ -76,52 +126,38 @@ export default function WatchCourse({ params }) {
     toast.success("Đăng xuất thành công");
   }, [router]);
 
-  // Xử lý khi video kết thúc
-  const handleVideoEnd = useCallback(() => {
-    // Tìm video tiếp theo trong danh sách
-    if (activeLesson?.materials) {
-      let foundNext = false;
-      let nextVideo = null;
-
-      for (const material of activeLesson.materials) {
-        if (material.type === "video") {
-          for (let i = 0; i < material.files.length; i++) {
-            if (foundNext) {
-              nextVideo = material.files[i];
-              break;
-            }
-            if (material.files[i].r2FileId === activeVideo?.r2FileId) {
-              foundNext = true;
-            }
-          }
-        }
-      }
-
-      // Tự động chuyển sang video tiếp theo nếu có
-      if (nextVideo) {
-        setActiveVideo(nextVideo);
-        setIsPlaying(true);
-        // Lưu tiến độ video hiện tại
-        setVideoProgress((prev) => ({
-          ...prev,
-          [activeVideo.r2FileId]: 100,
-        }));
-      }
+  const handleVideoEnd = () => {
+    if (courseContentRef.current) {
+      courseContentRef.current.handleVideoEnd();
     }
-  }, [activeLesson, activeVideo]);
+  };
 
   // Xử lý cập nhật tiến độ xem video
   const handleTimeUpdate = useCallback(
     (time) => {
       setCurrentTime(time);
-      if (activeVideo) {
+      if (videoUrl) {
         setVideoProgress((prev) => ({
           ...prev,
-          [activeVideo.r2FileId]: (time / activeVideo.duration) * 100,
+          [videoUrl]: (time / (activeLesson?.duration || 1)) * 100,
         }));
+
+        // Lưu trạng thái mỗi khi thời gian thay đổi (có thể thêm throttle để tối ưu)
+        if (activeLesson && activeChapter) {
+          const stateToSave = {
+            lessonId: activeLesson._id,
+            chapterId: activeChapter.id,
+            videoId: videoUrl,
+            currentTime: time,
+          };
+          localStorage.setItem(
+            `course_${params.courseId}_state`,
+            JSON.stringify(stateToSave)
+          );
+        }
       }
     },
-    [activeVideo]
+    [videoUrl, activeLesson, activeChapter, params.courseId]
   );
 
   // Component hiển thị danh sách video
@@ -260,26 +296,9 @@ export default function WatchCourse({ params }) {
           {/* Tab switcher */}
           <div className="bg-white border-b">
             <div className="flex space-x-4 px-4">
-              <button
-                onClick={() => setActiveTab("video")}
-                className={`py-3 px-4 border-b-2 font-medium ${
-                  activeTab === "video"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Video bài giảng
-              </button>
-              <button
-                onClick={() => setActiveTab("document")}
-                className={`py-3 px-4 border-b-2 font-medium ${
-                  activeTab === "document"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Tài liệu học tập
-              </button>
+              <h3 className="py-3 px-4 border-b-2 border-[#f05123] text-[#f05123] font-medium truncate">
+                {activeLesson?.title || "Chưa có bài học nào được chọn"}
+              </h3>
             </div>
           </div>
 
@@ -292,8 +311,8 @@ export default function WatchCourse({ params }) {
                   fileId={videoUrl}
                   onEnded={handleVideoEnd}
                   onTimeUpdate={handleTimeUpdate}
-                  autoPlay={isPlaying}
-                  startTime={videoProgress[videoUrl] || 0}
+                  autoPlay={true}
+                  startTime={currentTime}
                 />
                 {/* Video controls overlay */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
@@ -327,6 +346,7 @@ export default function WatchCourse({ params }) {
 
         {/* Right sidebar - Thay thế CourseSidebar bằng CourseContent */}
         <CourseContent
+          ref={courseContentRef}
           chapters={courseInfo?.chapters || []}
           activeLesson={activeLesson}
           activeChapter={activeChapter}
