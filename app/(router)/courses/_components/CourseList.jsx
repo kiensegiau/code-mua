@@ -54,8 +54,8 @@ function CourseList() {
             ))
           ) : filteredCourses.length > 0 ? (
             filteredCourses.map((course) => (
-              <Link href={`/course-preview/${course.id}`} key={course.id}>
-                <div>
+              <Link href={`/course-preview/${course.id}`} key={course.id} className='h-full'>
+                <div className='h-full'>
                   <CourseItem course={course} />
                 </div>
               </Link>

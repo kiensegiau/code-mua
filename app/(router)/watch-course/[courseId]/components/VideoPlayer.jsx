@@ -1,121 +1,112 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import "@videojs/http-streaming";
-import "videojs-contrib-quality-levels";
-import "videojs-hls-quality-selector";
 
-export default function VideoPlayer({ fileId, onError, autoPlay = true }) {
-  const videoRef = useRef(null);
+export default function VideoPlayer({
+  fileId,
+  onEnded,
+  onTimeUpdate,
+  autoPlay = true,
+  startTime = 0,
+}) {
+  const containerRef = useRef(null);
   const playerRef = useRef(null);
-  const [videoUrl, setVideoUrl] = useState(null);
+  const [currentPart, setCurrentPart] = useState(0);
 
+  // Tạo URL một lần và cache lại
+  const getVideoUrl = useCallback((part) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    return fileId.startsWith('http') 
+      ? `${fileId}&part=${part}`
+      : `${baseUrl}${fileId}&part=${part}`;
+  }, [fileId]);
+
+  // Khởi tạo player một lần
   useEffect(() => {
-    const fetchVideoUrl = async () => {
-      try {
-        const response = await fetch(fileId);
-        if (!response.ok) {
-          throw new Error("Không thể tải nội dung playlist");
-        }
-        setVideoUrl(fileId);
-      } catch (error) {
-        console.error("Lỗi khi tải URL video:", error);
-        onError(new Error("Không thể tải video. Vui lòng thử lại sau."));
-      }
-    };
+    if (!fileId || !containerRef.current || playerRef.current) return;
 
-    fetchVideoUrl();
-  }, [fileId, onError]);
+    const videoElement = document.createElement("video");
+    videoElement.className = "video-js vjs-big-play-centered";
+    containerRef.current.innerHTML = '';
+    containerRef.current.appendChild(videoElement);
 
-  useEffect(() => {
-    if (!videoRef.current || !videoUrl) return;
-
-    const initializePlayer = () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-      }
-
-      playerRef.current = videojs(videoRef.current, {
-        controls: true,
-        fluid: true,
-        responsive: true,
-        aspectRatio: "16:9",
-        autoplay: autoPlay,
-        html5: {
-          hls: {
-            enableLowInitialPlaylist: true,
-            smoothQualityChange: true,
-            overrideNative: true,
-          },
-          vhs: {
-            overrideNative: true,
-          },
+    const player = videojs(videoElement, {
+      controls: true,
+      fluid: true,
+      responsive: true,
+      aspectRatio: "16:9",
+      autoplay: autoPlay,
+      sources: [
+        {
+          src: getVideoUrl(currentPart),
+          type: "video/mp4"
         },
-        controlBar: {
-          children: [
-            "playToggle",
-            "volumePanel",
-            "currentTimeDisplay",
-            "timeDivider",
-            "durationDisplay",
-            "progressControl",
-            "liveDisplay",
-            "remainingTimeDisplay",
-            "customControlSpacer",
-            "playbackRateMenuButton",
-            "qualitySelector",
-            "fullscreenToggle",
-          ],
-        },
+      ],
+    });
+
+    player.on("ready", () => {
+      console.log("Player ready");
+      if (startTime > 0) {
+        player.currentTime(startTime);
+      }
+    });
+
+    player.on("error", (e) => {
+      console.error("Video player error:", player.error());
+    });
+
+    player.on("ended", () => {
+      const nextPart = currentPart + 1;
+      const nextUrl = getVideoUrl(nextPart);
+
+      fetch(nextUrl, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            setCurrentPart(nextPart);
+            player.src({
+              src: nextUrl,
+              type: "video/mp4"
+            });
+            player.play();
+          } else {
+            if (onEnded) onEnded();
+          }
+        })
+        .catch(error => {
+          console.error("Error checking next part:", error);
+          if (onEnded) onEnded();
+        });
+    });
+
+    if (onTimeUpdate) {
+      player.on("timeupdate", () => {
+        onTimeUpdate(player.currentTime());
       });
+    }
 
-      playerRef.current.src({
-        src: videoUrl,
-        type: "application/x-mpegURL",
-      });
+    playerRef.current = player;
 
-      playerRef.current.on("error", (error) => {
-        console.error("Lỗi trình phát video:", error);
-        const errorDetails = playerRef.current.error();
-        let errorMessage = "Lỗi khi tải video";
-        if (errorDetails) {
-          errorMessage = getErrorMessage(errorDetails);
-        }
-        onError(new Error(errorMessage));
-      });
-
-      playerRef.current.hlsQualitySelector({
-        displayCurrentQuality: true,
-      });
-    };
-
-    initializePlayer();
-
+    // Cleanup khi component unmount
     return () => {
       if (playerRef.current) {
         playerRef.current.dispose();
+        playerRef.current = null;
       }
     };
-  }, [videoUrl, onError, autoPlay]);
+  }, [fileId]); // Chỉ chạy khi fileId thay đổi
+
+  // Cập nhật source khi part thay đổi
+  useEffect(() => {
+    if (!playerRef.current) return;
+    
+    const videoUrl = getVideoUrl(currentPart);
+    playerRef.current.src({
+      src: videoUrl,
+      type: "video/mp4"
+    });
+  }, [currentPart, getVideoUrl]);
 
   return (
-    <div data-vjs-player className="absolute inset-0">
-      <video ref={videoRef} className="video-js vjs-big-play-centered h-full w-full" />
-    </div>
+    <div ref={containerRef} className="video-player-container" />
   );
-}
-
-function getErrorMessage(errorDetails) {
-  switch (errorDetails.code) {
-    case 1:
-      return "Quá trình tải video bị hủy bỏ";
-    case 2:
-      return "Lỗi mạng khi tải video";
-    case 3:
-      return "Lỗi giải mã video";
-    case 4:
-      return "Video không được hỗ trợ";
-    default:
-      return `Lỗi khi tải video: ${errorDetails.message}`;
-  }
 }

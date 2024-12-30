@@ -12,10 +12,12 @@ export default function CourseContent({
   onLessonClick,
   activeLesson,
   activeChapter,
-  onVideoEnd, // Callback khi video kết thúc
+  expandedChapterIndex,
+  setExpandedChapterIndex,
+  expandedLessonId,
+  setExpandedLessonId,
+  videoProgress
 }) {
-  const [expandedChapterIndex, setExpandedChapterIndex] = useState(null);
-  const [expandedLessonId, setExpandedLessonId] = useState(null);
   const [activeFileId, setActiveFileId] = useState(null);
 
   // Tìm video tiếp theo trong bài học hiện tại
@@ -148,20 +150,20 @@ export default function CourseContent({
   };
 
   const handleChapterClick = (index) => {
-    setExpandedChapterIndex(expandedChapterIndex === index ? null : index);
+    setExpandedChapterIndex(index === expandedChapterIndex ? -1 : index);
   };
 
-  const handleLessonClick = (lesson, chapter, index) => {
-    console.log("Lesson clicked:", {
-      lessonId: lesson.id,
-      lessonTitle: lesson.title,
-      files: lesson.files,
-    });
-
-    setExpandedChapterIndex(index);
-    setExpandedLessonId(expandedLessonId === lesson.id ? null : lesson.id);
+  const handleLessonClick = (lesson, chapter) => {
     if (onLessonClick) {
       onLessonClick(lesson, chapter);
+    }
+    setExpandedLessonId(lesson.id);
+  };
+
+  const handleFileClick = (file) => {
+    setActiveFileId(file.driveFileId);
+    if (onLessonClick) {
+      onLessonClick(activeLesson, activeChapter, file);
     }
   };
 
@@ -196,19 +198,29 @@ export default function CourseContent({
   const renderFiles = (files) => {
     return files?.map((file, index) => (
       <div
-        key={file.driveFileId || index}
-        className="flex items-center h-[40px] px-9 hover:bg-gray-100 transition-colors duration-150 ease-in-out border-l-[3px] border-transparent group"
+        key={index}
+        className="flex items-center h-[40px] px-9 hover:bg-gray-100 transition-colors duration-150 ease-in-out border-l-[3px] border-transparent group cursor-pointer"
+        onClick={() => handleFileClick(file)}
       >
         <div className="flex items-center w-full overflow-hidden">
-          {getFileIcon(file.driveFileId)}
+          {/* Icon dựa vào type */}
+          {file.type.includes("video") ? (
+            <IoPlayCircleOutline className="w-4 h-4 text-gray-600 flex-shrink-0 mr-2" />
+          ) : file.type.includes("pdf") ? (
+            <IoDocumentOutline className="w-4 h-4 text-gray-600 flex-shrink-0 mr-2" />
+          ) : (
+            <IoLinkOutline className="w-4 h-4 text-gray-600 flex-shrink-0 mr-2" />
+          )}
+
           <div className="flex-1 min-w-0">
             <span
               className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors duration-150 ease-in-out truncate block"
-              title={file.driveFileId}
+              title={file.name} // Hiện full name khi hover
             >
-              {truncateText(file.driveFileId)}
+              {file.name}
             </span>
           </div>
+
         </div>
       </div>
     ));
@@ -276,7 +288,7 @@ export default function CourseContent({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      handleLessonClick(lesson, chapter, index);
+                      handleLessonClick(lesson, chapter);
                     }}
                     className={`flex items-center h-[50px] px-7 cursor-pointer transition-all duration-150 ease-in-out
                     ${

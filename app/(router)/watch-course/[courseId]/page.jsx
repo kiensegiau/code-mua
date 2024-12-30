@@ -23,18 +23,21 @@ const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
 export default function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
+  const [activeChapter, setActiveChapter] = useState(null);
   const [activeVideo, setActiveVideo] = useState(null);
-  const [videoProgress, setVideoProgress] = useState({});
+  const [videoUrl, setVideoUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [videoUrl, setVideoUrl] = useState(null);
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [key, setKey] = useState(0);
+
+  const [expandedChapterIndex, setExpandedChapterIndex] = useState(-1);
+  const [expandedLessonId, setExpandedLessonId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [videoProgress, setVideoProgress] = useState({});
+
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("video"); // 'video' | 'document'
   const [activeMaterial, setActiveMaterial] = useState(null);
-  const [activeChapter, setActiveChapter] = useState(null);
   const courseContentRef = useRef();
 
   const fetchCourseInfo = useCallback(async () => {
@@ -112,11 +115,27 @@ export default function WatchCourse({ params }) {
   }, [activeLesson, activeChapter, videoUrl, currentTime, params.courseId]);
 
   const handleLessonClick = (lesson, chapter, file) => {
+    console.log("=== Click Debug ===");
+    console.log("Lesson:", lesson);
+    console.log("Chapter:", chapter);
+    console.log("File:", file);
+
     setActiveLesson(lesson);
     setActiveChapter(chapter);
+
     if (file) {
-      // Xử lý play video/file được chọn
-      handlePlayFile(file);
+      if (file.type.includes("video")) {
+        setVideoUrl(file.proxyUrl);
+        setActiveVideo(file);
+        setIsPlaying(true);
+        setKey((prev) => prev + 1);
+      } else {
+        // Mở tài liệu trong tab mới
+        window.open(
+          `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
+          "_blank"
+        );
+      }
     }
   };
 
@@ -159,6 +178,24 @@ export default function WatchCourse({ params }) {
     },
     [videoUrl, activeLesson, activeChapter, params.courseId]
   );
+
+  const handleFileClick = (file) => {
+    if (file.type.includes("video")) {
+      const fullUrl = file.proxyUrl.startsWith('http') 
+        ? file.proxyUrl 
+        : `/api/proxy/files?id=${file.id}`;
+      setVideoUrl(fullUrl);
+      setActiveVideo(file);
+      setIsPlaying(true);
+      setKey((prev) => prev + 1);
+    } else {
+      // Mở PDF hoặc tài liệu khác trong tab mới với URL đầy đủ
+      window.open(
+        `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
+        "_blank"
+      );
+    }
+  };
 
   // Component hiển thị danh sách video
   const VideoList = () => (
@@ -351,6 +388,11 @@ export default function WatchCourse({ params }) {
           activeLesson={activeLesson}
           activeChapter={activeChapter}
           onLessonClick={handleLessonClick}
+          expandedChapterIndex={expandedChapterIndex}
+          setExpandedChapterIndex={setExpandedChapterIndex}
+          expandedLessonId={expandedLessonId}
+          setExpandedLessonId={setExpandedLessonId}
+          videoProgress={videoProgress}
         />
       </div>
     </div>
