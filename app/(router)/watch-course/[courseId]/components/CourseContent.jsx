@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 import {
   IoBookOutline, // Icon cho chương
@@ -6,8 +6,9 @@ import {
   IoDocumentOutline, // Icon cho tài liệu
   IoLinkOutline, // Icon cho links
 } from "react-icons/io5";
+import { toast } from "react-hot-toast";
 
-export default function CourseContent({
+export default forwardRef(({
   chapters = [],
   onLessonClick,
   activeLesson,
@@ -17,7 +18,8 @@ export default function CourseContent({
   expandedLessonId,
   setExpandedLessonId,
   videoProgress,
-}) {
+  activeVideo
+}, ref) => {
   const [activeFileId, setActiveFileId] = useState(null);
 
   // Tìm video tiếp theo trong bài học hiện tại
@@ -64,39 +66,62 @@ export default function CourseContent({
 
   // Xử lý khi video kết thúc
   const handleVideoEnd = () => {
-    if (!activeLesson) return;
+    console.log('=== handleVideoEnd triggered ===');
+    console.log('Active video:', activeVideo);
+    console.log('Active lesson:', activeLesson);
+    console.log('Active chapter:', activeChapter);
+    console.log('Expanded chapter index:', expandedChapterIndex);
 
-    // Tìm video tiếp theo trong lesson hiện tại
-    const nextVideo = findNextVideo(activeLesson, activeFileId);
+    if (!activeLesson || !activeChapter || !activeVideo) {
+      console.log('Missing required data');
+      return;
+    }
+
+    // 1. Tìm video hiện tại trong lesson
+    const currentVideoIndex = activeLesson.files.findIndex(
+      f => f.driveFileId === activeVideo.driveFileId
+    );
+    console.log('Current video index:', currentVideoIndex);
+
+    // 2. Tìm video tiếp theo trong lesson hiện tại
+    const videoFiles = activeLesson.files.filter(f => f.type?.includes('video'));
+    const nextVideo = videoFiles[currentVideoIndex + 1];
+    console.log('Next video in current lesson:', nextVideo);
 
     if (nextVideo) {
-      // Phát video tiếp theo trong lesson hiện tại
-      setActiveFileId(nextVideo.driveFileId);
-      if (onLessonClick) {
-        onLessonClick(activeLesson, activeChapter, nextVideo);
+      console.log('Playing next video in current lesson');
+      onLessonClick(activeLesson, activeChapter, nextVideo);
+      return;
+    }
+
+    // 3. Nếu không có video tiếp theo, tìm lesson kế tiếp
+    const currentLessonIndex = activeChapter.lessons.findIndex(
+      l => l.id === activeLesson.id
+    );
+    console.log('Current lesson index:', currentLessonIndex);
+
+    const nextLesson = activeChapter.lessons[currentLessonIndex + 1];
+    console.log('Next lesson:', nextLesson);
+
+    if (nextLesson) {
+      // Tìm video đầu tiên trong lesson mới
+      const firstVideo = nextLesson.files.find(f => f.type?.includes('video'));
+      console.log('First video in next lesson:', firstVideo);
+
+      if (firstVideo) {
+        console.log('Moving to next lesson');
+        setExpandedLessonId(nextLesson.id);
+        onLessonClick(nextLesson, activeChapter, firstVideo);
       }
     } else {
-      // Tìm lesson tiếp theo có video
-      const currentLessonIndex = chapters[
-        activeChapterIndex
-      ]?.lessons.findIndex((l) => l.id === activeLesson.id);
-      const next = findNextLessonWithVideo(
-        chapters[activeChapterIndex]?.lessons,
-        currentLessonIndex
-      );
-
-      if (next) {
-        setExpandedLessonId(next.lesson.id);
-        setActiveFileId(next.videoFile.driveFileId);
-        if (onLessonClick) {
-          onLessonClick(next.lesson, activeChapter, next.videoFile);
-        }
-      } else {
-        console.log("Đã hoàn thành tất cả video");
-        // Có thể thêm thông báo hoàn thành khóa học
-      }
+      console.log('End of chapter reached');
+      toast.success('Đã hoàn thành chương học!');
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    handleVideoEnd
+  }));
 
   const handleChapterClick = (index) => {
     setExpandedChapterIndex(index === expandedChapterIndex ? -1 : index);
@@ -286,4 +311,4 @@ export default function CourseContent({
       </div>
     </div>
   );
-}
+});

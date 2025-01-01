@@ -145,11 +145,12 @@ export default function WatchCourse({ params }) {
     toast.success("Đăng xuất thành công");
   }, [router]);
 
-  const handleVideoEnd = () => {
+  const handleVideoEnd = useCallback(() => {
+    console.log('Video ended in page component');
     if (courseContentRef.current) {
       courseContentRef.current.handleVideoEnd();
     }
-  };
+  }, []);
 
   // Xử lý cập nhật tiến độ xem video
   const handleTimeUpdate = useCallback(
@@ -393,6 +394,7 @@ export default function WatchCourse({ params }) {
           expandedLessonId={expandedLessonId}
           setExpandedLessonId={setExpandedLessonId}
           videoProgress={videoProgress}
+          activeVideo={activeVideo}
         />
       </div>
     </div>
