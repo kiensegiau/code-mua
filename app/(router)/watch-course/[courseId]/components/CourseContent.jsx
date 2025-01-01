@@ -16,70 +16,32 @@ export default function CourseContent({
   setExpandedChapterIndex,
   expandedLessonId,
   setExpandedLessonId,
-  videoProgress
+  videoProgress,
 }) {
   const [activeFileId, setActiveFileId] = useState(null);
 
   // Tìm video tiếp theo trong bài học hiện tại
   const findNextVideo = (currentLesson, currentFileId) => {
-    const files = currentLesson.files || [];
-    const currentIndex = files.findIndex(
+    const videoFiles =
+      currentLesson.files?.filter((f) => f.type?.includes("video")) || [];
+    const currentIndex = videoFiles.findIndex(
       (f) => f.driveFileId === currentFileId
     );
-    const nextVideoFile = files
-      .slice(currentIndex + 1)
-      .find(
-        (file) =>
-          file.driveFileId.toLowerCase().includes("video") ||
-          file.driveFileId.includes("mp4")
-      );
-    return nextVideoFile;
+    return videoFiles[currentIndex + 1];
   };
 
   // Tìm bài học tiếp theo có video
-  const findNextLessonWithVideo = (currentChapterIndex, currentLessonIndex) => {
-    let nextLesson = null;
-    let nextChapter = null;
-
-    // Tìm trong chapter hiện tại
-    const currentChapter = chapters[currentChapterIndex];
-    const nextLessonInChapter = currentChapter.lessons[currentLessonIndex + 1];
-
-    if (
-      nextLessonInChapter?.files?.some(
-        (f) =>
-          f.driveFileId.toLowerCase().includes("video") ||
-          f.driveFileId.includes("mp4")
-      )
-    ) {
-      return {
-        lesson: nextLessonInChapter,
-        chapter: currentChapter,
-      };
-    }
-
-    // Tìm trong các chapter tiếp theo
-    for (let i = currentChapterIndex; i < chapters.length; i++) {
-      const chapter = chapters[i];
-      const startIndex = i === currentChapterIndex ? currentLessonIndex + 1 : 0;
-
-      for (let j = startIndex; j < chapter.lessons.length; j++) {
-        const lesson = chapter.lessons[j];
-        if (
-          lesson.files?.some(
-            (f) =>
-              f.driveFileId.toLowerCase().includes("video") ||
-              f.driveFileId.includes("mp4")
-          )
-        ) {
-          return {
-            lesson,
-            chapter,
-          };
-        }
+  const findNextLessonWithVideo = (lessons, currentLessonIndex) => {
+    for (let i = currentLessonIndex + 1; i < lessons.length; i++) {
+      const lesson = lessons[i];
+      const videoFile = lesson.files?.find((f) => f.type?.includes("video"));
+      if (videoFile) {
+        return {
+          lesson,
+          videoFile,
+        };
       }
     }
-
     return null;
   };
 
@@ -102,49 +64,36 @@ export default function CourseContent({
 
   // Xử lý khi video kết thúc
   const handleVideoEnd = () => {
-    if (!activeLesson || !activeFileId) return;
+    if (!activeLesson) return;
 
-    const currentChapterIndex = chapters.findIndex(
-      (c) => c.id === activeChapter?.id
-    );
-    const currentLessonIndex = chapters[currentChapterIndex]?.lessons.findIndex(
-      (l) => l.id === activeLesson.id
-    );
-
-    // Tìm video tiếp theo trong bài học hiện tại
+    // Tìm video tiếp theo trong lesson hiện tại
     const nextVideo = findNextVideo(activeLesson, activeFileId);
 
     if (nextVideo) {
-      // Nếu còn video trong bài học hiện tại
+      // Phát video tiếp theo trong lesson hiện tại
       setActiveFileId(nextVideo.driveFileId);
       if (onLessonClick) {
         onLessonClick(activeLesson, activeChapter, nextVideo);
       }
     } else {
-      // Tìm bài học tiếp theo có video
+      // Tìm lesson tiếp theo có video
+      const currentLessonIndex = chapters[
+        activeChapterIndex
+      ]?.lessons.findIndex((l) => l.id === activeLesson.id);
       const next = findNextLessonWithVideo(
-        currentChapterIndex,
+        chapters[activeChapterIndex]?.lessons,
         currentLessonIndex
       );
 
       if (next) {
-        const firstVideo = next.lesson.files.find(
-          (f) =>
-            f.driveFileId.toLowerCase().includes("video") ||
-            f.driveFileId.includes("mp4")
-        );
-
-        // Tự động mở chapter mới và lesson mới
-        const nextChapterIndex = chapters.findIndex(
-          (c) => c.id === next.chapter.id
-        );
-        setExpandedChapterIndex(nextChapterIndex);
         setExpandedLessonId(next.lesson.id);
-        setActiveFileId(firstVideo.driveFileId);
-
+        setActiveFileId(next.videoFile.driveFileId);
         if (onLessonClick) {
-          onLessonClick(next.lesson, next.chapter, firstVideo);
+          onLessonClick(next.lesson, activeChapter, next.videoFile);
         }
+      } else {
+        console.log("Đã hoàn thành tất cả video");
+        // Có thể thêm thông báo hoàn thành khóa học
       }
     }
   };
@@ -220,7 +169,6 @@ export default function CourseContent({
               {file.name}
             </span>
           </div>
-
         </div>
       </div>
     ));

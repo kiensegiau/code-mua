@@ -181,8 +181,8 @@ export default function WatchCourse({ params }) {
 
   const handleFileClick = (file) => {
     if (file.type.includes("video")) {
-      const fullUrl = file.proxyUrl.startsWith('http') 
-        ? file.proxyUrl 
+      const fullUrl = file.proxyUrl.startsWith("http")
+        ? file.proxyUrl
         : `/api/proxy/files?id=${file.id}`;
       setVideoUrl(fullUrl);
       setActiveVideo(file);
