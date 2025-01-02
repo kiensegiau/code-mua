@@ -9,10 +9,6 @@
     "Source Han Sans CN", sans-serif;
 }
 
-.main-container {
-  overflow: hidden;
-}
-
 .main-container,
 .main-container * {
   box-sizing: border-box;
@@ -23,4 +19,22 @@ select,
 textarea,
 button {
   outline: 0;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

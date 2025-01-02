@@ -330,7 +330,7 @@ export default function WatchCourse({ params }) {
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left side - Content viewer */}
-        <div className="flex-grow flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Tab switcher */}
           <div className="bg-white border-b">
             <div className="flex space-x-4 px-4">
@@ -341,9 +341,9 @@ export default function WatchCourse({ params }) {
           </div>
 
           {/* Content viewer */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden relative">
             {activeTab === "video" && videoUrl ? (
-              <div className="relative h-full">
+              <div className="absolute inset-0">
                 <VideoPlayer
                   key={`${videoUrl}-${key}`}
                   fileId={videoUrl}
@@ -352,8 +352,6 @@ export default function WatchCourse({ params }) {
                   autoPlay={true}
                   startTime={currentTime}
                 />
-                {/* Video controls overlay */}
-                
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
@@ -366,20 +364,22 @@ export default function WatchCourse({ params }) {
           </div>
         </div>
 
-        {/* Right sidebar - Thay thế CourseSidebar bằng CourseContent */}
-        <CourseContent
-          ref={courseContentRef}
-          chapters={courseInfo?.chapters || []}
-          activeLesson={activeLesson}
-          activeChapter={activeChapter}
-          onLessonClick={handleLessonClick}
-          expandedChapterIndex={expandedChapterIndex}
-          setExpandedChapterIndex={setExpandedChapterIndex}
-          expandedLessonId={expandedLessonId}
-          setExpandedLessonId={setExpandedLessonId}
-          videoProgress={videoProgress}
-          activeVideo={activeVideo}
-        />
+        {/* Right sidebar - Course Content */}
+        <div className="w-[380.39px] flex-shrink-0">
+          <CourseContent
+            ref={courseContentRef}
+            chapters={courseInfo?.chapters || []}
+            activeLesson={activeLesson}
+            activeChapter={activeChapter}
+            onLessonClick={handleLessonClick}
+            expandedChapterIndex={expandedChapterIndex}
+            setExpandedChapterIndex={setExpandedChapterIndex}
+            expandedLessonId={expandedLessonId}
+            setExpandedLessonId={setExpandedLessonId}
+            videoProgress={videoProgress}
+            activeVideo={activeVideo}
+          />
+        </div>
       </div>
     </div>
   );

@@ -179,7 +179,7 @@ export default forwardRef(({
     return files?.map((file, index) => (
       <div
         key={index}
-        className="flex items-center h-[40px] px-9 hover:bg-gray-100 transition-colors duration-150 ease-in-out border-l-[3px] border-transparent group cursor-pointer"
+        className="flex items-center h-[40px] px-9 hover:bg-gray-100 transition-all duration-200 ease-in-out border-l-[3px] border-transparent hover:border-l-[3px] hover:border-gray-200 group cursor-pointer"
         onClick={() => handleFileClick(file)}
       >
         <div className="flex items-center w-full overflow-hidden">
@@ -206,30 +206,30 @@ export default forwardRef(({
   };
 
   return (
-    <div className="main-container w-[380.39px] h-screen bg-white relative mx-auto my-0 shadow-lg">
-      <div className="border-b border-gray-100">
-        <div className="flex items-center">
+    <div className="h-screen bg-white shadow-lg flex flex-col border-l border-gray-100">
+      <div className="flex-none border-b border-gray-100 w-full">
+        <div className="flex items-center w-full">
           <button
-            className={`px-4 py-3 text-sm font-medium relative
+            className={`px-4 py-3 text-base font-medium relative w-full
               ${
                 activeLesson
                   ? "text-[#f05123] border-b-2 border-[#f05123]"
                   : "text-gray-500 hover:text-gray-700"
               }`}
           >
-            {activeLesson?.title || "Nội dung khóa học"}
+            {activeLesson?.titlegg || "Nội dung khóa học"}
           </button>
         </div>
       </div>
 
-      <div className="w-full h-[calc(100vh-48px)] relative overflow-auto">
+      <div className="flex-1 overflow-y-scroll">
         {chapters?.map((chapter, index) => (
           <div
             key={chapter.id || `chapter-${index}`}
             className="border-b border-gray-100 last:border-b-0"
           >
             <div
-              className="flex items-center h-[60px] px-5 bg-white cursor-pointer hover:bg-gray-50 transition-colors duration-150 ease-in-out"
+              className="flex items-center h-[60px] px-5 bg-white cursor-pointer hover:bg-gray-50 transition-all duration-200 ease-in-out"
               onClick={() => handleChapterClick(index)}
             >
               <div className="flex items-center flex-1 min-w-0">
@@ -269,11 +269,11 @@ export default forwardRef(({
                       e.stopPropagation();
                       handleLessonClick(lesson, chapter);
                     }}
-                    className={`flex items-center h-[50px] px-7 cursor-pointer transition-all duration-150 ease-in-out
+                    className={`flex items-center h-[50px] px-7 cursor-pointer transition-all duration-200 ease-in-out
                     ${
                       activeLesson?._id === lesson._id
                         ? "bg-[rgba(240,81,35,0.08)] border-l-4 border-[#f05123]"
-                        : "bg-white hover:bg-gray-50 border-l-4 border-transparent"
+                        : "bg-white hover:bg-gray-50 hover:border-l-4 hover:border-gray-200 border-l-4 border-transparent"
                     }`}
                   >
                     <div className="flex items-center w-full pointer-events-none min-w-0">
