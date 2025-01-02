@@ -56,8 +56,10 @@ export default forwardRef(({
       );
 
       if (activeChapterIndex !== -1) {
-        // Tự động mở chapter
-        setExpandedChapterIndex(activeChapterIndex);
+        // Chỉ set expandedChapterIndex khi component mới mount hoặc khi activeLesson thay đổi
+        if (expandedChapterIndex === -1) {
+          setExpandedChapterIndex(activeChapterIndex);
+        }
         // Tự động mở lesson
         setExpandedLessonId(activeLesson.id);
       }
@@ -124,7 +126,11 @@ export default forwardRef(({
   }));
 
   const handleChapterClick = (index) => {
-    setExpandedChapterIndex(index === expandedChapterIndex ? -1 : index);
+    if (expandedChapterIndex === index) {
+      setExpandedChapterIndex(-1);
+    } else {
+      setExpandedChapterIndex(index);
+    }
   };
 
   const handleLessonClick = (lesson, chapter) => {

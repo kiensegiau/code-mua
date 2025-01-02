@@ -8,6 +8,7 @@ export default function VideoPlayer({
   onTimeUpdate,
   autoPlay = true,
   startTime = 0,
+  key,
 }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
@@ -95,5 +96,20 @@ export default function VideoPlayer({
     });
   }, [currentPart, getVideoUrl]);
 
-  return <div ref={containerRef} className="video-player-container" />;
+  useEffect(() => {
+    if (playerRef.current) {
+      // Hủy bỏ request tải video cũ (nếu có)
+      if (playerRef.current.tech_ && playerRef.current.tech_.vhs) {
+        const xhr = playerRef.current.tech_.vhs.xhr;
+        if (xhr) {
+          xhr.abort();
+        }
+      }
+      
+      // Đặt lại thời gian phát về 0
+      playerRef.current.currentTime(0);
+    }
+  }, [fileId]);
+
+  return <div key={key} ref={containerRef} className="video-player-container" />;
 }

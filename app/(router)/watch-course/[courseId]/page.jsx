@@ -353,23 +353,7 @@ export default function WatchCourse({ params }) {
                   startTime={currentTime}
                 />
                 {/* Video controls overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <div className="text-white">
-                    {activeVideo && (
-                      <>
-                        <h3 className="font-medium">{activeVideo.title}</h3>
-                        <div className="text-sm opacity-75">
-                          {Math.floor(currentTime / 60)}:
-                          {String(Math.floor(currentTime % 60)).padStart(
-                            2,
-                            "0"
-                          )}{" "}
-                          /{activeVideo.duration}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+                
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
