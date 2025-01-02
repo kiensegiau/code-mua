@@ -13,6 +13,15 @@ export default function VideoPlayer({
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const [currentPart, setCurrentPart] = useState(0);
+  const previousRequestRef = useRef(null);
+
+  // Hàm để hủy request cũ
+  const cancelPreviousRequest = useCallback(() => {
+    if (previousRequestRef.current) {
+      previousRequestRef.current.abort();
+      previousRequestRef.current = null;
+    }
+  }, []);
 
   // Tạo URL một lần và cache lại
   const getVideoUrl = useCallback(
@@ -26,7 +35,25 @@ export default function VideoPlayer({
     [fileId]
   );
 
-  // Khởi tạo player một lần
+  // Xử lý khi seek video
+  const handleSeek = useCallback(() => {
+    if (playerRef.current) {
+      cancelPreviousRequest();
+    }
+  }, [cancelPreviousRequest]);
+
+  // Cleanup khi component unmount hoặc fileId thay đổi
+  useEffect(() => {
+    return () => {
+      cancelPreviousRequest();
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
+  }, [fileId, cancelPreviousRequest]);
+
+  // Khởi tạo player
   useEffect(() => {
     if (!fileId || !containerRef.current || playerRef.current) return;
 
@@ -49,6 +76,7 @@ export default function VideoPlayer({
       ],
     });
 
+    // Thêm event listeners
     player.on("ready", () => {
       console.log("Player ready");
       if (startTime > 0) {
@@ -68,6 +96,8 @@ export default function VideoPlayer({
       }
     });
 
+    player.on("seeking", handleSeek);
+
     if (onTimeUpdate) {
       player.on("timeupdate", () => {
         onTimeUpdate(player.currentTime());
@@ -75,41 +105,31 @@ export default function VideoPlayer({
     }
 
     playerRef.current = player;
+  }, [fileId, onEnded, handleSeek]);
 
-    // Cleanup khi component unmount
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-    };
-  }, [fileId, onEnded]); // Chỉ chạy khi fileId thay đổi
-
-  // Cập nhật source khi part thay đổi
+  // Cập nhật source khi part hoặc fileId thay đổi
   useEffect(() => {
     if (!playerRef.current) return;
 
+    // Hủy request cũ trước khi tải video mới
+    cancelPreviousRequest();
+
     const videoUrl = getVideoUrl(currentPart);
+
+    // Lưu XMLHttpRequest mới
+    const xhr = new XMLHttpRequest();
+    previousRequestRef.current = xhr;
+
     playerRef.current.src({
       src: videoUrl,
       type: "video/mp4",
     });
-  }, [currentPart, getVideoUrl]);
 
-  useEffect(() => {
-    if (playerRef.current) {
-      // Hủy bỏ request tải video cũ (nếu có)
-      if (playerRef.current.tech_ && playerRef.current.tech_.vhs) {
-        const xhr = playerRef.current.tech_.vhs.xhr;
-        if (xhr) {
-          xhr.abort();
-        }
-      }
-      
-      // Đặt lại thời gian phát về 0
-      playerRef.current.currentTime(0);
-    }
-  }, [fileId]);
+    // Reset time về 0 khi đổi video
+    playerRef.current.currentTime(0);
+  }, [currentPart, getVideoUrl, fileId, cancelPreviousRequest]);
 
-  return <div key={key} ref={containerRef} className="video-player-container" />;
+  return (
+    <div key={key} ref={containerRef} className="video-player-container" />
+  );
 }

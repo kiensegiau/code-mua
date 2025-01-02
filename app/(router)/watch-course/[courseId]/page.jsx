@@ -73,26 +73,35 @@ export default function WatchCourse({ params }) {
         `course_${params.courseId}_state`
       );
       if (savedState) {
-        const { lessonId, chapterId, videoId, currentTime } =
+        const { lessonId, chapterId, videoId, currentTime, fileId } =
           JSON.parse(savedState);
 
         // Tìm chapter và lesson từ ID đã lưu
         const chapter = courseInfo.chapters.find((c) => c.id === chapterId);
-        const lesson = chapter?.lessons.find((l) => l._id === lessonId);
+        if (chapter) {
+          const lesson = chapter.lessons.find((l) => l._id === lessonId);
+          if (lesson) {
+            // Tìm file video đang active
+            const activeFile = lesson.files.find(
+              (f) => f.driveFileId === fileId
+            );
 
-        if (lesson && chapter) {
-          setActiveLesson(lesson);
-          setActiveChapter(chapter);
-          setVideoUrl(videoId);
-          setCurrentTime(currentTime);
+            setActiveLesson(lesson);
+            setActiveChapter(chapter);
+            if (activeFile) {
+              setActiveVideo(activeFile);
+              setVideoUrl(activeFile.proxyUrl);
+            }
+            setCurrentTime(currentTime || 0);
 
-          // Mở chapter chứa lesson đó
-          const chapterIndex = courseInfo.chapters.findIndex(
-            (c) => c.id === chapterId
-          );
-          if (chapterIndex !== -1) {
-            setExpandedChapterIndex(chapterIndex);
-            setExpandedLessonId(lesson.id);
+            // Mở chapter và lesson
+            const chapterIndex = courseInfo.chapters.findIndex(
+              (c) => c.id === chapterId
+            );
+            if (chapterIndex !== -1) {
+              setExpandedChapterIndex(chapterIndex);
+              setExpandedLessonId(lesson.id);
+            }
           }
         }
       }
@@ -100,19 +109,27 @@ export default function WatchCourse({ params }) {
   }, [courseInfo, params.courseId]);
 
   useEffect(() => {
-    if (activeLesson && activeChapter && videoUrl) {
+    if (activeLesson && activeChapter && activeVideo) {
       const stateToSave = {
         lessonId: activeLesson._id,
         chapterId: activeChapter.id,
         videoId: videoUrl,
         currentTime: currentTime,
+        fileId: activeVideo.driveFileId, // Thêm fileId để biết file nào đang active
       };
       localStorage.setItem(
         `course_${params.courseId}_state`,
         JSON.stringify(stateToSave)
       );
     }
-  }, [activeLesson, activeChapter, videoUrl, currentTime, params.courseId]);
+  }, [
+    activeLesson,
+    activeChapter,
+    videoUrl,
+    currentTime,
+    activeVideo,
+    params.courseId,
+  ]);
 
   const handleLessonClick = (lesson, chapter, file) => {
     console.log("=== Click Debug ===");
@@ -146,7 +163,7 @@ export default function WatchCourse({ params }) {
   }, [router]);
 
   const handleVideoEnd = useCallback(() => {
-    console.log('Video ended in page component');
+    console.log("Video ended in page component");
     if (courseContentRef.current) {
       courseContentRef.current.handleVideoEnd();
     }
@@ -156,19 +173,20 @@ export default function WatchCourse({ params }) {
   const handleTimeUpdate = useCallback(
     (time) => {
       setCurrentTime(time);
-      if (videoUrl) {
+      if (videoUrl && activeVideo) {
         setVideoProgress((prev) => ({
           ...prev,
           [videoUrl]: (time / (activeLesson?.duration || 1)) * 100,
         }));
 
-        // Lưu trạng thái mỗi khi thời gian thay đổi (có thể thêm throttle để tối ưu)
+        // Lưu trạng thái mỗi khi thời gian thay đổi
         if (activeLesson && activeChapter) {
           const stateToSave = {
             lessonId: activeLesson._id,
             chapterId: activeChapter.id,
             videoId: videoUrl,
             currentTime: time,
+            fileId: activeVideo.driveFileId,
           };
           localStorage.setItem(
             `course_${params.courseId}_state`,
@@ -177,7 +195,7 @@ export default function WatchCourse({ params }) {
         }
       }
     },
-    [videoUrl, activeLesson, activeChapter, params.courseId]
+    [videoUrl, activeLesson, activeChapter, activeVideo, params.courseId]
   );
 
   const handleFileClick = (file) => {
@@ -289,48 +307,46 @@ export default function WatchCourse({ params }) {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="h-screen grid grid-rows-[auto_1fr] bg-white">
       {/* Header */}
-      <div className="flex-shrink-0">
-        <header className="bg-gray-900 text-white py-2 px-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/courses"
-              className="flex items-center text-orange-500 hover:text-orange-600 transition-colors"
+      <header className="bg-gray-900 text-white py-2 px-4">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/courses"
+            className="flex items-center text-orange-500 hover:text-orange-600 transition-colors"
+          >
+            <ArrowLeftOutlined className="mr-2" />
+            <span>Quay lại danh sách khóa học</span>
+          </Link>
+          <h1 className="text-lg font-bold">
+            {courseInfo?.title?.toUpperCase()}
+            {courseInfo?.instructor
+              ? ` - ${courseInfo.instructor.toUpperCase()}`
+              : ""}
+          </h1>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-300">
+              0% | 0/
+              {courseInfo?.chapters?.reduce(
+                (total, chapter) => total + (chapter?.lessons?.length || 0),
+                0
+              ) || 0}{" "}
+              BÀI HỌC
+            </span>
+            <button
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors"
+              onClick={handleLogout}
             >
-              <ArrowLeftOutlined className="mr-2" />
-              <span>Quay lại danh sách khóa học</span>
-            </Link>
-            <h1 className="text-lg font-bold">
-              {courseInfo?.title?.toUpperCase()}
-              {courseInfo?.instructor
-                ? ` - ${courseInfo.instructor.toUpperCase()}`
-                : ""}
-            </h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-300">
-                0% | 0/
-                {courseInfo?.chapters?.reduce(
-                  (total, chapter) => total + (chapter?.lessons?.length || 0),
-                  0
-                ) || 0}{" "}
-                BÀI HỌC
-              </span>
-              <button
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors"
-                onClick={handleLogout}
-              >
-                ĐĂNG XUẤT
-              </button>
-            </div>
+              ĐĂNG XUẤT
+            </button>
           </div>
-        </header>
-      </div>
+        </div>
+      </header>
 
-      {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left side - Content viewer */}
-        <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content */}
+      <main className="grid grid-cols-[1fr_380px] overflow-hidden">
+        {/* Left side - Video viewer */}
+        <div className="flex flex-col min-w-0">
           {/* Tab switcher */}
           <div className="bg-white border-b">
             <div className="flex space-x-4 px-4">
@@ -364,8 +380,8 @@ export default function WatchCourse({ params }) {
           </div>
         </div>
 
-        {/* Right sidebar - Course Content */}
-        <div className="w-[380.39px] flex-shrink-0">
+        {/* Right side - Course content */}
+        <div className="h-full">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}
@@ -380,7 +396,7 @@ export default function WatchCourse({ params }) {
             activeVideo={activeVideo}
           />
         </div>
-      </div>
+      </main>
     </div>
   );
 }
