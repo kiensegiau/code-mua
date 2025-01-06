@@ -1,98 +1,163 @@
 "use client"
-import { useAuth } from '@/app/_context/AuthContext'
-import { BadgeCheck, BadgeIcon, BookOpen, GraduationCap, Home, LayoutDashboard, LayoutGrid, Mail, User } from 'lucide-react'
-import Image from 'next/image'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React from 'react'
+import { 
+  Home, 
+  BookOpen, 
+  GraduationCap, 
+  BookMarked, 
+  Users, 
+  FileText, 
+  MessageSquare,
+  HelpCircle,
+  Settings,
+  Star
+} from 'lucide-react'
+import { useAuth } from '@/app/_context/AuthContext'
 
 function SideNav() {
-  const {user, profile}=useAuth();
-  const menu=[
+  const pathname = usePathname()
+  const { user } = useAuth()
+
+  const menuItems = [
     {
-      id:0,
-      name:'Trang chủ',
-      icon:Home,
-      path:'/',
-      auth:true
+      title: 'Trang chủ',
+      icon: Home,
+      href: '/',
+      color: 'text-gray-400'
     },
     {
-      id:1,
-      name:'Tất cả khóa học',
-      icon:BookOpen,
-      path:'/courses',
-      auth:true
-    },
-    {
-      id:4,
-      name:'Cửa hàng',
-      icon:LayoutGrid,
-      path:'/store',
-      auth:true
-    },
-    {
-      id:5,
-      name:'Bản tin',
-      icon:Mail,
-      path:'/newsletter',
-      auth:true
-    },
-    {
-      id: 6,
-      name: 'Cá nhân',
-      icon: User,
-      path: '/profile',
-      auth: true
-    },
-    {
-      id: 7,
-      name: 'Khóa học của tôi',
+      title: 'Khóa học',
       icon: BookOpen,
-      path: '/my-courses',
-      auth: true
+      href: '/courses',
+      color: 'text-gray-400'
+    },
+    {
+      title: 'Khóa học của tôi',
+      icon: GraduationCap,
+      href: '/my-courses',
+      color: 'text-gray-400',
+      requireAuth: true
+    },
+    {
+      title: 'Yêu thích',
+      icon: Star,
+      href: '/wishlist',
+      color: 'text-gray-400',
+      requireAuth: true
+    },
+    {
+      title: 'Blog',
+      icon: FileText,
+      href: '/blog',
+      color: 'text-gray-400'
+    },
+    {
+      title: 'Cộng đồng',
+      icon: Users,
+      href: '/community',
+      color: 'text-gray-400'
+    },
+    {
+      title: 'Trò chuyện',
+      icon: MessageSquare,
+      href: '/chat',
+      color: 'text-gray-400',
+      requireAuth: true
     }
   ]
 
-  const path=usePathname();
+  const supportItems = [
+    {
+      title: 'Trợ giúp & Hỗ trợ',
+      icon: HelpCircle,
+      href: '/help',
+      color: 'text-gray-400'
+    },
+    {
+      title: 'Cài đặt',
+      icon: Settings,
+      href: '/settings',
+      color: 'text-gray-400'
+    }
+  ]
+
+  const isActive = (href) => {
+    if (href === '/') {
+      return pathname === href
+    }
+    return pathname.startsWith(href)
+  }
+
+  const NavItem = ({ item }) => {
+    const Icon = item.icon
+    const active = isActive(item.href)
+
+    if (item.requireAuth && !user) return null
+
+    return (
+      <Link 
+        href={item.href}
+        className={`
+          flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all
+          ${active 
+            ? 'bg-[#ff4d4f]/10 text-[#ff4d4f] font-medium' 
+            : 'text-gray-400 hover:bg-[#ff4d4f]/5 hover:text-[#ff4d4f]'
+          }
+        `}
+      >
+        <div className={`p-1.5 rounded-md ${active ? 'bg-[#ff4d4f]/10' : 'bg-gray-800'}`}>
+          <Icon className={`h-[18px] w-[18px] ${active ? 'text-[#ff4d4f]' : item.color}`} />
+        </div>
+        <span className='text-sm'>{item.title}</span>
+        {item.badge && (
+          <span className='ml-auto text-xs font-medium px-2 py-0.5 rounded-full bg-[#ff4d4f]/10 text-[#ff4d4f]'>
+            {item.badge}
+          </span>
+        )}
+      </Link>
+    )
+  }
 
   return (
-    <div className='h-full bg-white'>
-      {/* User Profile Section - Mobile Only */}
-      <div className='md:hidden p-4 border-b'>
-        {user && profile ? (
-          <div className='flex items-center gap-3'>
-            <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center'>
-              <User className='w-6 h-6 text-primary' />
-            </div>
-            <div>
-              <h3 className='font-medium'>{profile.fullName || 'Người dùng'}</h3>
-              <p className='text-sm text-gray-500'>{user.email}</p>
+    <div className='fixed top-[48px] left-0 w-64 h-[calc(100vh-48px)] bg-[#141414] border-r border-gray-800 overflow-y-auto'>
+      <div className='py-4 flex flex-col gap-2'>
+        {/* Main Menu */}
+        <div className='px-3'>
+          {menuItems.map((item, index) => (
+            <NavItem key={index} item={item} />
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div className='h-px bg-violet-100 my-2' />
+
+        {/* Support Menu */}
+        <div className='px-3'>
+          {supportItems.map((item, index) => (
+            <NavItem key={index} item={item} />
+          ))}
+        </div>
+
+        {/* User Status */}
+        {user && (
+          <div className='px-4 py-3 mx-3 mt-2 bg-gray-800/50 rounded-lg'>
+            <div className='flex items-center gap-3'>
+              <div className='w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center'>
+                <Users className='h-4 w-4 text-[#ff4d4f]' />
+              </div>
+              <div className='flex-1 min-w-0'>
+                <p className='text-sm font-medium text-gray-300 truncate'>
+                  {user.email}
+                </p>
+                <p className='text-xs text-[#ff4d4f]'>
+                  Thành viên
+                </p>
+              </div>
             </div>
           </div>
-        ) : (
-          <Link href="/sign-in">
-            <div className='text-primary font-medium'>Đăng nhập</div>
-          </Link>
         )}
-      </div>
-
-      {/* Navigation Menu */}
-      <div className='p-3 md:p-5'>
-        {menu.map((item,index)=>item.auth&&(
-          <Link key={index} href={item.path}>
-            <div className={`group flex gap-3
-              p-3 text-[15px] md:text-[16px] items-center
-              text-gray-500 cursor-pointer
-              hover:bg-primary/10 hover:text-primary
-              rounded-md
-              transition-all ease-in-out duration-200
-              ${path === item.path ? 'bg-primary/10 text-primary' : ''}
-            `}>
-              <item.icon className='w-5 h-5 md:w-[18px] md:h-[18px]'/>
-              <span className='font-medium'>{item.name}</span>
-            </div>
-          </Link>
-        ))}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 "use client"
 import { Button } from '@/components/ui/button'
-import { BellDot, Menu, Search, X } from 'lucide-react'
+import { BellDot, Menu, Search, X, LogOut, User, Book, Settings, Bell } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { useAuth } from '@/app/_context/AuthContext'
@@ -13,6 +14,7 @@ function Header() {
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleSignOut = () => {
     auth.signOut();
@@ -23,60 +25,128 @@ function Header() {
 
   return (
     <>
-      <div className='p-3 md:p-4 bg-white flex justify-between items-center border-b fixed top-0 left-0 right-0 z-50'>
-        {/* Mobile Menu Button */}
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className='md:hidden'
-        >
-          {isMobileMenuOpen ? <X className='h-6 w-6' /> : <Menu className='h-6 w-6' />}
-        </button>
+      <div className='px-3 md:px-4 py-2 bg-[#141414] flex justify-between items-center border-b border-gray-800 fixed top-0 left-0 right-0 z-50'>
+        <div className='flex items-center gap-2 md:gap-6'>
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className='md:hidden hover:bg-gray-800 p-1.5 rounded-lg transition-colors'
+          >
+            {isMobileMenuOpen ? <X className='h-5 w-5 text-gray-400' /> : <Menu className='h-5 w-5 text-gray-400' />}
+          </button>
 
-        {/* Logo */}
-        <div className='flex items-center'>
-          <Link href="/">
-            <span className='font-black text-lg md:text-2xl text-purple-800' style={{ fontFamily: 'cursive', fontStyle: 'italic', textShadow: '2px 2px 4px #aaa' }}>ShareAcademy.net</span>
+          {/* Logo */}
+          <Link href="/" className='flex items-center gap-2'>
+            <Image
+              src="/logo.png"
+              alt="ShareAcademy Logo"
+              width={32}
+              height={32}
+              className='w-7 h-7 md:w-8 md:h-8'
+            />
+            <span className='font-bold text-base md:text-lg text-[#ff4d4f]'>
+              ShareAcademy
+            </span>
           </Link>
+
+          {/* Desktop Navigation */}
+          <nav className='hidden md:flex items-center gap-5'>
+            <Link href="/courses" className='text-sm text-gray-400 hover:text-[#ff4d4f] transition-colors'>
+              Khóa học
+            </Link>
+            <Link href="/blog" className='text-sm text-gray-400 hover:text-[#ff4d4f] transition-colors'>
+              Blog
+            </Link>
+            <Link href="/about" className='text-sm text-gray-400 hover:text-[#ff4d4f] transition-colors'>
+              Giới thiệu
+            </Link>
+          </nav>
         </div>
 
-        {/* Search bar - Desktop */}
-        <div className='hidden md:flex gap-2 border p-[5px_15px] rounded-full w-1/3'>
-          <Search className='h-5 w-5'/>
-          <input type="text" placeholder='Tìm kiếm khóa học, bài viết, video...' className='outline-none w-full rounded-full border-none focus:ring-0'/>
-        </div>
-
-        {/* Search Icon & User Actions - Mobile */}
         <div className='flex items-center gap-2 md:gap-4'>
+          {/* Search bar - Desktop */}
+          <div className='hidden md:flex items-center gap-2 bg-gray-800/50 py-1.5 px-3 rounded-full w-[280px] border border-gray-700 focus-within:border-[#ff4d4f]/20 focus-within:ring-4 focus-within:ring-[#ff4d4f]/10 transition-all'>
+            <Search className='h-4 w-4 text-gray-400'/>
+            <input 
+              type="text" 
+              placeholder='Tìm kiếm khóa học...' 
+              className='bg-transparent outline-none w-full text-sm text-gray-300 placeholder:text-gray-500'
+            />
+          </div>
+
+          {/* Search Icon - Mobile */}
           <button 
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className='md:hidden'
+            className='md:hidden hover:bg-gray-800 p-1.5 rounded-lg transition-colors'
           >
-            <Search className='h-5 w-5' />
+            <Search className='h-5 w-5 text-gray-400' />
           </button>
           
-          <BellDot className='text-gray-500 h-5 w-5 md:h-6 md:w-6'/>
+          {/* Notifications */}
+          <button className='relative hover:bg-gray-800 p-1.5 rounded-lg transition-colors'>
+            <Bell className='text-gray-400 h-5 w-5'/>
+            <span className='absolute top-1 right-1 w-2 h-2 bg-[#ff4d4f] rounded-full'></span>
+          </button>
           
-          {/* User greeting - Desktop only */}
-          {user && profile && (
-            <span className="hidden md:inline text-gray-700">Xin chào, {profile.fullName || user.email}</span>
+          {user ? (
+            <div className='relative'>
+              {/* User Menu Button */}
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className='flex items-center gap-2 hover:bg-gray-800 p-1.5 rounded-lg transition-colors'
+              >
+                <div className='w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center'>
+                  <User className='h-4 w-4 text-[#ff4d4f]' />
+                </div>
+                <span className='hidden md:inline text-sm font-medium text-gray-300'>
+                  {profile?.fullName?.split(' ').pop() || 'User'}
+                </span>
+              </button>
+
+              {/* User Menu Dropdown */}
+              {isUserMenuOpen && (
+                <div className='absolute right-0 mt-1 w-48 bg-[#1f1f1f] rounded-lg shadow-lg border border-gray-800 py-1'>
+                  <Link href="/profile" className='flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-[#ff4d4f]'>
+                    <User className='h-4 w-4' />
+                    <span>Hồ sơ</span>
+                  </Link>
+                  <Link href="/my-courses" className='flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-[#ff4d4f]'>
+                    <Book className='h-4 w-4' />
+                    <span>Khóa học của tôi</span>
+                  </Link>
+                  <Link href="/settings" className='flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-[#ff4d4f]'>
+                    <Settings className='h-4 w-4' />
+                    <span>Cài đặt</span>
+                  </Link>
+                  <button 
+                    onClick={handleSignOut}
+                    className='w-full flex items-center gap-2 px-4 py-2 text-sm text-[#ff4d4f] hover:bg-[#ff4d4f]/10'
+                  >
+                    <LogOut className='h-4 w-4' />
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href='/sign-in'>
+              <Button size="sm" className='h-8 text-sm bg-[#ff4d4f] hover:bg-[#ff4d4f]/90 text-white'>
+                Đăng nhập
+              </Button>
+            </Link>
           )}
-          
-          {user
-            ? <Button onClick={handleSignOut} className='h-8 text-sm md:text-base'>Đăng xuất</Button>
-            : <Link href={'/sign-in'}><Button className='h-8 text-sm md:text-base'>Đăng nhập</Button></Link>
-          }
         </div>
       </div>
 
       {/* Mobile Search Bar */}
       {isSearchOpen && (
-        <div className='fixed top-[60px] left-0 right-0 p-3 bg-white border-b z-40 md:hidden'>
-          <div className='flex gap-2 border p-[5px_15px] rounded-full'>
-            <Search className='h-5 w-5'/>
+        <div className='fixed top-[48px] left-0 right-0 p-2 bg-[#141414] border-b border-gray-800 z-40 md:hidden'>
+          <div className='flex items-center gap-2 bg-gray-800/50 py-1.5 px-3 rounded-full border border-gray-700'>
+            <Search className='h-4 w-4 text-gray-400'/>
             <input 
               type="text" 
-              placeholder='Tìm kiếm...' 
-              className='outline-none w-full rounded-full border-none focus:ring-0'
+              placeholder='Tìm kiếm khóa học...' 
+              className='bg-transparent outline-none w-full text-sm text-gray-300 placeholder:text-gray-500'
               autoFocus
             />
           </div>
@@ -85,13 +155,24 @@ function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className='fixed top-[60px] left-0 bottom-0 w-64 bg-white z-40 md:hidden overflow-y-auto'>
+        <div className='fixed top-[48px] left-0 bottom-0 w-64 bg-[#141414] z-40 md:hidden overflow-y-auto border-r border-gray-800'>
           <SideNav />
         </div>
       )}
 
+      {/* Backdrop for mobile menu */}
+      {(isMobileMenuOpen || isUserMenuOpen) && (
+        <div 
+          className='fixed inset-0 bg-black/50 z-30 md:hidden'
+          onClick={() => {
+            setIsMobileMenuOpen(false)
+            setIsUserMenuOpen(false)
+          }}
+        />
+      )}
+
       {/* Spacer for fixed header */}
-      <div className='h-[60px]'></div>
+      <div className='h-[48px]'></div>
     </>
   )
 }

@@ -6,12 +6,12 @@ import React, {
 } from "react";
 import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 import {
-  IoBookOutline, // Icon cho chương
-  IoPlayCircleOutline, // Icon cho bài học video
-  IoDocumentOutline, // Icon cho tài liệu
-  IoLinkOutline, // Icon cho links
+  IoBookOutline,
+  IoPlayCircleOutline,
+  IoDocumentOutline,
+  IoLinkOutline,
 } from "react-icons/io5";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 export default forwardRef(
   (
@@ -228,15 +228,15 @@ export default forwardRef(
     };
 
     return (
-      <div className="h-screen bg-white shadow-lg flex flex-col border-l border-gray-100">
-        <div className="flex-none border-b border-gray-100 w-full">
+      <div className="h-screen bg-[#1f1f1f] shadow-lg flex flex-col border-l border-gray-800">
+        <div className="flex-none border-b border-gray-800 w-full">
           <div className="flex items-center w-full">
             <button
               className={`px-4 py-3 text-base font-medium relative w-full
               ${
                 activeLesson
-                  ? "text-[#f05123] border-b-2 border-[#f05123]"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "text-[#ff4d4f] border-b-2 border-[#ff4d4f]"
+                  : "text-gray-400 hover:text-gray-300"
               }`}
             >
               {activeLesson?.titlegg || "Nội dung khóa học"}
@@ -246,27 +246,27 @@ export default forwardRef(
 
         <div className="flex-1 overflow-y-scroll">
           {chapters
-            ?.slice() // Tạo bản sao của array
+            ?.slice()
             .sort(sortByNumber)
             .map((chapter, index) => (
               <div
                 key={chapter.id || `chapter-${index}`}
-                className="border-b border-gray-100 last:border-b-0"
+                className="border-b border-gray-800 last:border-b-0"
               >
                 <div
-                  className="flex items-center h-[60px] px-5 bg-white cursor-pointer hover:bg-gray-50 transition-all duration-200 ease-in-out"
+                  className="flex items-center h-[60px] px-5 bg-[#1f1f1f] cursor-pointer hover:bg-gray-800/50 transition-all duration-200 ease-in-out"
                   onClick={() => handleChapterClick(index)}
                 >
                   <div className="flex items-center flex-1 min-w-0">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-purple-50 flex-shrink-0 mr-3">
-                      <IoBookOutline className="w-4 h-4 text-purple-600" />
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#ff4d4f]/10 flex-shrink-0 mr-3">
+                      <IoBookOutline className="w-4 h-4 text-[#ff4d4f]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4
-                        className="text-[15px] font-medium text-gray-800 mb-1 truncate"
+                        className="text-[15px] font-medium text-gray-200 mb-1 truncate"
                         title={chapter.title}
                       >
-                        {truncateText(chapter.title)}
+                        {chapter.title}
                       </h4>
                       <p className="text-xs text-gray-500">
                         {`${chapter.completedLessons || 0}/${
@@ -283,7 +283,7 @@ export default forwardRef(
                 </div>
 
                 {expandedChapterIndex === index && (
-                  <div className="bg-white">
+                  <div className="bg-[#1f1f1f]">
                     {[...(chapter.lessons || [])]
                       .sort((a, b) => {
                         return sortByNumber(a, b);
@@ -302,8 +302,8 @@ export default forwardRef(
                             className={`flex items-center h-[50px] px-7 cursor-pointer transition-all duration-200 ease-in-out group
                               ${
                                 activeLesson?._id === lesson._id
-                                  ? "bg-[rgba(240,81,35,0.08)] border-l-4 border-[#f05123]"
-                                  : "bg-white hover:bg-[rgba(240,81,35,0.04)] hover:border-l-4 hover:border-[rgba(240,81,35,0.4)] border-l-4 border-transparent"
+                                  ? "bg-[#ff4d4f]/10 border-l-4 border-[#ff4d4f]"
+                                  : "bg-[#1f1f1f] hover:bg-gray-800/50 hover:border-l-4 hover:border-[#ff4d4f]/40 border-l-4 border-transparent"
                               }`}
                           >
                             <div className="flex items-center w-full pointer-events-none min-w-0">
@@ -311,16 +311,16 @@ export default forwardRef(
                                 className={`flex items-center justify-center w-6 h-6 rounded-lg flex-shrink-0 mr-3 transition-all duration-200
                                 ${
                                   activeLesson?._id === lesson._id
-                                    ? "bg-[rgba(240,81,35,0.1)]"
-                                    : "bg-gray-100 group-hover:bg-[rgba(240,81,35,0.05)]"
+                                    ? "bg-[#ff4d4f]/10"
+                                    : "bg-gray-800 group-hover:bg-[#ff4d4f]/5"
                                 }`}
                               >
                                 <IoPlayCircleOutline
                                   className={`w-3.5 h-3.5 transition-colors duration-200
                                   ${
                                     activeLesson?._id === lesson._id
-                                      ? "text-[#f05123]"
-                                      : "text-gray-600 group-hover:text-[rgba(240,81,35,0.6)]"
+                                      ? "text-[#ff4d4f]"
+                                      : "text-gray-400 group-hover:text-[#ff4d4f]/60"
                                   }`}
                                 />
                               </div>
@@ -328,17 +328,17 @@ export default forwardRef(
                                 className={`text-sm truncate transition-colors duration-200
                                 ${
                                   activeLesson?._id === lesson._id
-                                    ? "text-[#f05123] font-medium"
-                                    : "text-gray-700 group-hover:text-[rgba(240,81,35,0.8)]"
+                                    ? "text-[#ff4d4f] font-medium"
+                                    : "text-gray-400 group-hover:text-gray-300"
                                 }`}
                                 title={lesson.title}
                               >
-                                {truncateText(lesson.title)}
+                                {lesson.title}
                               </span>
                             </div>
                           </div>
                           {expandedLessonId === lesson.id && lesson.files && (
-                            <div className="bg-gray-50 py-1">
+                            <div className="bg-gray-800/30 py-1">
                               {renderFiles(
                                 lesson.files.slice().sort(sortFiles)
                               )}

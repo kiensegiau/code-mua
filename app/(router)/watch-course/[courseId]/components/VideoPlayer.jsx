@@ -7,7 +7,6 @@ export default function VideoPlayer({
   onEnded,
   onTimeUpdate,
   autoPlay = true,
-  startTime = 0,
   key,
 }) {
   const containerRef = useRef(null);
@@ -79,9 +78,6 @@ export default function VideoPlayer({
     // Thêm event listeners
     player.on("ready", () => {
       console.log("Player ready");
-      if (startTime > 0) {
-        player.currentTime(startTime);
-      }
     });
 
     player.on("error", (e) => {

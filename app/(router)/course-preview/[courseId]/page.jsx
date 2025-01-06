@@ -1,14 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Collapse, Button, List } from "antd";
-import {
-  PlayCircleOutlined,
-  QuestionCircleOutlined,
-  UnorderedListOutlined,
-  ClockCircleOutlined,
-  LaptopOutlined,
-} from "@ant-design/icons";
-import "antd/dist/reset.css";
+import { 
+  PlayCircle, 
+  Clock, 
+  BookOpen, 
+  GraduationCap,
+  Users,
+  Target,
+  Laptop,
+  CheckCircle,
+  Star,
+  Share2,
+  ChevronRight
+} from 'lucide-react';
 import Header from "../../_components/Header";
 import Sidebar from "../../_components/SideNav";
 import { useAuth } from "@/app/_context/AuthContext";
@@ -16,11 +20,14 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import { toast } from "sonner";
 import CourseEnrollSection from "./_components/CourseEnrollSection";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
   const { user } = useAuth();
   const [isUserEnrolled, setIsUserEnrolled] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     const fetchCourseInfo = async () => {
@@ -42,120 +49,159 @@ function WatchCourse({ params }) {
 
   if (!courseInfo) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Đang tải...</div>
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+        <div className="animate-spin w-6 h-6 border-2 border-[#ff4d4f] border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
+  const tabs = [
+    { id: 'overview', label: 'Thông tin' },
+    { id: 'curriculum', label: 'Nội dung' },
+    { id: 'reviews', label: 'Đánh giá' }
+  ]
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-[#141414]">
       <Header />
       <div className="flex flex-1">
         <div className="hidden md:block w-64">
           <Sidebar />
         </div>
-        <div className="flex-1 px-4 md:px-6 py-4 md:py-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Mobile Preview Image */}
-            <div className="md:hidden mb-6">
-              <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg">
-                <Image
-                  src={courseInfo.previewImageUrl || '/default-course-preview.jpg'}
-                  alt={courseInfo.title}
-                  layout="fill"
-                  objectFit="cover"
-                  className="w-full h-full"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
-                    <PlayCircleOutlined className="text-2xl text-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Course Info */}
-              <div className="w-full lg:w-2/3">
-                <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-                  <h1 className="text-xl md:text-3xl font-bold mb-2">{courseInfo.title}</h1>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
-                    <div className="flex items-center gap-1">
-                      <ClockCircleOutlined />
-                      <span>{courseInfo.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <UnorderedListOutlined />
-                      <span>{courseInfo.totalLessons} bài học</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <QuestionCircleOutlined />
-                      <span>{courseInfo.level}</span>
-                    </div>
-                  </div>
-
-                  <h2 className="text-lg md:text-2xl font-bold mb-4">Mô tả khoá học</h2>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: courseInfo.description }}
-                    className="prose max-w-none text-gray-600 text-sm md:text-base"
+        <div className="flex-1">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+            <div className="grid lg:grid-cols-12 gap-6">
+              {/* Main Content */}
+              <div className="lg:col-span-8">
+                {/* Course Preview Image */}
+                <div className="relative aspect-video rounded-lg overflow-hidden mb-6 border border-gray-800">
+                  <Image
+                    src={courseInfo.previewImageUrl || '/default-course-preview.jpg'}
+                    alt={courseInfo.title}
+                    layout="fill"
+                    objectFit="cover"
                   />
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-[#1f1f1f] rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-[#ff4d4f]/10 transition-colors">
+                      <PlayCircle className="w-8 h-8 text-[#ff4d4f]" />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Course Preview & Enroll Section */}
-              <div className="w-full lg:w-1/3">
-                {/* Desktop Preview Image */}
-                <div className="hidden md:block mb-6">
-                  <div className="bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl overflow-hidden shadow-lg">
-                    <div className="relative aspect-video">
-                      <Image
-                        src={courseInfo.previewImageUrl || '/default-course-preview.jpg'}
-                        alt={courseInfo.title}
-                        layout="fill"
-                        objectFit="cover"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                          <PlayCircleOutlined className="text-3xl text-primary" />
-                        </div>
+                {/* Course Title & Stats */}
+                <div className="mb-6">
+                  <h1 className="text-2xl font-bold text-gray-200 mb-4">{courseInfo.title}</h1>
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
+                        <Target className="w-4 h-4" />
+                        <span>Mức độ: {courseInfo.level}</span>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4" />
+                      <span>Thời lượng: {courseInfo.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4" />
+                      <span>Số lượng: {courseInfo.totalLessons} video</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Users className="w-4 h-4" />
+                      <span>Lượt xem: {courseInfo.enrollments || 0}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Enroll Section */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  <div className="p-4 md:p-6">
-                    <div className="text-center mb-6">
-                      <h3 className="text-2xl md:text-3xl font-semibold text-primary">
-                        {courseInfo.price > 0
-                          ? `${courseInfo.price.toLocaleString('vi-VN')} VND`
-                          : "Miễn phí"}
-                      </h3>
-                    </div>
+                {/* Tabs Navigation */}
+                <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 overflow-hidden">
+                  <div className="flex border-b border-gray-800">
+                    {tabs.map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                          py-2 px-6 font-medium text-sm transition-colors relative
+                          ${activeTab === tab.id 
+                            ? 'text-[#ff4d4f] bg-[#ff4d4f]/10' 
+                            : 'text-gray-400 hover:text-gray-200'
+                          }
+                        `}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
 
+                  {/* Tab Content */}
+                  <div className="p-6">
+                    {activeTab === 'overview' && (
+                      <div className="prose prose-invert max-w-none">
+                        <h2 className="text-lg font-bold text-gray-200 mb-4">Mô tả</h2>
+                        <div
+                          dangerouslySetInnerHTML={{ __html: courseInfo.description }}
+                          className="text-gray-400 mb-8"
+                        />
+
+                        <h2 className="text-lg font-bold text-gray-200 mb-4">Công nghệ sử dụng</h2>
+                        <div className="flex flex-wrap gap-2 mb-8">
+                          {courseInfo.technologies?.map((tech, index) => (
+                            <span key={index} className="px-3 py-1 bg-[#ff4d4f]/10 text-[#ff4d4f] rounded-full text-sm">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+
+                        <h2 className="text-lg font-bold text-gray-200 mb-4">Yêu cầu</h2>
+                        <div className="space-y-2">
+                          {courseInfo.requirements?.map((req, index) => (
+                            <div key={index} className="flex items-start gap-2 text-gray-400">
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff4d4f] mt-2" />
+                              <span>{req}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <h2 className="text-lg font-bold text-gray-200 mt-8 mb-4">Lợi ích</h2>
+                        <div className="space-y-2">
+                          {courseInfo.learningObjectives?.map((objective, index) => (
+                            <div key={index} className="flex items-start gap-2 text-gray-400">
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff4d4f] mt-2" />
+                              <span>{objective}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar */}
+              <div className="lg:col-span-4 lg:sticky lg:top-[80px] h-fit">
+                <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 overflow-hidden">
+                  <div className="p-6">
                     <CourseEnrollSection
                       courseInfo={courseInfo}
                       isUserAlreadyEnrolled={isUserEnrolled}
                     />
 
-                    <div className="mt-6 space-y-4 text-sm md:text-base text-gray-600">
-                      <div className="flex items-center gap-3">
-                        <QuestionCircleOutlined className="text-lg text-gray-400" />
-                        <span>{courseInfo.level}</span>
+                    <div className="mt-6 space-y-4">
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                        <span>Truy cập trọn đời</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <UnorderedListOutlined className="text-lg text-gray-400" />
-                        <span>Tổng số <strong>{courseInfo.totalLessons}</strong> bài học</span>
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                        <span>Giáo trình chi tiết</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <ClockCircleOutlined className="text-lg text-gray-400" />
-                        <span>Thời lượng <strong>{courseInfo.duration}</strong></span>
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                        <span>Bài tập thực hành</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <LaptopOutlined className="text-lg text-gray-400" />
-                        <span>Học mọi lúc, mọi nơi</span>
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                        <span>Chứng chỉ hoàn thành</span>
                       </div>
                     </div>
                   </div>

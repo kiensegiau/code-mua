@@ -63,7 +63,7 @@ function CourseList() {
             placeholder='Tìm kiếm khóa học...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-10 pr-4 py-2 w-full rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm'
+            className='pl-10 pr-4 py-2 w-full rounded-full bg-gray-800/50 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-300 placeholder:text-gray-500'
           />
         </div>
 
@@ -73,7 +73,7 @@ function CourseList() {
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className='px-4 py-2 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white'
+            className='px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-gray-300'
           >
             <option value='all'>Tất cả trình độ</option>
             {levels.map(level => (
@@ -85,7 +85,7 @@ function CourseList() {
           <select
             value={selectedPrice}
             onChange={(e) => setSelectedPrice(e.target.value)}
-            className='px-4 py-2 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white'
+            className='px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-gray-300'
           >
             <option value='all'>Tất cả giá</option>
             <option value='free'>Miễn phí</option>
@@ -98,14 +98,14 @@ function CourseList() {
       {loading ? (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6'>
           {[...Array(8)].map((_, index) => (
-            <div key={index} className='bg-white rounded-xl overflow-hidden shadow-sm'>
-              <div className='aspect-video bg-gray-200 animate-pulse' />
+            <div key={index} className='bg-[#1f1f1f] rounded-lg overflow-hidden border border-gray-800'>
+              <div className='aspect-video bg-gray-800 animate-pulse' />
               <div className='p-4'>
-                <div className='h-5 bg-gray-200 rounded animate-pulse mb-3' />
-                <div className='h-4 bg-gray-200 rounded animate-pulse w-2/3 mb-3' />
+                <div className='h-5 bg-gray-800 rounded animate-pulse mb-3' />
+                <div className='h-4 bg-gray-800 rounded animate-pulse w-2/3 mb-3' />
                 <div className='flex justify-between mt-4'>
-                  <div className='h-4 bg-gray-200 rounded animate-pulse w-1/4' />
-                  <div className='h-4 bg-gray-200 rounded animate-pulse w-1/4' />
+                  <div className='h-4 bg-gray-800 rounded animate-pulse w-1/4' />
+                  <div className='h-4 bg-gray-800 rounded animate-pulse w-1/4' />
                 </div>
               </div>
             </div>
@@ -127,10 +127,10 @@ function CourseList() {
               alt='No courses'
               width={200}
               height={200}
-              className='mx-auto'
+              className='mx-auto opacity-50'
             />
           </div>
-          <h3 className='text-gray-600 mb-2'>
+          <h3 className='text-gray-400 mb-2'>
             {searchQuery 
               ? 'Không tìm thấy khóa học nào phù hợp'
               : 'Chưa có khóa học nào'}

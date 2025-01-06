@@ -2,19 +2,24 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Collapse, List, Spin } from "antd";
 import {
-  PlayCircleOutlined,
-  ArrowLeftOutlined,
-  FileTextOutlined,
-  CheckOutlined,
-} from "@ant-design/icons";
+  PlayCircle,
+  ArrowLeft,
+  FileText,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Play,
+  Pause,
+  Video,
+  File,
+  ArrowLeftCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "../../../_utils/GlobalApi";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CourseContent from "./components/CourseContent";
-
-const { Panel } = Collapse;
 
 const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
@@ -27,7 +32,6 @@ export default function WatchCourse({ params }) {
   const [activeVideo, setActiveVideo] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [currentTime, setCurrentTime] = useState(0);
   const [key, setKey] = useState(0);
 
   const [expandedChapterIndex, setExpandedChapterIndex] = useState(-1);
@@ -36,8 +40,6 @@ export default function WatchCourse({ params }) {
   const [videoProgress, setVideoProgress] = useState({});
 
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("video"); // 'video' | 'document'
-  const [activeMaterial, setActiveMaterial] = useState(null);
   const courseContentRef = useRef();
 
   const fetchCourseInfo = useCallback(async () => {
@@ -57,70 +59,6 @@ export default function WatchCourse({ params }) {
     fetchCourseInfo();
   }, [fetchCourseInfo]);
 
-  useEffect(() => {
-    if (courseInfo) {
-      const savedState = localStorage.getItem(
-        `course_${params.courseId}_state`
-      );
-      if (savedState) {
-        const { lessonId, chapterId, videoId, currentTime, fileId } =
-          JSON.parse(savedState);
-
-        // Tìm chapter và lesson từ ID đã lưu
-        const chapter = courseInfo.chapters.find((c) => c.id === chapterId);
-        if (chapter) {
-          const lesson = chapter.lessons.find((l) => l._id === lessonId);
-          if (lesson) {
-            // Tìm file video đang active
-            const activeFile = lesson.files.find(
-              (f) => f.driveFileId === fileId
-            );
-
-            setActiveLesson(lesson);
-            setActiveChapter(chapter);
-            if (activeFile) {
-              setActiveVideo(activeFile);
-              setVideoUrl(activeFile.proxyUrl);
-            }
-            setCurrentTime(currentTime || 0);
-
-            // Mở chapter và lesson
-            const chapterIndex = courseInfo.chapters.findIndex(
-              (c) => c.id === chapterId
-            );
-            if (chapterIndex !== -1) {
-              setExpandedChapterIndex(chapterIndex);
-              setExpandedLessonId(lesson.id);
-            }
-          }
-        }
-      }
-    }
-  }, [courseInfo, params.courseId]);
-
-  useEffect(() => {
-    if (activeLesson && activeChapter && activeVideo) {
-      const stateToSave = {
-        lessonId: activeLesson._id,
-        chapterId: activeChapter.id,
-        videoId: videoUrl,
-        currentTime: currentTime,
-        fileId: activeVideo.driveFileId, // Thêm fileId để biết file nào đang active
-      };
-      localStorage.setItem(
-        `course_${params.courseId}_state`,
-        JSON.stringify(stateToSave)
-      );
-    }
-  }, [
-    activeLesson,
-    activeChapter,
-    videoUrl,
-    currentTime,
-    activeVideo,
-    params.courseId,
-  ]);
-
   const handleLessonClick = (lesson, chapter, file) => {
     console.log("=== Click Debug ===");
     console.log("Lesson:", lesson);
@@ -137,7 +75,6 @@ export default function WatchCourse({ params }) {
         setIsPlaying(true);
         setKey((prev) => prev + 1);
       } else {
-        // Mở tài liệu trong tab mới
         window.open(
           `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
           "_blank"
@@ -152,40 +89,82 @@ export default function WatchCourse({ params }) {
     toast.success("Đăng xuất thành công");
   }, [router]);
 
-  const handleVideoEnd = useCallback(() => {
-    console.log("Video ended in page component");
-    if (courseContentRef.current) {
-      courseContentRef.current.handleVideoEnd();
+  const handleVideoEnd = async () => {
+    try {
+      // Cập nhật tiến độ video hiện tại
+      if (user && activeVideo) {
+        await GlobalApi.updateVideoProgress(user.uid, activeVideo.id, 100);
+        setVideoProgress(prev => ({
+          ...prev,
+          [activeVideo.id]: 100
+        }));
+      }
+
+      // Tìm video tiếp theo trong cùng bài học
+      const currentLesson = activeLesson;
+      if (!currentLesson?.videos) return;
+
+      // Sắp xếp videos theo thứ tự
+      const sortedVideos = currentLesson.videos
+        .map((video, index) => ({ ...video, sortOrder: video.sortOrder || index }))
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+
+      const currentVideoIndex = sortedVideos.findIndex(v => v.id === activeVideo?.id);
+      
+      if (currentVideoIndex !== -1 && currentVideoIndex < sortedVideos.length - 1) {
+        // Còn video tiếp theo trong bài học hiện tại
+        const nextVideo = sortedVideos[currentVideoIndex + 1];
+        setActiveVideo(nextVideo);
+        setVideoUrl(nextVideo.url);
+        setKey(prev => prev + 1);
+        toast.success('Đang chuyển sang video tiếp theo');
+        return;
+      }
+
+      // Nếu đã hết video trong bài học hiện tại, tìm bài học tiếp theo
+      let nextLesson = null;
+      let foundCurrent = false;
+
+      // Duyệt qua các chương và bài học để tìm bài tiếp theo
+      for (const chapter of courseInfo?.chapters || []) {
+        // Sắp xếp lessons theo thứ tự
+        const sortedLessons = chapter.lessons
+          .map((lesson, index) => ({ ...lesson, sortOrder: lesson.sortOrder || index }))
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+
+        for (const lesson of sortedLessons) {
+          if (foundCurrent) {
+            nextLesson = lesson;
+            break;
+          }
+          if (lesson.id === currentLesson?.id) {
+            foundCurrent = true;
+          }
+        }
+        if (nextLesson) break;
+      }
+
+      // Nếu có bài học tiếp theo, chuyển sang video đầu tiên của bài đó
+      if (nextLesson && nextLesson.videos?.length > 0) {
+        handleLessonClick(nextLesson);
+        toast.success('Đang chuyển sang bài học tiếp theo');
+      }
+    } catch (error) {
+      console.error("Lỗi khi xử lý kết thúc video:", error);
     }
-  }, []);
+  };
 
   // Xử lý cập nhật tiến độ xem video
   const handleTimeUpdate = useCallback(
     (time) => {
-      setCurrentTime(time);
       if (videoUrl && activeVideo) {
         setVideoProgress((prev) => ({
           ...prev,
-          [videoUrl]: (time / (activeLesson?.duration || 1)) * 100,
+          [activeVideo.id]: (time / (activeVideo?.duration || 1)) * 100,
         }));
-
-        // Lưu trạng thái mỗi khi thời gian thay đổi
-        if (activeLesson && activeChapter) {
-          const stateToSave = {
-            lessonId: activeLesson._id,
-            chapterId: activeChapter.id,
-            videoId: videoUrl,
-            currentTime: time,
-            fileId: activeVideo.driveFileId,
-          };
-          localStorage.setItem(
-            `course_${params.courseId}_state`,
-            JSON.stringify(stateToSave)
-          );
-        }
       }
     },
-    [videoUrl, activeLesson, activeChapter, activeVideo, params.courseId]
+    [videoUrl, activeVideo]
   );
 
   const handleFileClick = (file) => {
@@ -193,14 +172,12 @@ export default function WatchCourse({ params }) {
     console.log("File:", file);
     
     if (file.type?.includes("video")) {
-      // Sử dụng activeLesson và activeChapter hiện tại
       if (!activeLesson || !activeChapter) {
         console.warn("Missing activeLesson or activeChapter");
         return;
       }
       handleLessonClick(activeLesson, activeChapter, file);
     } else {
-      // Mở PDF hoặc tài liệu khác trong tab mới với URL đầy đủ
       window.open(
         `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
         "_blank"
@@ -208,183 +185,90 @@ export default function WatchCourse({ params }) {
     }
   };
 
-  // Component hiển thị danh sách video
-  const VideoList = () => (
-    <div className="space-y-4">
-      {activeLesson?.materials?.map((material, index) => {
-        if (material.type === "video") {
-          return (
-            <div key={index} className="border rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 font-medium flex justify-between items-center">
-                <span>Video {index + 1}</span>
-                <span className="text-sm text-gray-500">
-                  {material.files.length} video
-                </span>
-              </div>
-              <div className="divide-y">
-                {material.files.map((file, fileIndex) => (
-                  <button
-                    key={fileIndex}
-                    onClick={() => {
-                      setActiveVideo(file);
-                      setIsPlaying(true);
-                    }}
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
-                      activeVideo?.r2FileId === file.r2FileId
-                        ? "bg-blue-50"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        {activeVideo?.r2FileId === file.r2FileId ? (
-                          <PlayCircleOutlined className="text-blue-500" />
-                        ) : videoProgress[file.r2FileId] === 100 ? (
-                          <CheckOutlined className="text-green-500" />
-                        ) : (
-                          <PlayCircleOutlined className="text-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-grow">
-                        <div className="font-medium">{file.title}</div>
-                        <div className="text-sm text-gray-500">
-                          {file.duration}
-                        </div>
-                      </div>
-                      {videoProgress[file.r2FileId] > 0 &&
-                        videoProgress[file.r2FileId] < 100 && (
-                          <div className="flex-shrink-0 w-12 text-xs text-gray-500">
-                            {Math.round(videoProgress[file.r2FileId])}%
-                          </div>
-                        )}
-                    </div>
-                    {/* Progress bar */}
-                    {videoProgress[file.r2FileId] > 0 && (
-                      <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${
-                            videoProgress[file.r2FileId] === 100
-                              ? "bg-green-500"
-                              : "bg-blue-500"
-                          }`}
-                          style={{ width: `${videoProgress[file.r2FileId]}%` }}
-                        />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        }
-        return null;
-      })}
-    </div>
-  );
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (!courseInfo) {
-    return (
-      <div className="text-center py-10 bg-white text-gray-800">
-        Bài giảng đang được cập nhật, vui lòng quay lại sau
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+        <div className="animate-spin w-6 h-6 border-2 border-[#ff4d4f] border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen grid grid-rows-[auto_1fr] bg-white">
+    <div className="h-screen bg-[#141414] flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-gray-900 text-white py-2 px-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Link
-              href="/courses"
-              className="flex items-center text-orange-500 hover:text-orange-600 transition-colors md:inline-flex hidden"
-            >
-              <ArrowLeftOutlined className="mr-2" />
-              <span>Quay lại danh sách khóa học</span>
-            </Link>
-            <Link
-              href="/courses"
-              className="flex items-center text-orange-500 hover:text-orange-600 transition-colors md:hidden"
-            >
-              <ArrowLeftOutlined />
-            </Link>
-          </div>
-          <h1 className="text-lg font-bold truncate mx-4 hidden md:block">
-            {courseInfo?.title?.toUpperCase()}
-            {courseInfo?.instructor
-              ? ` - ${courseInfo.instructor.toUpperCase()}`
-              : ""}
-          </h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-300 hidden md:inline">
-              0% | 0/
-              {courseInfo?.chapters?.reduce(
-                (total, chapter) => total + (chapter?.lessons?.length || 0),
-                0
-              ) || 0}{" "}
-              BÀI HỌC
-            </span>
-            <button
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors hidden md:block"
-              onClick={handleLogout}
-            >
-              ĐĂNG XUẤT
-            </button>
-          </div>
-        </div>
-        {/* Mobile title */}
-        <h1 className="text-sm font-bold truncate mt-1 md:hidden">
-          {courseInfo?.title?.toUpperCase()}
-        </h1>
-      </header>
-
-      {/* Main content */}
-      <main className="flex flex-col md:grid md:grid-cols-[1fr_380px] h-full overflow-hidden">
-        {/* Video section */}
-        <div className="flex flex-col min-w-0 h-[40vh] md:h-full">
-          {/* Tab switcher */}
-          <div className="bg-white border-b">
-            <div className="flex items-center px-4">
-              <h3 className="py-3 px-4 border-b-2 border-[#f05123] text-[#f05123] font-medium truncate text-sm md:text-base">
-                {activeLesson?.title || "Chưa có bài học nào được chọn"}
-              </h3>
+      <div className="bg-[#1f1f1f] border-b border-gray-800 flex-none">
+        <div className="max-w-[1600px] mx-auto px-4">
+          <div className="flex items-center justify-between h-[52px]">
+            <div className="flex items-center gap-4">
+              <Link 
+                href="/courses"
+                className="flex items-center gap-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm">Quay lại</span>
+              </Link>
+              <div className="h-4 w-[1px] bg-gray-800"></div>
+              <h1 className="text-sm text-gray-200 truncate max-w-[300px]">
+                {courseInfo?.title}
+              </h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-gray-400">
+                <span className="text-[#ff4d4f] font-medium">
+                  {Object.values(videoProgress).filter(p => p === 100).length}
+                </span>
+                <span className="mx-1">/</span>
+                <span>
+                  {courseInfo?.chapters?.reduce(
+                    (total, chapter) => total + (chapter?.lessons?.length || 0),
+                    0
+                  ) || 0}
+                </span>
+                <span className="ml-0.5">bài học</span>
+              </div>
+              <div className="h-4 w-[1px] bg-gray-800"></div>
+              <button
+                onClick={handleLogout}
+                className="text-xs text-gray-400 hover:text-[#ff4d4f] transition-colors"
+              >
+                Đăng xuất
+              </button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Content viewer */}
-          <div className="flex-1 relative">
-            {activeTab === "video" && videoUrl ? (
-              <div className="absolute inset-0">
-                <VideoPlayer
-                  key={`${videoUrl}-${key}`}
-                  fileId={videoUrl}
-                  onEnded={handleVideoEnd}
-                  onTimeUpdate={handleTimeUpdate}
-                  autoPlay={true}
-                  startTime={currentTime}
-                />
-              </div>
+      {/* Main Content */}
+      <div className="flex-1 flex md:grid md:grid-cols-[1fr_380px] overflow-hidden">
+        {/* Video Player Section */}
+        <div className="flex flex-col min-w-0 h-full">
+          <div className="flex-1 relative bg-[#1f1f1f]">
+            {videoUrl ? (
+              <VideoPlayer
+                key={key}
+                fileId={videoUrl}
+                isPlaying={isPlaying}
+                onEnded={handleVideoEnd}
+                onTimeUpdate={handleTimeUpdate}
+                autoPlay={true}
+              />
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">
-                  Vui lòng chọn {activeTab === "video" ? "video" : "tài liệu"} để xem
-                </p>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <p className="text-gray-400">Vui lòng chọn một bài học để bắt đầu</p>
               </div>
             )}
           </div>
+
+          {/* Video Info */}
+          <div className="flex-none p-6 border-t border-gray-800 bg-[#1f1f1f]">
+            <h1 className="text-xl font-medium text-gray-200">
+              {activeLesson?.title || "Chưa có bài học nào được chọn"}
+            </h1>
+          </div>
         </div>
 
-        {/* Course content section */}
-        <div className="flex-1 md:flex-none bg-white md:relative overflow-y-auto border-t md:border-t-0">
+        {/* Course Content Section */}
+        <div className="flex-none w-[380px] bg-[#1f1f1f] border-l border-gray-800">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}
@@ -399,7 +283,7 @@ export default function WatchCourse({ params }) {
             activeVideo={activeVideo}
           />
         </div>
-      </main>
+      </div>
     </div>
   );
 }
