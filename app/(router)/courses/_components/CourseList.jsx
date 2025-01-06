@@ -42,15 +42,14 @@ function CourseList() {
 
   return (
     <div className='flex flex-col h-full'>
-      <div className='flex items-center justify-between p-5 bg-white rounded-t-lg'>
-        <h2 className='text-[20px] font-bold text-primary'>Tất cả khóa học</h2>
-        
+      <div className='flex items-center justify-between p-3 md:p-5 bg-white rounded-t-lg'>
+        <h2 className='text-lg md:text-xl font-bold text-primary'>Tất cả khóa học</h2>
       </div>
-      <div className='flex-1 overflow-auto p-5 bg-white rounded-b-lg'>
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+      <div className='flex-1 overflow-auto p-3 md:p-5 bg-white rounded-b-lg'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4'>
           {loading ? (
-            [1,2,3,4,5,6].map((item, index) => (
-              <div key={index} className='w-full h-[240px] rounded-xl m-2 bg-slate-200 animate-pulse'></div>
+            [1,2,3,4].map((item, index) => (
+              <div key={index} className='w-full h-[200px] md:h-[240px] rounded-xl bg-slate-200 animate-pulse'></div>
             ))
           ) : filteredCourses.length > 0 ? (
             filteredCourses.map((course) => (
@@ -61,7 +60,9 @@ function CourseList() {
               </Link>
             ))
           ) : (
-            <p>Không có khóa học nào.</p>
+            <div className='col-span-full text-center py-8 text-gray-500'>
+              Không có khóa học nào.
+            </div>
           )}
         </div>
       </div>

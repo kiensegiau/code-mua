@@ -4,26 +4,28 @@ import { useAuth } from '@/app/_context/AuthContext';
 import GlobalApi from '@/app/_utils/GlobalApi';
 import Header from "../_components/Header";
 import Sidebar from "../_components/SideNav";
-import { Card, Spin, Empty, Skeleton, message } from "antd";
+import { toast } from "sonner";
 import Link from "next/link";
-import { BookOpen, Clock } from 'lucide-react';
+import { BookOpen, Clock, Search } from 'lucide-react';
+import Image from "next/image";
 
 function MyCourses() {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchEnrolledCourses = async () => {
-      if (user && user.uid) {
+      if (user?.uid) {
         try {
           setLoading(true);
           const courses = await GlobalApi.getEnrolledCourses(user.uid);
           setEnrolledCourses(courses);
-          message.success('Đã tải danh sách khóa học thành công');
+          toast.success('Đã tải danh sách khóa học');
         } catch (error) {
           console.error("Lỗi khi lấy danh sách khóa học đã đăng ký:", error);
-          message.error('Không thể tải danh sách khóa học');
+          toast.error('Không thể tải danh sách khóa học');
         } finally {
           setLoading(false);
         }
@@ -33,70 +35,106 @@ function MyCourses() {
     fetchEnrolledCourses();
   }, [user]);
 
+  const filteredCourses = enrolledCourses.filter(course => 
+    course.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
       <div className="flex flex-1">
-        <Sidebar />
-        <div className="flex-1 p-8">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">Khóa học của tôi</h1>
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, index) => (
-                <Card key={index} className="w-full">
-                  <Skeleton active avatar paragraph={{ rows: 4 }} />
-                </Card>
-              ))}
+        <div className="hidden md:block w-64">
+          <Sidebar />
+        </div>
+        <div className="flex-1 px-4 md:px-6 py-4 md:py-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">Khóa học của tôi</h1>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khóa học..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full md:w-[300px] rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                />
+              </div>
             </div>
-          ) : enrolledCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrolledCourses.map((course) => (
-                <Link href={`/watch-course/${course.id}`} key={course.id}>
-                  <Card
-                    hoverable
-                    className="overflow-hidden transition-all duration-300 hover:shadow-lg"
-                    cover={
-                      <div className="h-48 overflow-hidden">
-                        <img 
-                          alt={course.title} 
-                          src={course.thumbnailUrl || '/placeholder-image.jpg'} 
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+
+            {/* Course Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                    <div className="h-40 bg-gray-200 animate-pulse" />
+                    <div className="p-4">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-4" />
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredCourses.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {filteredCourses.map((course) => (
+                  <Link href={`/watch-course/${course.id}`} key={course.id} className="block">
+                    <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <div className="relative h-40 overflow-hidden">
+                        <Image
+                          src={course.thumbnailUrl || '/placeholder-image.jpg'}
+                          alt={course.title}
+                          layout="fill"
+                          objectFit="cover"
+                          className="transition-transform duration-300 hover:scale-105"
                         />
                       </div>
-                    }
-                  >
-                    <Card.Meta
-                      title={<span className="text-lg font-semibold text-gray-800">{course.title}</span>}
-                      description={
-                        <div>
-                          <p className="text-gray-600 mb-2 line-clamp-2">{course.description}</p>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <BookOpen size={16} className="mr-1" />
-                            <span className="mr-3">{course.totalLessons} bài học</span>
-                            <Clock size={16} className="mr-1" />
+                      <div className="p-4">
+                        <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2">
+                          {course.title}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-1.5">
+                            <BookOpen className="h-4 w-4" />
+                            <span>{course.totalLessons} bài học</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-4 w-4" />
                             <span>{course.duration}</span>
                           </div>
                         </div>
-                      }
-                    />
-                  </Card>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="mb-4">
+                  <Image
+                    src="/empty-courses.png"
+                    alt="No courses"
+                    width={200}
+                    height={200}
+                    className="mx-auto"
+                  />
+                </div>
+                <h3 className="text-gray-600 mb-4">
+                  {searchQuery 
+                    ? 'Không tìm thấy khóa học nào phù hợp'
+                    : 'Bạn chưa đăng ký khóa học nào'}
+                </h3>
+                <Link href="/courses">
+                  <button className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors text-sm md:text-base">
+                    Khám phá khóa học
+                  </button>
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <span className="text-gray-600">Bạn chưa đăng ký khóa học nào</span>
-              }
-            >
-              <Link href="/courses">
-                <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                  Khám phá khóa học
-                </button>
-              </Link>
-            </Empty>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

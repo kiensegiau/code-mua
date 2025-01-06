@@ -1,16 +1,21 @@
 "use client"
 import { useAuth } from '@/app/_context/AuthContext'
-import { BadgeCheck, BadgeIcon, BookOpen, GraduationCap, LayoutDashboard, LayoutGrid, Mail, User } from 'lucide-react'
+import { BadgeCheck, BadgeIcon, BookOpen, GraduationCap, Home, LayoutDashboard, LayoutGrid, Mail, User } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import React from 'react'
 
 function SideNav() {
-  const {user}=useAuth();
+  const {user, profile}=useAuth();
   const menu=[
-   
+    {
+      id:0,
+      name:'Trang chủ',
+      icon:Home,
+      path:'/',
+      auth:true
+    },
     {
       id:1,
       name:'Tất cả khóa học',
@@ -25,14 +30,6 @@ function SideNav() {
       path:'/store',
       auth:true
     },
-    
-    // {
-    //   id:3,
-    //   name:'Trở thành giảng viên',
-    //   icon:GraduationCap,
-    //   path:'/instructor',
-    //   auth:true
-    // },
     {
       id:5,
       name:'Bản tin',
@@ -59,26 +56,44 @@ function SideNav() {
   const path=usePathname();
 
   return (
-    <div className='px-5 pb-5 bg-white 
-    shadow-sm border h-screen'>
-        <div>
-          {menu.map((item,index)=>item.auth&&(
-            <Link key={index} href={item.path}>
-            <div className={`group flex gap-3
-            mt-2 p-3 text-[18px] items-center
-             text-gray-500 cursor-pointer
-             hover:bg-primary
-             hover:text-white
-             rounded-md
-             transition-all ease-in-out duration-200
-             ${path.includes(item.path)&&'bg-primary text-white'}
-             `}>
-              <item.icon className='group-hover:animate-bounce'/>
-              <h2>{item.name}</h2>
+    <div className='h-full bg-white'>
+      {/* User Profile Section - Mobile Only */}
+      <div className='md:hidden p-4 border-b'>
+        {user && profile ? (
+          <div className='flex items-center gap-3'>
+            <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center'>
+              <User className='w-6 h-6 text-primary' />
             </div>
-            </Link>
-          ))}
-        </div>
+            <div>
+              <h3 className='font-medium'>{profile.fullName || 'Người dùng'}</h3>
+              <p className='text-sm text-gray-500'>{user.email}</p>
+            </div>
+          </div>
+        ) : (
+          <Link href="/sign-in">
+            <div className='text-primary font-medium'>Đăng nhập</div>
+          </Link>
+        )}
+      </div>
+
+      {/* Navigation Menu */}
+      <div className='p-3 md:p-5'>
+        {menu.map((item,index)=>item.auth&&(
+          <Link key={index} href={item.path}>
+            <div className={`group flex gap-3
+              p-3 text-[15px] md:text-[16px] items-center
+              text-gray-500 cursor-pointer
+              hover:bg-primary/10 hover:text-primary
+              rounded-md
+              transition-all ease-in-out duration-200
+              ${path === item.path ? 'bg-primary/10 text-primary' : ''}
+            `}>
+              <item.icon className='w-5 h-5 md:w-[18px] md:h-[18px]'/>
+              <span className='font-medium'>{item.name}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
