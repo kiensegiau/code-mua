@@ -142,21 +142,32 @@ function SideNav() {
 
         {/* User Status */}
         {user && (
-          <div className='px-4 py-3 mx-3 mt-2 bg-gray-800/50 rounded-lg'>
-            <div className='flex items-center gap-3'>
-              <div className='w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center'>
-                <Users className='h-4 w-4 text-[#ff4d4f]' />
+          <Link
+            href="/profile"
+            className="block px-4 py-3 mx-3 mt-2 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center transition-colors">
+                {user.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt={user.email}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <Users className="h-4 w-4 text-[#ff4d4f]" />
+                )}
               </div>
-              <div className='flex-1 min-w-0'>
-                <p className='text-sm font-medium text-gray-300 truncate'>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-300 truncate group-hover:text-white transition-colors">
                   {user.email}
                 </p>
-                <p className='text-xs text-[#ff4d4f]'>
-                  Thành viên
+                <p className="text-xs text-[#ff4d4f]">
+                  Xem trang cá nhân
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         )}
       </div>
     </div>

@@ -26,11 +26,11 @@ function Header() {
   return (
     <>
       <div className='px-3 md:px-4 py-2 bg-[#141414] flex justify-between items-center border-b border-gray-800 fixed top-0 left-0 right-0 z-50'>
-        <div className='flex items-center gap-2 md:gap-6'>
+        <div className='flex items-center gap-2'>
           {/* Mobile Menu Button */}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className='md:hidden hover:bg-gray-800 p-1.5 rounded-lg transition-colors'
+            className='hover:bg-gray-800 p-1.5 rounded-lg transition-colors'
           >
             {isMobileMenuOpen ? <X className='h-5 w-5 text-gray-400' /> : <Menu className='h-5 w-5 text-gray-400' />}
           </button>
@@ -48,32 +48,19 @@ function Header() {
               ShareAcademy
             </span>
           </Link>
+        </div>
 
-          {/* Desktop Navigation */}
-          <nav className='hidden md:flex items-center gap-5'>
-            <Link href="/courses" className='text-sm text-gray-400 hover:text-[#ff4d4f] transition-colors'>
-              Khóa học
-            </Link>
-            <Link href="/blog" className='text-sm text-gray-400 hover:text-[#ff4d4f] transition-colors'>
-              Blog
-            </Link>
-            <Link href="/about" className='text-sm text-gray-400 hover:text-[#ff4d4f] transition-colors'>
-              Giới thiệu
-            </Link>
-          </nav>
+        {/* Search bar - Desktop */}
+        <div className='hidden md:flex items-center gap-2 bg-gray-800/50 py-1.5 px-3 rounded-full w-[280px] border border-gray-700 focus-within:border-[#ff4d4f]/20 focus-within:ring-4 focus-within:ring-[#ff4d4f]/10 transition-all'>
+          <Search className='h-4 w-4 text-gray-400'/>
+          <input 
+            type="text" 
+            placeholder='Tìm kiếm khóa học...' 
+            className='bg-transparent outline-none w-full text-sm text-gray-300 placeholder:text-gray-500'
+          />
         </div>
 
         <div className='flex items-center gap-2 md:gap-4'>
-          {/* Search bar - Desktop */}
-          <div className='hidden md:flex items-center gap-2 bg-gray-800/50 py-1.5 px-3 rounded-full w-[280px] border border-gray-700 focus-within:border-[#ff4d4f]/20 focus-within:ring-4 focus-within:ring-[#ff4d4f]/10 transition-all'>
-            <Search className='h-4 w-4 text-gray-400'/>
-            <input 
-              type="text" 
-              placeholder='Tìm kiếm khóa học...' 
-              className='bg-transparent outline-none w-full text-sm text-gray-300 placeholder:text-gray-500'
-            />
-          </div>
-
           {/* Search Icon - Mobile */}
           <button 
             onClick={() => setIsSearchOpen(!isSearchOpen)}
