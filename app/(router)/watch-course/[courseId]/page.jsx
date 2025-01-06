@@ -58,16 +58,6 @@ export default function WatchCourse({ params }) {
   }, [fetchCourseInfo]);
 
   useEffect(() => {
-    if (courseInfo && courseInfo.chapters && courseInfo.chapters.length > 0) {
-      const firstChapter = courseInfo.chapters[0];
-      if (firstChapter.lessons && firstChapter.lessons.length > 0) {
-        const firstLesson = firstChapter.lessons[0];
-        handleLessonClick(firstLesson);
-      }
-    }
-  }, [courseInfo]);
-
-  useEffect(() => {
     if (courseInfo) {
       const savedState = localStorage.getItem(
         `course_${params.courseId}_state`

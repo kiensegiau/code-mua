@@ -56,25 +56,6 @@ export default forwardRef(
       return null;
     };
 
-    // Thêm useEffect để tự động mở rộng chapter và lesson khi active lesson thay đổi
-    useEffect(() => {
-      if (activeLesson && chapters) {
-        // Tìm chapter chứa lesson đang active
-        const activeChapterIndex = chapters.findIndex((chapter) =>
-          chapter.lessons?.some((lesson) => lesson._id === activeLesson._id)
-        );
-
-        if (activeChapterIndex !== -1) {
-          // Chỉ set expandedChapterIndex khi component mới mount hoặc khi activeLesson thay đổi
-          if (expandedChapterIndex === -1) {
-            setExpandedChapterIndex(activeChapterIndex);
-          }
-          // Tự động mở lesson
-          setExpandedLessonId(activeLesson.id);
-        }
-      }
-    }, [activeLesson, chapters, expandedChapterIndex]);
-
     // Xử lý khi video kết thúc
     const handleVideoEnd = () => {
       if (!activeLesson || !activeChapter || !activeVideo) {
