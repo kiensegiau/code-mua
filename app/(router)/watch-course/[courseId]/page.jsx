@@ -132,6 +132,11 @@ export default function WatchCourse({ params }) {
   ]);
 
   const handleLessonClick = (lesson, chapter, file) => {
+    console.log("=== Click Debug ===");
+    console.log("Lesson:", lesson);
+    console.log("Chapter:", chapter);
+    console.log("File:", file);
+
     setActiveLesson(lesson);
     setActiveChapter(chapter);
 
@@ -194,6 +199,9 @@ export default function WatchCourse({ params }) {
   );
 
   const handleFileClick = (file) => {
+    console.log("=== File Click Debug ===");
+    console.log("File:", file);
+    
     if (file.type?.includes("video")) {
       // Sử dụng activeLesson và activeChapter hiện tại
       if (!activeLesson || !activeChapter) {
@@ -305,21 +313,29 @@ export default function WatchCourse({ params }) {
       {/* Header */}
       <header className="bg-gray-900 text-white py-2 px-4">
         <div className="flex items-center justify-between">
-          <Link
-            href="/courses"
-            className="flex items-center text-orange-500 hover:text-orange-600 transition-colors"
-          >
-            <ArrowLeftOutlined className="mr-2" />
-            <span>Quay lại danh sách khóa học</span>
-          </Link>
-          <h1 className="text-lg font-bold">
+          <div className="flex items-center">
+            <Link
+              href="/courses"
+              className="flex items-center text-orange-500 hover:text-orange-600 transition-colors md:inline-flex hidden"
+            >
+              <ArrowLeftOutlined className="mr-2" />
+              <span>Quay lại danh sách khóa học</span>
+            </Link>
+            <Link
+              href="/courses"
+              className="flex items-center text-orange-500 hover:text-orange-600 transition-colors md:hidden"
+            >
+              <ArrowLeftOutlined />
+            </Link>
+          </div>
+          <h1 className="text-lg font-bold truncate mx-4 hidden md:block">
             {courseInfo?.title?.toUpperCase()}
             {courseInfo?.instructor
               ? ` - ${courseInfo.instructor.toUpperCase()}`
               : ""}
           </h1>
           <div className="flex items-center space-x-4">
-            <span className="text-gray-300">
+            <span className="text-gray-300 hidden md:inline">
               0% | 0/
               {courseInfo?.chapters?.reduce(
                 (total, chapter) => total + (chapter?.lessons?.length || 0),
@@ -328,30 +344,34 @@ export default function WatchCourse({ params }) {
               BÀI HỌC
             </span>
             <button
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition-colors hidden md:block"
               onClick={handleLogout}
             >
               ĐĂNG XUẤT
             </button>
           </div>
         </div>
+        {/* Mobile title */}
+        <h1 className="text-sm font-bold truncate mt-1 md:hidden">
+          {courseInfo?.title?.toUpperCase()}
+        </h1>
       </header>
 
       {/* Main content */}
-      <main className="grid grid-cols-[1fr_380px] overflow-hidden">
-        {/* Left side - Video viewer */}
-        <div className="flex flex-col min-w-0">
+      <main className="flex flex-col md:grid md:grid-cols-[1fr_380px] h-full overflow-hidden">
+        {/* Video section */}
+        <div className="flex flex-col min-w-0 h-[40vh] md:h-full">
           {/* Tab switcher */}
           <div className="bg-white border-b">
-            <div className="flex space-x-4 px-4">
-              <h3 className="py-3 px-4 border-b-2 border-[#f05123] text-[#f05123] font-medium truncate">
+            <div className="flex items-center px-4">
+              <h3 className="py-3 px-4 border-b-2 border-[#f05123] text-[#f05123] font-medium truncate text-sm md:text-base">
                 {activeLesson?.title || "Chưa có bài học nào được chọn"}
               </h3>
             </div>
           </div>
 
           {/* Content viewer */}
-          <div className="flex-1 overflow-hidden relative">
+          <div className="flex-1 relative">
             {activeTab === "video" && videoUrl ? (
               <div className="absolute inset-0">
                 <VideoPlayer
@@ -366,16 +386,15 @@ export default function WatchCourse({ params }) {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-500">
-                  Vui lòng chọn {activeTab === "video" ? "video" : "tài liệu"}{" "}
-                  để xem
+                  Vui lòng chọn {activeTab === "video" ? "video" : "tài liệu"} để xem
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right side - Course content */}
-        <div className="h-full">
+        {/* Course content section */}
+        <div className="flex-1 md:flex-none bg-white md:relative overflow-y-auto border-t md:border-t-0">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}
