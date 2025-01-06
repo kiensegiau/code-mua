@@ -28,6 +28,7 @@ function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [balance, setBalance] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -81,13 +82,17 @@ function Header() {
         </div>
 
         {/* Search bar - Desktop */}
-        <div className="hidden md:flex items-center gap-2 bg-gray-800/50 py-1.5 px-3 rounded-full w-[480px] lg:w-[580px] xl:w-[680px] border border-gray-700 focus-within:border-[#ff4d4f]/20 focus-within:ring-4 focus-within:ring-[#ff4d4f]/10 transition-all">
-          <Search className="h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
-            className="bg-transparent outline-none w-full text-sm text-gray-300 placeholder:text-gray-500"
-          />
+        <div className="flex-1 px-4 lg:px-6">
+          <div className="relative max-w-[680px] mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-full bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">

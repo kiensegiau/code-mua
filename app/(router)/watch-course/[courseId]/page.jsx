@@ -13,7 +13,7 @@ import {
   Video,
   File,
   ArrowLeftCircle,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "../../../_utils/GlobalApi";
@@ -61,11 +61,6 @@ export default function WatchCourse({ params }) {
   }, [fetchCourseInfo]);
 
   const handleLessonClick = (lesson, chapter, file) => {
-    console.log("=== Click Debug ===");
-    console.log("Lesson:", lesson);
-    console.log("Chapter:", chapter);
-    console.log("File:", file);
-
     setActiveLesson(lesson);
     setActiveChapter(chapter);
 
@@ -90,117 +85,6 @@ export default function WatchCourse({ params }) {
     toast.success("Đăng xuất thành công");
   }, [router]);
 
-  const handleVideoEnd = async () => {
-    try {
-      // Cập nhật tiến độ video hiện tại
-      if (activeVideo) {
-        setVideoProgress(prev => ({
-          ...prev,
-          [activeVideo.id]: 100
-        }));
-      }
-
-      // Tìm video tiếp theo trong cùng bài học
-      if (!activeLesson?.files) return;
-
-      // Sắp xếp videos theo thứ tự
-      const sortedFiles = activeLesson.files
-        .filter(f => f.type?.includes("video"))
-        .sort((a, b) => {
-          const numA = parseInt(a.name.match(/\d+/) || [0]);
-          const numB = parseInt(b.name.match(/\d+/) || [0]);
-          return numA - numB;
-        });
-
-      const currentVideoIndex = sortedFiles.findIndex(v => v.driveFileId === activeVideo?.driveFileId);
-      
-      if (currentVideoIndex !== -1 && currentVideoIndex < sortedFiles.length - 1) {
-        // Còn video tiếp theo trong bài học hiện tại
-        const nextVideo = sortedFiles[currentVideoIndex + 1];
-        setActiveVideo(nextVideo);
-        setVideoUrl(nextVideo.proxyUrl);
-        setKey(prev => prev + 1);
-        toast.success('Đang chuyển sang video tiếp theo');
-        return;
-      }
-
-      // Nếu đã hết video trong bài học hiện tại, tìm bài học tiếp theo
-      const sortedLessons = activeChapter.lessons
-        .sort((a, b) => {
-          const numA = parseInt(a.title.match(/\d+/) || [0]);
-          const numB = parseInt(b.title.match(/\d+/) || [0]);
-          return numA - numB;
-        });
-
-      const currentLessonIndex = sortedLessons.findIndex(l => l.id === activeLesson.id);
-      
-      if (currentLessonIndex !== -1 && currentLessonIndex < sortedLessons.length - 1) {
-        const nextLesson = sortedLessons[currentLessonIndex + 1];
-        // Tìm video đầu tiên trong bài học tiếp theo
-        const firstVideo = nextLesson.files
-          ?.filter(f => f.type?.includes("video"))
-          .sort((a, b) => {
-            const numA = parseInt(a.name.match(/\d+/) || [0]);
-            const numB = parseInt(b.name.match(/\d+/) || [0]);
-            return numA - numB;
-          })[0];
-
-        if (firstVideo) {
-          setActiveLesson(nextLesson);
-          setExpandedLessonId(nextLesson.id);
-          handleLessonClick(nextLesson, activeChapter, firstVideo);
-          toast.success('Đang chuyển sang bài học tiếp theo');
-          return;
-        }
-      }
-
-      // Nếu đã hết bài học trong chương hiện tại, tìm chương tiếp theo
-      const sortedChapters = courseInfo.chapters
-        .sort((a, b) => {
-          const numA = parseInt(a.title.match(/\d+/) || [0]);
-          const numB = parseInt(b.title.match(/\d+/) || [0]);
-          return numA - numB;
-        });
-
-      const currentChapterIndex = sortedChapters.findIndex(c => c.id === activeChapter.id);
-      
-      if (currentChapterIndex !== -1 && currentChapterIndex < sortedChapters.length - 1) {
-        const nextChapter = sortedChapters[currentChapterIndex + 1];
-        const firstLesson = nextChapter.lessons
-          .sort((a, b) => {
-            const numA = parseInt(a.title.match(/\d+/) || [0]);
-            const numB = parseInt(b.title.match(/\d+/) || [0]);
-            return numA - numB;
-          })[0];
-
-        if (firstLesson) {
-          const firstVideo = firstLesson.files
-            ?.filter(f => f.type?.includes("video"))
-            .sort((a, b) => {
-              const numA = parseInt(a.name.match(/\d+/) || [0]);
-              const numB = parseInt(b.name.match(/\d+/) || [0]);
-              return numA - numB;
-            })[0];
-
-          if (firstVideo) {
-            setActiveChapter(nextChapter);
-            setExpandedChapterIndex(currentChapterIndex + 1);
-            setActiveLesson(firstLesson);
-            setExpandedLessonId(firstLesson.id);
-            handleLessonClick(firstLesson, nextChapter, firstVideo);
-            toast.success('Đang chuyển sang chương tiếp theo');
-            return;
-          }
-        }
-      }
-
-      toast.success('Bạn đã hoàn thành khóa học!');
-    } catch (error) {
-      console.error("Lỗi khi xử lý kết thúc video:", error);
-      toast.error('Có lỗi xảy ra khi chuyển video');
-    }
-  };
-
   // Xử lý cập nhật tiến độ xem video
   const handleTimeUpdate = useCallback(
     (time) => {
@@ -215,9 +99,6 @@ export default function WatchCourse({ params }) {
   );
 
   const handleFileClick = (file) => {
-    console.log("=== File Click Debug ===");
-    console.log("File:", file);
-    
     if (file.type?.includes("video")) {
       if (!activeLesson || !activeChapter) {
         console.warn("Missing activeLesson or activeChapter");
@@ -248,12 +129,14 @@ export default function WatchCourse({ params }) {
           <div className="flex items-center h-[52px]">
             {/* Left Section */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Link 
+              <Link
                 href="/courses"
                 className="flex items-center gap-2 text-gray-300 hover:text-[#ff4d4f] transition-colors flex-shrink-0 bg-gray-800/50 hover:bg-gray-800 px-3 py-1.5 rounded-full"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm hidden xs:block font-medium">Quay lại</span>
+                <span className="text-sm hidden xs:block font-medium">
+                  Quay lại
+                </span>
               </Link>
 
               <div className="h-4 w-[1px] bg-gray-800 hidden xs:block flex-shrink-0"></div>
@@ -273,12 +156,16 @@ export default function WatchCourse({ params }) {
               <div className="text-xs bg-gray-800/50 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <span className="text-[#ff4d4f] font-medium">
-                    {Object.values(videoProgress).filter(p => p === 100).length}
+                    {
+                      Object.values(videoProgress).filter((p) => p === 100)
+                        .length
+                    }
                   </span>
                   <span className="text-gray-400">/</span>
                   <span className="text-gray-300">
                     {courseInfo?.chapters?.reduce(
-                      (total, chapter) => total + (chapter?.lessons?.length || 0),
+                      (total, chapter) =>
+                        total + (chapter?.lessons?.length || 0),
                       0
                     ) || 0}
                   </span>
@@ -314,7 +201,9 @@ export default function WatchCourse({ params }) {
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-gray-400">Vui lòng chọn một bài học để bắt đầu</p>
+                <p className="text-gray-400">
+                  Vui lòng chọn một bài học để bắt đầu
+                </p>
               </div>
             )}
           </div>

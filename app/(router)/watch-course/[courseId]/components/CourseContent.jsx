@@ -31,31 +31,6 @@ export default forwardRef(
   ) => {
     const [activeFileId, setActiveFileId] = useState(null);
 
-    // Tìm video tiếp theo trong bài học hiện tại
-    const findNextVideo = (currentLesson, currentFileId) => {
-      const videoFiles =
-        currentLesson.files?.filter((f) => f.type?.includes("video")) || [];
-      const currentIndex = videoFiles.findIndex(
-        (f) => f.driveFileId === currentFileId
-      );
-      return videoFiles[currentIndex + 1];
-    };
-
-    // Tìm bài học tiếp theo có video
-    const findNextLessonWithVideo = (lessons, currentLessonIndex) => {
-      for (let i = currentLessonIndex + 1; i < lessons.length; i++) {
-        const lesson = lessons[i];
-        const videoFile = lesson.files?.find((f) => f.type?.includes("video"));
-        if (videoFile) {
-          return {
-            lesson,
-            videoFile,
-          };
-        }
-      }
-      return null;
-    };
-
     // Xử lý khi video kết thúc
     const handleVideoEnd = () => {
       if (!activeLesson || !activeChapter || !activeVideo) {
@@ -128,87 +103,8 @@ export default forwardRef(
       }
     };
 
-    const getFileIcon = (fileId) => {
-      // Kiểm tra loại file dựa vào tên hoặc id
-      if (fileId.toLowerCase().includes("video") || fileId.includes("mp4")) {
-        return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-50 mr-3">
-            <IoPlayCircleOutline className="w-3.5 h-3.5 text-blue-600" />
-          </div>
-        );
-      } else if (
-        fileId.toLowerCase().includes("doc") ||
-        fileId.includes("pdf")
-      ) {
-        return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-orange-50 mr-3">
-            <IoDocumentOutline className="w-3.5 h-3.5 text-orange-600" />
-          </div>
-        );
-      } else {
-        return (
-          <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gray-100 mr-3">
-            <IoLinkOutline className="w-3.5 h-3.5 text-gray-600" />
-          </div>
-        );
-      }
-    };
-
-    const truncateText = (text, maxLength = 40) => {
-      if (text.length <= maxLength) return text;
-      return `${text.substring(0, maxLength)}...`;
-    };
-
-    const renderFiles = (files) => {
-      return files?.map((file, index) => (
-        <div
-          key={index}
-          className={`flex items-center h-[40px] px-9 hover:bg-gray-100 transition-all duration-200 ease-in-out border-l-[3px] 
-          ${
-            activeVideo?.driveFileId === file.driveFileId
-              ? "border-l-[3px] border-[#f05123]"
-              : "border-transparent hover:border-l-[3px] hover:border-gray-200"
-          } group cursor-pointer`}
-          onClick={() => handleFileClick(file)}
-        >
-          <div className="flex items-center w-full overflow-hidden">
-            {/* Icon dựa vào type */}
-            {file.type.includes("video") ? (
-              <IoPlayCircleOutline
-                className={`w-4 h-4 flex-shrink-0 mr-2 
-                ${
-                  activeVideo?.driveFileId === file.driveFileId
-                    ? "text-[#f05123]"
-                    : "text-gray-600"
-                }`}
-              />
-            ) : file.type.includes("pdf") ? (
-              <IoDocumentOutline className="w-4 h-4 text-gray-600 flex-shrink-0 mr-2" />
-            ) : (
-              <IoLinkOutline className="w-4 h-4 text-gray-600 flex-shrink-0 mr-2" />
-            )}
-
-            <div className="flex-1 min-w-0">
-              <span
-                className={`text-sm group-hover:text-gray-900 transition-colors duration-150 ease-in-out truncate block
-                ${
-                  activeVideo?.driveFileId === file.driveFileId
-                    ? "text-[#f05123] font-medium"
-                    : "text-gray-600"
-                }`}
-                title={file.name}
-              >
-                {file.name}
-              </span>
-            </div>
-          </div>
-        </div>
-      ));
-    };
-
     // Hàm helper để lấy số từ title
     const getNumberFromTitle = (text = "") => {
-      // Tìm số ở đầu chuỗi hoặc sau dấu chấm
       const match = text.match(/(?:^|\.)?\s*(\d+)/);
       return match ? parseInt(match[1]) : 999999;
     };
