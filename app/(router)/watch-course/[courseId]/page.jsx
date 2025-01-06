@@ -92,8 +92,7 @@ export default function WatchCourse({ params }) {
   const handleVideoEnd = async () => {
     try {
       // Cập nhật tiến độ video hiện tại
-      if (user && activeVideo) {
-        await GlobalApi.updateVideoProgress(user.uid, activeVideo.id, 100);
+      if (activeVideo) {
         setVideoProgress(prev => ({
           ...prev,
           [activeVideo.id]: 100
@@ -101,56 +100,103 @@ export default function WatchCourse({ params }) {
       }
 
       // Tìm video tiếp theo trong cùng bài học
-      const currentLesson = activeLesson;
-      if (!currentLesson?.videos) return;
+      if (!activeLesson?.files) return;
 
       // Sắp xếp videos theo thứ tự
-      const sortedVideos = currentLesson.videos
-        .map((video, index) => ({ ...video, sortOrder: video.sortOrder || index }))
-        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const sortedFiles = activeLesson.files
+        .filter(f => f.type?.includes("video"))
+        .sort((a, b) => {
+          const numA = parseInt(a.name.match(/\d+/) || [0]);
+          const numB = parseInt(b.name.match(/\d+/) || [0]);
+          return numA - numB;
+        });
 
-      const currentVideoIndex = sortedVideos.findIndex(v => v.id === activeVideo?.id);
+      const currentVideoIndex = sortedFiles.findIndex(v => v.driveFileId === activeVideo?.driveFileId);
       
-      if (currentVideoIndex !== -1 && currentVideoIndex < sortedVideos.length - 1) {
+      if (currentVideoIndex !== -1 && currentVideoIndex < sortedFiles.length - 1) {
         // Còn video tiếp theo trong bài học hiện tại
-        const nextVideo = sortedVideos[currentVideoIndex + 1];
+        const nextVideo = sortedFiles[currentVideoIndex + 1];
         setActiveVideo(nextVideo);
-        setVideoUrl(nextVideo.url);
+        setVideoUrl(nextVideo.proxyUrl);
         setKey(prev => prev + 1);
         toast.success('Đang chuyển sang video tiếp theo');
         return;
       }
 
       // Nếu đã hết video trong bài học hiện tại, tìm bài học tiếp theo
-      let nextLesson = null;
-      let foundCurrent = false;
+      const sortedLessons = activeChapter.lessons
+        .sort((a, b) => {
+          const numA = parseInt(a.title.match(/\d+/) || [0]);
+          const numB = parseInt(b.title.match(/\d+/) || [0]);
+          return numA - numB;
+        });
 
-      // Duyệt qua các chương và bài học để tìm bài tiếp theo
-      for (const chapter of courseInfo?.chapters || []) {
-        // Sắp xếp lessons theo thứ tự
-        const sortedLessons = chapter.lessons
-          .map((lesson, index) => ({ ...lesson, sortOrder: lesson.sortOrder || index }))
-          .sort((a, b) => a.sortOrder - b.sortOrder);
+      const currentLessonIndex = sortedLessons.findIndex(l => l.id === activeLesson.id);
+      
+      if (currentLessonIndex !== -1 && currentLessonIndex < sortedLessons.length - 1) {
+        const nextLesson = sortedLessons[currentLessonIndex + 1];
+        // Tìm video đầu tiên trong bài học tiếp theo
+        const firstVideo = nextLesson.files
+          ?.filter(f => f.type?.includes("video"))
+          .sort((a, b) => {
+            const numA = parseInt(a.name.match(/\d+/) || [0]);
+            const numB = parseInt(b.name.match(/\d+/) || [0]);
+            return numA - numB;
+          })[0];
 
-        for (const lesson of sortedLessons) {
-          if (foundCurrent) {
-            nextLesson = lesson;
-            break;
-          }
-          if (lesson.id === currentLesson?.id) {
-            foundCurrent = true;
+        if (firstVideo) {
+          setActiveLesson(nextLesson);
+          setExpandedLessonId(nextLesson.id);
+          handleLessonClick(nextLesson, activeChapter, firstVideo);
+          toast.success('Đang chuyển sang bài học tiếp theo');
+          return;
+        }
+      }
+
+      // Nếu đã hết bài học trong chương hiện tại, tìm chương tiếp theo
+      const sortedChapters = courseInfo.chapters
+        .sort((a, b) => {
+          const numA = parseInt(a.title.match(/\d+/) || [0]);
+          const numB = parseInt(b.title.match(/\d+/) || [0]);
+          return numA - numB;
+        });
+
+      const currentChapterIndex = sortedChapters.findIndex(c => c.id === activeChapter.id);
+      
+      if (currentChapterIndex !== -1 && currentChapterIndex < sortedChapters.length - 1) {
+        const nextChapter = sortedChapters[currentChapterIndex + 1];
+        const firstLesson = nextChapter.lessons
+          .sort((a, b) => {
+            const numA = parseInt(a.title.match(/\d+/) || [0]);
+            const numB = parseInt(b.title.match(/\d+/) || [0]);
+            return numA - numB;
+          })[0];
+
+        if (firstLesson) {
+          const firstVideo = firstLesson.files
+            ?.filter(f => f.type?.includes("video"))
+            .sort((a, b) => {
+              const numA = parseInt(a.name.match(/\d+/) || [0]);
+              const numB = parseInt(b.name.match(/\d+/) || [0]);
+              return numA - numB;
+            })[0];
+
+          if (firstVideo) {
+            setActiveChapter(nextChapter);
+            setExpandedChapterIndex(currentChapterIndex + 1);
+            setActiveLesson(firstLesson);
+            setExpandedLessonId(firstLesson.id);
+            handleLessonClick(firstLesson, nextChapter, firstVideo);
+            toast.success('Đang chuyển sang chương tiếp theo');
+            return;
           }
         }
-        if (nextLesson) break;
       }
 
-      // Nếu có bài học tiếp theo, chuyển sang video đầu tiên của bài đó
-      if (nextLesson && nextLesson.videos?.length > 0) {
-        handleLessonClick(nextLesson);
-        toast.success('Đang chuyển sang bài học tiếp theo');
-      }
+      toast.success('Bạn đã hoàn thành khóa học!');
     } catch (error) {
       console.error("Lỗi khi xử lý kết thúc video:", error);
+      toast.error('Có lỗi xảy ra khi chuyển video');
     }
   };
 
