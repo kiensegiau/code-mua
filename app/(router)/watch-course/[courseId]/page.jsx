@@ -13,6 +13,7 @@ import {
   Video,
   File,
   ArrowLeftCircle,
+  LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 import GlobalApi from "../../../_utils/GlobalApi";
@@ -244,40 +245,53 @@ export default function WatchCourse({ params }) {
       {/* Header */}
       <div className="bg-[#1f1f1f] border-b border-gray-800 flex-none">
         <div className="max-w-[1600px] mx-auto px-4">
-          <div className="flex items-center justify-between h-[52px]">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center h-[52px]">
+            {/* Left Section */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <Link 
                 href="/courses"
-                className="flex items-center gap-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                className="flex items-center gap-2 text-gray-300 hover:text-[#ff4d4f] transition-colors flex-shrink-0 bg-gray-800/50 hover:bg-gray-800 px-3 py-1.5 rounded-full"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm">Quay lại</span>
+                <span className="text-sm hidden xs:block font-medium">Quay lại</span>
               </Link>
-              <div className="h-4 w-[1px] bg-gray-800"></div>
-              <h1 className="text-sm text-gray-200 truncate max-w-[300px] hidden sm:block">
-                {courseInfo?.title}
-              </h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-xs text-gray-400 hidden sm:block">
-                <span className="text-[#ff4d4f] font-medium">
-                  {Object.values(videoProgress).filter(p => p === 100).length}
-                </span>
-                <span className="mx-1">/</span>
-                <span>
-                  {courseInfo?.chapters?.reduce(
-                    (total, chapter) => total + (chapter?.lessons?.length || 0),
-                    0
-                  ) || 0}
-                </span>
-                <span className="ml-0.5">bài học</span>
+
+              <div className="h-4 w-[1px] bg-gray-800 hidden xs:block flex-shrink-0"></div>
+
+              <div className="flex-1 min-w-0">
+                <div className="hidden xs:block text-[11px] uppercase tracking-wider text-[#ff4d4f] font-medium mb-0.5">
+                  Đang học
+                </div>
+                <h1 className="text-sm text-gray-100 truncate pr-4 font-medium">
+                  {courseInfo?.title || "Đang tải..."}
+                </h1>
               </div>
-              <div className="h-4 w-[1px] bg-gray-800 hidden sm:block"></div>
+            </div>
+
+            {/* Right Section */}
+            <div className="flex items-center gap-4">
+              <div className="text-xs bg-gray-800/50 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-[#ff4d4f] font-medium">
+                    {Object.values(videoProgress).filter(p => p === 100).length}
+                  </span>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-gray-300">
+                    {courseInfo?.chapters?.reduce(
+                      (total, chapter) => total + (chapter?.lessons?.length || 0),
+                      0
+                    ) || 0}
+                  </span>
+                </div>
+                <span className="text-gray-400">bài học</span>
+              </div>
+
               <button
                 onClick={handleLogout}
-                className="text-xs text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                className="text-white hover:text-white transition-colors whitespace-nowrap bg-[#ff4d4f] hover:bg-[#ff4d4f]/90 px-3 py-1.5 rounded-full font-medium flex items-center gap-2 text-xs"
               >
-                Đăng xuất
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Đăng xuất</span>
               </button>
             </div>
           </div>
@@ -288,7 +302,7 @@ export default function WatchCourse({ params }) {
       <div className="flex-1 md:grid md:grid-cols-[1fr_380px] flex flex-col min-h-0">
         {/* Video Player Section */}
         <div className="flex-none md:flex md:flex-col md:h-full">
-          <div className="w-full aspect-video bg-[#1f1f1f]">
+          <div className="w-full aspect-video bg-[#1f1f1f] relative">
             {videoUrl ? (
               <VideoPlayer
                 key={key}
@@ -299,7 +313,7 @@ export default function WatchCourse({ params }) {
                 autoPlay={true}
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <p className="text-gray-400">Vui lòng chọn một bài học để bắt đầu</p>
               </div>
             )}
