@@ -240,7 +240,7 @@ export default function WatchCourse({ params }) {
   }
 
   return (
-    <div className="h-screen bg-[#141414] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#141414] flex flex-col">
       {/* Header */}
       <div className="bg-[#1f1f1f] border-b border-gray-800 flex-none">
         <div className="max-w-[1600px] mx-auto px-4">
@@ -254,12 +254,12 @@ export default function WatchCourse({ params }) {
                 <span className="text-sm">Quay lại</span>
               </Link>
               <div className="h-4 w-[1px] bg-gray-800"></div>
-              <h1 className="text-sm text-gray-200 truncate max-w-[300px]">
+              <h1 className="text-sm text-gray-200 truncate max-w-[300px] hidden sm:block">
                 {courseInfo?.title}
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 hidden sm:block">
                 <span className="text-[#ff4d4f] font-medium">
                   {Object.values(videoProgress).filter(p => p === 100).length}
                 </span>
@@ -272,7 +272,7 @@ export default function WatchCourse({ params }) {
                 </span>
                 <span className="ml-0.5">bài học</span>
               </div>
-              <div className="h-4 w-[1px] bg-gray-800"></div>
+              <div className="h-4 w-[1px] bg-gray-800 hidden sm:block"></div>
               <button
                 onClick={handleLogout}
                 className="text-xs text-gray-400 hover:text-[#ff4d4f] transition-colors"
@@ -285,10 +285,10 @@ export default function WatchCourse({ params }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex md:grid md:grid-cols-[1fr_380px] overflow-hidden">
+      <div className="flex-1 md:grid md:grid-cols-[1fr_380px] flex flex-col min-h-0">
         {/* Video Player Section */}
-        <div className="flex flex-col min-w-0 h-full">
-          <div className="flex-1 relative bg-[#1f1f1f]">
+        <div className="flex-none md:flex md:flex-col md:h-full">
+          <div className="w-full aspect-video bg-[#1f1f1f]">
             {videoUrl ? (
               <VideoPlayer
                 key={key}
@@ -306,15 +306,15 @@ export default function WatchCourse({ params }) {
           </div>
 
           {/* Video Info */}
-          <div className="flex-none p-6 border-t border-gray-800 bg-[#1f1f1f]">
-            <h1 className="text-xl font-medium text-gray-200">
+          <div className="flex-none p-3 md:p-6 border-t border-gray-800 bg-[#1f1f1f]">
+            <h1 className="text-sm md:text-xl font-medium text-gray-200">
               {activeLesson?.title || "Chưa có bài học nào được chọn"}
             </h1>
           </div>
         </div>
 
-        {/* Course Content Section */}
-        <div className="flex-none w-[380px] bg-[#1f1f1f] border-l border-gray-800">
+        {/* Course Content Section - Full width on mobile, sidebar on desktop */}
+        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 overflow-y-auto">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}
