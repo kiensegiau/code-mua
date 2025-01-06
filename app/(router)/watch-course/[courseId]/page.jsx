@@ -132,11 +132,6 @@ export default function WatchCourse({ params }) {
   ]);
 
   const handleLessonClick = (lesson, chapter, file) => {
-    console.log("=== Click Debug ===");
-    console.log("Lesson:", lesson);
-    console.log("Chapter:", chapter);
-    console.log("File:", file);
-
     setActiveLesson(lesson);
     setActiveChapter(chapter);
 
@@ -199,14 +194,13 @@ export default function WatchCourse({ params }) {
   );
 
   const handleFileClick = (file) => {
-    if (file.type.includes("video")) {
-      const fullUrl = file.proxyUrl.startsWith("http")
-        ? file.proxyUrl
-        : `/api/proxy/files?id=${file.id}`;
-      setVideoUrl(fullUrl);
-      setActiveVideo(file);
-      setIsPlaying(true);
-      setKey((prev) => prev + 1);
+    if (file.type?.includes("video")) {
+      // Sử dụng activeLesson và activeChapter hiện tại
+      if (!activeLesson || !activeChapter) {
+        console.warn("Missing activeLesson or activeChapter");
+        return;
+      }
+      handleLessonClick(activeLesson, activeChapter, file);
     } else {
       // Mở PDF hoặc tài liệu khác trong tab mới với URL đầy đủ
       window.open(

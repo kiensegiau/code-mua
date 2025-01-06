@@ -73,14 +73,11 @@ export default forwardRef(
           setExpandedLessonId(activeLesson.id);
         }
       }
-    }, [activeLesson, chapters]);
+    }, [activeLesson, chapters, expandedChapterIndex]);
 
     // Xử lý khi video kết thúc
     const handleVideoEnd = () => {
-      console.log("=== handleVideoEnd triggered ===");
-
       if (!activeLesson || !activeChapter || !activeVideo) {
-        console.log("Missing required data");
         return;
       }
 
@@ -93,15 +90,11 @@ export default forwardRef(
       const currentVideoIndex = sortedVideoFiles.findIndex(
         (f) => f.driveFileId === activeVideo.driveFileId
       );
-      console.log("Current video index:", currentVideoIndex);
 
       // 3. Lấy video tiếp theo trong lesson hiện tại
       const nextVideo = sortedVideoFiles[currentVideoIndex + 1];
-      console.log("Next video in current lesson:", nextVideo);
 
       if (nextVideo) {
-        console.log("Playing next video in current lesson");
-        onLessonClick(activeLesson, activeChapter, nextVideo);
         return;
       }
 
@@ -110,10 +103,8 @@ export default forwardRef(
       const currentLessonIndex = sortedLessons.findIndex(
         (l) => l.id === activeLesson.id
       );
-      console.log("Current lesson index:", currentLessonIndex);
 
       const nextLesson = sortedLessons[currentLessonIndex + 1];
-      console.log("Next lesson:", nextLesson);
 
       if (nextLesson) {
         // 5. Tìm video đầu tiên trong lesson mới (đã sắp xếp)
@@ -121,15 +112,11 @@ export default forwardRef(
           .filter((f) => f.type?.includes("video"))
           .sort(sortFiles)[0];
 
-        console.log("First video in next lesson:", firstVideo);
-
         if (firstVideo) {
-          console.log("Moving to next lesson");
           setExpandedLessonId(nextLesson.id);
           onLessonClick(nextLesson, activeChapter, firstVideo);
         }
       } else {
-        console.log("End of chapter reached");
         toast.success("Đã hoàn thành chương học!");
       }
     };
@@ -247,10 +234,8 @@ export default forwardRef(
 
     // Hàm sort cho chapters và lessons
     const sortByNumber = (a, b) => {
-      console.log("Sorting:", a.title, b.title); // Debug log
       const numA = getNumberFromTitle(a.title);
       const numB = getNumberFromTitle(b.title);
-      console.log("Numbers:", numA, numB); // Debug log
       return numA - numB;
     };
 
@@ -320,7 +305,6 @@ export default forwardRef(
                   <div className="bg-white">
                     {[...(chapter.lessons || [])]
                       .sort((a, b) => {
-                        console.log("Sorting lessons:", a.title, b.title); // Debug log
                         return sortByNumber(a, b);
                       })
                       .map((lesson, lessonIndex) => (
