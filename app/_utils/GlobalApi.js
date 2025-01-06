@@ -78,14 +78,13 @@ const GlobalApi = {
     }
   },
 
-  enrollCourse: async (userId, courseId) => {
+  purchaseCourse: async (userId, courseId) => {
     try {
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("uid", "==", userId));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.error("Không tìm thấy người dùng với UID:", userId);
         throw new Error("Không tìm thấy thông tin người dùng");
       }
 
@@ -94,31 +93,124 @@ const GlobalApi = {
       const courseDoc = await getDoc(courseRef);
 
       if (!courseDoc.exists()) {
-        console.error("Không tìm thấy khóa học với ID:", courseId);
         throw new Error("Không tìm thấy thông tin khóa học");
       }
 
+      const userData = userDoc.data();
+      const courseData = courseDoc.data();
+      const userBalance = userData.balance || 0;
+      const coursePrice = courseData.price || 0;
+
+      // Kiểm tra số dư
+      if (userBalance < coursePrice) {
+        throw new Error("Insufficient balance");
+      }
+
+      // Kiểm tra đã mua chưa
+      const purchaseSnapshot = await db
+        .collection("purchases")
+        .where("userId", "==", userId)
+        .where("courseId", "==", courseId)
+        .limit(1)
+        .get();
+
+      if (!purchaseSnapshot.empty) {
+        throw new Error("Course already purchased");
+      }
+
+      // Thực hiện giao dịch
       await runTransaction(db, async (transaction) => {
-        const userData = userDoc.data();
-        const enrolledCourses = userData.enrolledCourses || [];
-        const enrolledUsers = courseDoc.data().enrolledUsers || [];
+        // Trừ tiền
+        transaction.update(doc(db, "users", userDoc.id), {
+          balance: userBalance - coursePrice,
+        });
 
-        const userRef = doc(db, "users", userDoc.id);
+        // Lưu lịch sử mua
+        const purchaseRef = doc(collection(db, "purchases"));
+        transaction.set(purchaseRef, {
+          userId,
+          courseId,
+          amount: coursePrice,
+          purchasedAt: new Date(),
+        });
 
-        if (!enrolledCourses.includes(courseId)) {
+        // Thêm vào danh sách khóa học đã đăng ký
+        transaction.update(doc(db, "users", userDoc.id), {
+          enrolledCourses: arrayUnion(courseId),
+        });
+
+        // Cập nhật số người đăng ký của khóa học
+        transaction.update(courseRef, {
+          enrolledUsers: arrayUnion(userId),
+          enrollments: (courseData.enrollments || 0) + 1,
+        });
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Lỗi khi mua khóa học:", error);
+      throw error;
+    }
+  },
+
+  enrollCourse: async (userId, courseId) => {
+    try {
+      const courseRef = doc(db, "courses", courseId);
+      const courseDoc = await getDoc(courseRef);
+
+      if (!courseDoc.exists()) {
+        throw new Error("Không tìm thấy thông tin khóa học");
+      }
+
+      const courseData = courseDoc.data();
+
+      // Nếu là khóa học có phí, chuyển sang flow mua khóa học
+      if (courseData.price > 0) {
+        return await GlobalApi.purchaseCourse(userId, courseId);
+      }
+
+      // Lấy document ID của user
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("uid", "==", userId));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        throw new Error("Không tìm thấy thông tin người dùng");
+      }
+
+      const userDocId = querySnapshot.docs[0].id;
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      // Nếu là khóa học miễn phí, chỉ cần đăng ký
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, "users", userDocId);
+
+        // Nếu chưa có mảng enrolledCourses, tạo mới với khóa học hiện tại
+        if (!userData.enrolledCourses) {
+          transaction.update(userRef, {
+            enrolledCourses: [courseId],
+          });
+        } else {
           transaction.update(userRef, {
             enrolledCourses: arrayUnion(courseId),
           });
         }
 
-        if (!enrolledUsers.includes(userId)) {
+        // Tương tự với enrolledUsers của khóa học
+        if (!courseData.enrolledUsers) {
+          transaction.update(courseRef, {
+            enrolledUsers: [userId],
+            enrollments: 1,
+          });
+        } else {
           transaction.update(courseRef, {
             enrolledUsers: arrayUnion(userId),
+            enrollments: (courseData.enrollments || 0) + 1,
           });
         }
       });
 
-      console.log("Đăng ký khóa học thành công");
       return true;
     } catch (error) {
       console.error("Lỗi khi đăng ký khóa học:", error);
