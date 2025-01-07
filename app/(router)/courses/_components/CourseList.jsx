@@ -1,147 +1,219 @@
-import React, { useEffect, useState } from 'react'
-import GlobalApi from '@/app/_utils/GlobalApi'
-import CourseItem from './CourseItem'
-import { Search, Filter, Loader2 } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
+"use client";
 
-function CourseList() {
-  const [courseList, setCourseList] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('all')
-  const [selectedPrice, setSelectedPrice] = useState('all')
+import React, { useState, useEffect, useCallback } from "react";
+import CourseItem from "./CourseItem";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+import GlobalApi from "@/app/_utils/GlobalApi";
+
+function CourseList({ grade }) {
+  const [expandedSubjects, setExpandedSubjects] = useState({});
+  const [coursesBySubject, setCoursesBySubject] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [itemsPerPage, setItemsPerPage] = useState(4);
+
+  const subjects = [
+    { value: "math", label: "Toán học" },
+    { value: "physics", label: "Vật lý" },
+    { value: "chemistry", label: "Hóa học" },
+    { value: "biology", label: "Sinh học" },
+    { value: "literature", label: "Ngữ văn" },
+    { value: "english", label: "Tiếng Anh" },
+    { value: "history", label: "Lịch sử" },
+    { value: "geography", label: "Địa lý" },
+    { value: "informatics", label: "Tin học" },
+    { value: "others", label: "Khác" },
+  ];
+
+  const toggleSubject = (subjectId) => {
+    setExpandedSubjects((prev) => ({
+      ...prev,
+      [subjectId]: !prev[subjectId],
+    }));
+  };
+
+  // Cập nhật số lượng items dựa trên kích thước màn hình
+  const updateItemsPerPage = useCallback(() => {
+    const width = window.innerWidth;
+    if (width >= 1536) {
+      // 2xl
+      setItemsPerPage(6);
+    } else if (width >= 1280) {
+      // xl
+      setItemsPerPage(5);
+    } else if (width >= 1024) {
+      // lg
+      setItemsPerPage(4);
+    } else if (width >= 768) {
+      // md
+      setItemsPerPage(3);
+    } else {
+      setItemsPerPage(2);
+    }
+  }, []);
 
   useEffect(() => {
-    getAllCourseList()
-  }, [])
+    updateItemsPerPage();
+    window.addEventListener("resize", updateItemsPerPage);
+    return () => window.removeEventListener("resize", updateItemsPerPage);
+  }, [updateItemsPerPage]);
 
-  const getAllCourseList = async () => {
+  useEffect(() => {
+    getAllCourses();
+  }, []);
+
+  const getAllCourses = async () => {
     try {
-      setLoading(true)
-      const resp = await GlobalApi.getAllCourseList()
-      
-      // Xử lý response trực tiếp vì API trả về mảng
-      const coursesWithDefaults = (Array.isArray(resp) ? resp : []).map(course => ({
-        ...course,
-        price: course.price || 0,
-        level: course.level || 'Cơ bản',
-        duration: course.duration || '0',
-        totalLessons: course.totalLessons || 0,
-        teacher: course.teacher || 'Giảng viên'
-      }))
+      setLoading(true);
+      const resp = await GlobalApi.getAllCourseList();
 
-      setCourseList(coursesWithDefaults)
+      // Lọc khóa học theo lớp nếu có
+      const filteredCourses = grade
+        ? resp.filter((course) => course.grade === grade)
+        : resp;
+
+      // Phân loại khóa học theo môn
+      const coursesGrouped = subjects.map((subject) => ({
+        id: subject.value,
+        title: subject.label,
+        courses: filteredCourses.filter((course) => {
+          if (course.subject && course.subject === subject.value) {
+            return true;
+          }
+          if (
+            subject.value === "others" &&
+            (!course.subject ||
+              !subjects.find((s) => s.value === course.subject))
+          ) {
+            return true;
+          }
+          return false;
+        }),
+      }));
+
+      setCoursesBySubject(coursesGrouped);
     } catch (error) {
-      console.error("Error fetching courses:", error)
+      console.error("Error fetching courses:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
+  };
+
+  // Chỉ hiển thị các môn có khóa học
+  const subjectsWithCourses = subjects.filter((subject) =>
+    coursesBySubject.some(
+      (category) => category.id === subject.value && category.courses.length > 0
+    )
+  );
+
+  if (loading) {
+    return (
+      <div className="space-y-10">
+        {[1, 2, 3].map((index) => (
+          <div key={index} className="space-y-4 animate-pulse">
+            <div className="h-8 bg-gray-800 rounded w-48"></div>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-4">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="aspect-video bg-gray-800 rounded"
+                ></div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
-  const filteredCourses = courseList.filter(course => {
-    const matchesSearch = course.title?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel
-    const matchesPrice = selectedPrice === 'all' 
-      || (selectedPrice === 'free' && course.price === 0)
-      || (selectedPrice === 'paid' && course.price > 0)
-    
-    return matchesSearch && matchesLevel && matchesPrice
-  })
-
-  const levels = ['Cơ bản', 'Trung bình', 'Nâng cao']
-
   return (
-    <div>
-      {/* Search and Filter Section */}
-      <div className='flex flex-col md:flex-row gap-4 mb-6'>
-        {/* Search Bar */}
-        <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
-          <input
-            type='text'
-            placeholder='Tìm kiếm khóa học...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='pl-10 pr-4 py-2 w-full rounded-full bg-gray-800/50 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-300 placeholder:text-gray-500'
-          />
-        </div>
+    <div className="space-y-10">
+      {subjectsWithCourses.map((subject) => {
+        const category = coursesBySubject.find(
+          (cat) => cat.id === subject.value
+        );
+        if (!category || !category.courses.length) return null;
 
-        {/* Filters */}
-        <div className='flex flex-wrap gap-2'>
-          {/* Level Filter */}
-          <select
-            value={selectedLevel}
-            onChange={(e) => setSelectedLevel(e.target.value)}
-            className='px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-gray-300'
-          >
-            <option value='all'>Tất cả trình độ</option>
-            {levels.map(level => (
-              <option key={level} value={level}>{level}</option>
-            ))}
-          </select>
+        const isExpanded = expandedSubjects[subject.value];
+        const displayedCourses = isExpanded
+          ? category.courses
+          : category.courses.slice(0, itemsPerPage);
+        const hasMore = category.courses.length > itemsPerPage;
 
-          {/* Price Filter */}
-          <select
-            value={selectedPrice}
-            onChange={(e) => setSelectedPrice(e.target.value)}
-            className='px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-gray-300'
-          >
-            <option value='all'>Tất cả giá</option>
-            <option value='free'>Miễn phí</option>
-            <option value='paid'>Có phí</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Course Grid */}
-      {loading ? (
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6'>
-          {[...Array(8)].map((_, index) => (
-            <div key={index} className='bg-[#1f1f1f] rounded-lg overflow-hidden border border-gray-800'>
-              <div className='aspect-video bg-gray-800 animate-pulse' />
-              <div className='p-4'>
-                <div className='h-5 bg-gray-800 rounded animate-pulse mb-3' />
-                <div className='h-4 bg-gray-800 rounded animate-pulse w-2/3 mb-3' />
-                <div className='flex justify-between mt-4'>
-                  <div className='h-4 bg-gray-800 rounded animate-pulse w-1/4' />
-                  <div className='h-4 bg-gray-800 rounded animate-pulse w-1/4' />
+        return (
+          <div key={subject.value} className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">
+                    {subject.label}
+                  </h2>
                 </div>
               </div>
+              {hasMore && (
+                <button
+                  onClick={() => toggleSubject(subject.value)}
+                  className="text-[#ff4d4f] hover:underline flex items-center gap-1 text-sm sm:text-base"
+                >
+                  {isExpanded ? "Thu gọn" : "Xem tất cả"}
+                  {isExpanded ? (
+                    <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  )}
+                </button>
+              )}
             </div>
-          ))}
-        </div>
-      ) : filteredCourses.length > 0 ? (
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6'>
-          {filteredCourses.map((course, index) => (
-            <Link href={`/course-preview/${course.id}`} key={index} className="block">
-              <CourseItem course={course} />
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className='text-center py-12'>
-          <div className='mb-4'>
-            <Image
-              src='/empty-courses.png'
-              alt='No courses'
-              width={200}
-              height={200}
-              className='mx-auto opacity-50'
-            />
+
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-4">
+              {displayedCourses
+                .slice(
+                  0,
+                  displayedCourses.length - (hasMore && !isExpanded ? 1 : 0)
+                )
+                .map((course) => (
+                  <CourseItem key={course.id} course={course} />
+                ))}
+
+              {hasMore && !isExpanded && (
+                <button
+                  onClick={() => toggleSubject(subject.value)}
+                  className="group h-full min-h-[140px] sm:min-h-[160px] bg-[#1f1f1f] rounded-lg border border-dashed border-gray-700 hover:border-[#ff4d4f] transition-colors duration-300 flex flex-col items-center justify-center gap-2 cursor-pointer"
+                >
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-800 group-hover:bg-[#ff4d4f]/10 flex items-center justify-center transition-colors duration-300">
+                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-[#ff4d4f]" />
+                  </div>
+                  <div className="text-center px-2">
+                    <p className="text-[10px] sm:text-xs text-gray-400 group-hover:text-[#ff4d4f] font-medium">
+                      Xem thêm
+                    </p>
+                    <p className="text-[8px] sm:text-[10px] text-gray-500">
+                      {category.courses.length - itemsPerPage} khóa học khác
+                    </p>
+                  </div>
+                </button>
+              )}
+            </div>
+
+            {isExpanded && (
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => toggleSubject(subject.value)}
+                  className="flex items-center gap-2 text-[#ff4d4f] hover:underline text-sm sm:text-base"
+                >
+                  Thu gọn
+                  <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+              </div>
+            )}
           </div>
-          <h3 className='text-gray-400 mb-2'>
-            {searchQuery 
-              ? 'Không tìm thấy khóa học nào phù hợp'
-              : 'Chưa có khóa học nào'}
-          </h3>
-          <p className='text-sm text-gray-500'>
-            Vui lòng thử tìm kiếm với từ khóa khác
-          </p>
-        </div>
-      )}
+        );
+      })}
     </div>
-  )
+  );
 }
 
-export default CourseList
+CourseList.defaultProps = {
+  grade: null, // Không lọc theo lớp nếu không có prop grade
+};
+
+export default CourseList;

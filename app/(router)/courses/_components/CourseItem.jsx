@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { BookOpen, Clock, Users, Award, TrendingUp } from "lucide-react";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -39,10 +41,10 @@ function CourseItem({ course }) {
           </div>
 
           {/* Content section with consistent spacing */}
-          <div className="flex-1 p-4 flex flex-col">
+          <div className="flex-1 p-3 flex flex-col">
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
-                <h2 className="font-semibold text-gray-200 text-lg mb-1 line-clamp-2 group-hover:text-[#ff4d4f] transition-colors cursor-pointer">
+                <h2 className="font-semibold text-gray-200 text-base mb-1 line-clamp-2 group-hover:text-[#ff4d4f] transition-colors cursor-pointer">
                   {course.title}
                 </h2>
               </Tooltip.Trigger>
@@ -59,7 +61,7 @@ function CourseItem({ course }) {
 
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
-                <p className="text-sm text-gray-400 mb-3 line-clamp-1 cursor-pointer">
+                <p className="text-xs text-gray-400 mb-2 line-clamp-1 cursor-pointer">
                   {course.subname || "Khóa học online"}
                 </p>
               </Tooltip.Trigger>
@@ -75,29 +77,29 @@ function CourseItem({ course }) {
             </Tooltip.Root>
 
             {/* Teacher info */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                <Users className="w-4 h-4 text-[#ff4d4f]" />
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center">
+                <Users className="w-3 h-3 text-[#ff4d4f]" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-300">
+                <p className="text-xs font-medium text-gray-300">
                   {course.teacher}
                 </p>
-                <p className="text-xs text-gray-400">Giảng viên</p>
+                <p className="text-[10px] text-gray-400">Giảng viên</p>
               </div>
             </div>
 
             {/* Course stats */}
-            <div className="grid grid-cols-2 gap-3 mt-auto pt-3 border-t border-gray-800">
+            <div className="grid grid-cols-2 gap-2 mt-auto pt-2 border-t border-gray-800">
               <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-400">
+                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-xs text-gray-400 whitespace-nowrap">
                   {course.duration || "100+"} giờ
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-400">
+                <BookOpen className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-xs text-gray-400 whitespace-nowrap">
                   {course.totalLessons || "100+"} bài học
                 </span>
               </div>

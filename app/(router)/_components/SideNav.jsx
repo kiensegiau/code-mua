@@ -29,14 +29,32 @@ function SideNav() {
       color: "text-gray-400",
     },
     {
-      title: "Khóa học",
+      title: "Tất cả khóa học",
       icon: BookOpen,
       href: "/courses",
       color: "text-gray-400",
     },
     {
-      title: "Khóa học của tôi",
+      title: "Lớp 12",
       icon: GraduationCap,
+      href: "/courses/grade-12",
+      color: "text-gray-400",
+    },
+    {
+      title: "Lớp 11",
+      icon: GraduationCap,
+      href: "/courses/grade-11",
+      color: "text-gray-400",
+    },
+    {
+      title: "Lớp 10",
+      icon: GraduationCap,
+      href: "/courses/grade-10",
+      color: "text-gray-400",
+    },
+    {
+      title: "Khóa học của tôi",
+      icon: BookMarked,
       href: "/my-courses",
       color: "text-gray-400",
       requireAuth: true,
@@ -50,30 +68,10 @@ function SideNav() {
       badge: "Mới",
     },
     {
-      title: "Yêu thích",
-      icon: Star,
-      href: "/wishlist",
-      color: "text-gray-400",
-      requireAuth: true,
-    },
-    {
-      title: "Blog",
-      icon: FileText,
-      href: "/blog",
-      color: "text-gray-400",
-    },
-    {
       title: "Cộng đồng",
       icon: Users,
       href: "/community",
       color: "text-gray-400",
-    },
-    {
-      title: "Trò chuyện",
-      icon: MessageSquare,
-      href: "/chat",
-      color: "text-gray-400",
-      requireAuth: true,
     },
   ];
 
@@ -96,7 +94,10 @@ function SideNav() {
     if (href === "/") {
       return pathname === href;
     }
-    return pathname.startsWith(href);
+    if (href === "/courses") {
+      return pathname === href;
+    }
+    return pathname === href;
   };
 
   const NavItem = ({ item }) => {
