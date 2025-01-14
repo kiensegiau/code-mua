@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PlayCircle,
   Clock,
@@ -15,38 +15,102 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import { toast } from "sonner";
 import CourseEnrollSection from "./_components/CourseEnrollSection";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { db } from "@/app/_utils/firebase";
 
 function CoursePreview({ params }) {
-  const [courseInfo, setCourseInfo] = useState(null);
-  const { user } = useAuth();
-  const [isUserEnrolled, setIsUserEnrolled] = useState(false);
+  const { user, profile } = useAuth();
+  const router = useRouter();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    const fetchCourseInfo = async () => {
-      try {
-        const course = await GlobalApi.getCourseById(params.courseId);
-        setCourseInfo(course);
-        if (user) {
-          const enrolled = await GlobalApi.isUserEnrolled(
-            user.uid,
-            params.courseId
-          );
-          setIsUserEnrolled(enrolled);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy thông tin khóa học:", error);
-        toast.error("Không thể tải thông tin khóa học");
+    getCourseById();
+  }, []);
+
+  const getCourseById = async () => {
+    try {
+      const resp = await GlobalApi.getCourseById(params.courseId);
+      setCourse(resp);
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      toast.error("Không thể tải thông tin khóa học");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnrollCourse = async () => {
+    if (!user) {
+      router.push("/sign-in");
+      return;
+    }
+
+    try {
+      setEnrolling(true);
+
+      // Kiểm tra số dư
+      if (course.price > (profile?.balance || 0)) {
+        toast.error("Số dư không đủ để mua khóa học này");
+        return;
       }
-    };
 
-    fetchCourseInfo();
-  }, [params.courseId, user]);
+      // Cập nhật số dư của user
+      const newBalance = profile.balance - course.price;
+      const userDocRef = doc(db, "users", profile.id);
 
-  if (!courseInfo) {
+      // Kiểm tra xem khóa học đã được mua chưa
+      if (profile?.enrolledCourses?.some((c) => c.courseId === course.id)) {
+        toast.error("Bạn đã đăng ký khóa học này rồi");
+        return;
+      }
+
+      await updateDoc(userDocRef, {
+        balance: newBalance,
+        enrolledCourses: arrayUnion({
+          courseId: course.id,
+          enrolledAt: new Date().toISOString(),
+          price: course.price,
+          title: course.title,
+          coverImage: course.coverImage,
+        }),
+      });
+
+      // Cập nhật số lượng học viên của khóa học
+      const courseDocRef = doc(db, "courses", course.id);
+      const courseDoc = await getDoc(courseDocRef);
+      if (courseDoc.exists()) {
+        await updateDoc(courseDocRef, {
+          totalStudents: (courseDoc.data().totalStudents || 0) + 1,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      toast.success("Đăng ký khóa học thành công!");
+      router.push(`/watch-course/${course.id}`);
+    } catch (error) {
+      console.error("Error enrolling course:", error);
+      toast.error("Có lỗi xảy ra khi đăng ký khóa học");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#141414] flex items-center justify-center">
         <div className="animate-spin w-6 h-6 border-2 border-[#ff4d4f] border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+        <div className="text-gray-400">Không tìm thấy khóa học</div>
       </div>
     );
   }
@@ -68,26 +132,26 @@ function CoursePreview({ params }) {
                 {/* Course Title & Stats */}
                 <div className="mb-6">
                   <h1 className="text-2xl font-bold text-gray-200 mb-4">
-                    {courseInfo.title}
+                    {course.title}
                   </h1>
                   <div className="flex flex-wrap gap-4 text-sm text-gray-400">
                     <div className="flex items-center gap-1.5">
                       <div className="flex items-center gap-1">
                         <Target className="w-4 h-4" />
-                        <span>Mức độ: {courseInfo.level}</span>
+                        <span>Mức độ: {course.level}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-4 h-4" />
-                      <span>Thời lượng: {courseInfo.duration}</span>
+                      <span>Thời lượng: {course.duration}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <BookOpen className="w-4 h-4" />
-                      <span>Số lượng: {courseInfo.totalLessons} video</span>
+                      <span>Số lượng: {course.totalLessons} video</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Users className="w-4 h-4" />
-                      <span>Lượt xem: {courseInfo.enrollments || 0}</span>
+                      <span>Lượt xem: {course.enrollments || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -122,14 +186,10 @@ function CoursePreview({ params }) {
                         </h2>
                         <div
                           dangerouslySetInnerHTML={{
-                            __html: courseInfo.description,
+                            __html: course.description,
                           }}
                           className="text-gray-400 mb-8"
                         />
-
-                        
-
-                        
                       </div>
                     )}
                   </div>
@@ -143,10 +203,9 @@ function CoursePreview({ params }) {
                   <div className="relative aspect-video overflow-hidden">
                     <Image
                       src={
-                        courseInfo.previewImageUrl ||
-                        "/default-course-preview.jpg"
+                        course.previewImageUrl || "/default-course-preview.jpg"
                       }
-                      alt={courseInfo.title}
+                      alt={course.title}
                       layout="fill"
                       objectFit="cover"
                     />
@@ -159,8 +218,9 @@ function CoursePreview({ params }) {
 
                   <div className="p-6">
                     <CourseEnrollSection
-                      courseInfo={courseInfo}
-                      isUserAlreadyEnrolled={isUserEnrolled}
+                      courseInfo={course}
+                      onEnroll={handleEnrollCourse}
+                      isEnrolling={enrolling}
                     />
 
                     <div className="mt-6 space-y-4">

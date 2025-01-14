@@ -258,43 +258,55 @@ const GlobalApi = {
 
   getEnrolledCourses: async (userId) => {
     try {
+      console.log("Bắt đầu lấy danh sách khóa học đã đăng ký");
+
+      // Lấy thông tin người dùng
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("uid", "==", userId));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.error("Không tìm thấy người dùng với UID:", userId);
+        console.log("Không tìm thấy người dùng");
         return [];
       }
 
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      const enrolledCourseIds = userData.enrolledCourses || [];
+      const userData = querySnapshot.docs[0].data();
+      const enrolledCourses = userData.enrolledCourses || [];
 
-      const enrolledCourses = await Promise.all(
-        enrolledCourseIds.map(async (courseId) => {
-          const courseRef = doc(db, "courses", courseId);
-          const courseSnap = await getDoc(courseRef);
-          if (courseSnap.exists()) {
-            const courseData = courseSnap.data();
-            return {
-              id: courseSnap.id,
-              ...courseData,
-              totalLessons: courseData.chapters
-                ? courseData.chapters.reduce(
-                    (acc, chapter) =>
-                      acc + (chapter.lessons ? chapter.lessons.length : 0),
-                    0
-                  )
-                : 0,
-              duration: courseData.duration || "Chưa xác định",
-            };
-          }
-          return null;
-        })
-      );
+      console.log("Danh sách khóa học đã đăng ký:", enrolledCourses);
 
-      return enrolledCourses.filter((course) => course !== null);
+      if (!enrolledCourses.length) {
+        return [];
+      }
+
+      // Lấy thông tin chi tiết của từng khóa học
+      const coursesPromises = enrolledCourses.map(async (courseInfo) => {
+        console.log("Đang lấy thông tin khóa học:", courseInfo);
+        const courseRef = doc(db, "courses", courseInfo.courseId || courseInfo);
+        const courseSnap = await getDoc(courseRef);
+
+        if (courseSnap.exists()) {
+          const courseData = courseSnap.data();
+          return {
+            id: courseSnap.id,
+            ...courseData,
+            // Nếu courseInfo là object (format mới), sử dụng thông tin từ đó
+            enrolledAt: courseInfo.enrolledAt || new Date().toISOString(),
+            progress: courseInfo.progress || 0,
+            lastAccessed: courseInfo.lastAccessed || null,
+            // Thêm các thông tin khác từ courseInfo nếu có
+            coverImage: courseInfo.coverImage || courseData.coverImage,
+            title: courseInfo.title || courseData.title,
+          };
+        }
+        return null;
+      });
+
+      const courses = await Promise.all(coursesPromises);
+      const validCourses = courses.filter(course => course !== null);
+
+      console.log("Đã lấy thông tin chi tiết khóa học:", validCourses);
+      return validCourses;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách khóa học đã đăng ký:", error);
       throw error;

@@ -27,21 +27,7 @@ function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [balance, setBalance] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    if (user) {
-      // Lắng nghe thay đổi số dư của user
-      const unsubscribe = onSnapshot(doc(db, "users", user.uid), (doc) => {
-        if (doc.exists()) {
-          setBalance(doc.data().balance || 0);
-        }
-      });
-
-      return () => unsubscribe();
-    }
-  }, [user]);
 
   const handleSignOut = () => {
     auth.signOut();
@@ -109,7 +95,12 @@ function Header() {
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 rounded-full border border-gray-700">
               <Wallet className="h-4 w-4 text-[#ff4d4f]" />
               <span className="text-sm font-medium text-gray-300">
-                {balance.toLocaleString("vi-VN")} VND
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(profile?.balance || 0)}
               </span>
             </div>
           )}
@@ -141,7 +132,14 @@ function Header() {
                   {/* Số dư - Mobile */}
                   <div className="md:hidden flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border-b border-gray-800">
                     <Wallet className="h-4 w-4 text-[#ff4d4f]" />
-                    <span>{balance.toLocaleString("vi-VN")} VND</span>
+                    <span>
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(profile?.balance || 0)}
+                    </span>
                   </div>
 
                   <Link
