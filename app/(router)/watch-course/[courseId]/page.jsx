@@ -43,6 +43,12 @@ export default function WatchCourse({ params }) {
   const router = useRouter();
   const courseContentRef = useRef();
 
+  const handleVideoEnd = useCallback(() => {
+    if (courseContentRef.current) {
+      courseContentRef.current.handleVideoEnd();
+    }
+  }, []);
+
   const fetchCourseInfo = useCallback(async () => {
     try {
       setLoading(true);

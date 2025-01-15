@@ -35,6 +35,7 @@ function Header() {
     localStorage.removeItem("refreshToken");
     router.push("/sign-in");
   };
+console.log(profile);
 
   return (
     <>
