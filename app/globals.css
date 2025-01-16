@@ -132,3 +132,57 @@ body{
 .delay-700 {
   animation-delay: 700ms;
 }
+
+/* Custom styles cho nút next/previous */
+.plyr__control--prev,
+.plyr__control--next {
+  padding: 6px !important;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: all 0.2s !important;
+}
+
+.plyr__control--prev:hover,
+.plyr__control--next:hover {
+  background: rgba(255, 77, 79, 0.8) !important;
+  opacity: 1;
+}
+
+.plyr__control--prev svg,
+.plyr__control--next svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Vị trí của các nút */
+.plyr__controls button[data-plyr="play"] {
+  margin: 0 8px;
+}
+
+.plyr__control--prev {
+  margin-right: 4px;
+}
+
+.plyr__control--next {
+  margin-left: 4px;
+}
+
+/* Styles cho nút điều hướng lớn */
+.plyr__video-wrapper:hover .plyr__controls {
+  opacity: 1 !important;
+}
+
+/* Ẩn nút khi video đang play và không hover */
+.plyr--playing .plyr__controls {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease-in-out !important;
+}
+
+/* Hiện nút khi hover hoặc pause */
+.plyr--playing:hover .plyr__controls,
+.plyr--paused .plyr__controls {
+  opacity: 1 !important;
+}

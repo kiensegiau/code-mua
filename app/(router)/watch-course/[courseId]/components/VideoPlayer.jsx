@@ -20,9 +20,7 @@ export default function VideoPlayer({
   const options = {
     controls: [
       'play-large',
-      'rewind',
       'play',
-      'fast-forward',
       'progress',
       'current-time',
       'duration',
@@ -30,6 +28,22 @@ export default function VideoPlayer({
       'volume',
       'settings',
       'fullscreen'
+    ],
+    customControls: [
+      {
+        type: 'button',
+        id: 'previousVideo',
+        position: 'center',
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
+        click: () => onPrevious?.()
+      },
+      {
+        type: 'button',
+        id: 'nextVideo',
+        position: 'center',
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`,
+        click: () => onNext?.()
+      }
     ],
     settings: ['captions', 'quality', 'speed'],
     speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
@@ -70,16 +84,23 @@ export default function VideoPlayer({
       reset: 'Reset',
       disabled: 'Disabled',
       advertisement: 'Ad',
+      previousVideo: 'Video trước',
+      nextVideo: 'Video tiếp theo',
     },
-    events: [
-      'ready',
-      'play',
-      'pause',
-      'ended',
-      'loadeddata',
-      'loadedmetadata',
-      'error'
-    ]
+    keyboard: {
+      focused: true,
+      global: true,
+      bindings: {
+        arrowLeft: {
+          key: 37,
+          handler: () => onPrevious?.()
+        },
+        arrowRight: {
+          key: 39,
+          handler: () => onNext?.()
+        }
+      }
+    }
   };
 
   const videoUrl = fileId.startsWith('http') 
@@ -108,8 +129,72 @@ export default function VideoPlayer({
     console.log('Video metadata loaded');
   };
 
+  useEffect(() => {
+    // Đợi một chút để đảm bảo player đã được render
+    setTimeout(() => {
+      // Tìm controls container
+      const controlsContainer = document.querySelector('.plyr__controls');
+      if (controlsContainer) {
+        const playButton = controlsContainer.querySelector('button[data-plyr="play"]');
+        if (playButton) {
+          // Kiểm tra xem nút đã tồn tại chưa để tránh tạo duplicate
+          const existingPrevButton = controlsContainer.querySelector('.plyr__control--prev');
+          const existingNextButton = controlsContainer.querySelector('.plyr__control--next');
+
+          if (!existingPrevButton) {
+            const prevButton = document.createElement('button');
+            prevButton.type = 'button';
+            prevButton.className = 'plyr__control plyr__control--prev';
+            prevButton.innerHTML = options.customControls[0].html;
+            prevButton.onclick = options.customControls[0].click;
+            playButton.parentNode.insertBefore(prevButton, playButton);
+          }
+
+          if (!existingNextButton) {
+            const nextButton = document.createElement('button');
+            nextButton.type = 'button';
+            nextButton.className = 'plyr__control plyr__control--next';
+            nextButton.innerHTML = options.customControls[1].html;
+            nextButton.onclick = options.customControls[1].click;
+            playButton.parentNode.insertBefore(nextButton, playButton.nextSibling);
+          }
+        }
+      }
+    }, 100); // Đợi 100ms
+
+    // Cleanup function
+    return () => {
+      const prevButton = document.querySelector('.plyr__control--prev');
+      const nextButton = document.querySelector('.plyr__control--next');
+      if (prevButton) prevButton.remove();
+      if (nextButton) nextButton.remove();
+    };
+  }, [playerRef.current, onNext, onPrevious]);
+
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full relative group">
+      {/* Nút Previous lớn */}
+      <button 
+        onClick={onPrevious}
+        className="hidden group-hover:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/50 hover:bg-[#ff4d4f]/80 transition-all duration-200 z-10"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+          <path d="m12 19-7-7 7-7"/>
+          <path d="M19 12H5"/>
+        </svg>
+      </button>
+
+      {/* Nút Next lớn */}
+      <button 
+        onClick={onNext}
+        className="hidden group-hover:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/50 hover:bg-[#ff4d4f]/80 transition-all duration-200 z-10"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </button>
+
       <Plyr
         ref={playerRef}
         source={source}
@@ -119,8 +204,8 @@ export default function VideoPlayer({
         onLoadedData={handleLoadedData}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => {
-          console.log('Video ended');
-          onEnded?.();
+          console.log('Video ended, auto playing next video');
+          onNext?.();
         }}
         onTimeUpdate={(e) => {
           const time = e.target.currentTime;
