@@ -26,6 +26,9 @@ const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
 });
 
+const aspectRatio = 9/16;
+const videoHeight = `${100 * aspectRatio}vw`;
+
 export default function WatchCourse({ params }) {
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
@@ -128,7 +131,10 @@ export default function WatchCourse({ params }) {
   }
 
   return (
-    <div className="h-screen bg-[#141414] flex flex-col overflow-hidden">
+    <div 
+      className="h-screen bg-[#141414] flex flex-col overflow-hidden"
+      style={{ "--video-height": videoHeight }}
+    >
       {/* Header */}
       <div className="bg-[#1f1f1f] border-b border-gray-800 flex-none">
         <div className="max-w-[1600px] mx-auto px-4">
@@ -194,36 +200,39 @@ export default function WatchCourse({ params }) {
       {/* Main Content */}
       <div className="flex-1 md:grid md:grid-cols-[1fr_380px] flex flex-col min-h-0 overflow-hidden">
         {/* Video Player Section */}
-        <div className="flex-none md:flex md:flex-col md:h-full overflow-hidden">
-          <div className="w-full aspect-video bg-[#1f1f1f] relative">
-            {videoUrl ? (
-              <VideoPlayer
-                key={key}
-                fileId={videoUrl}
-                isPlaying={isPlaying}
-                onEnded={handleVideoEnd}
-                onTimeUpdate={handleTimeUpdate}
-                autoPlay={true}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-gray-400">
-                  Vui lòng chọn một bài học để bắt đầu
-                </p>
-              </div>
-            )}
+        <div className="flex-none md:flex md:flex-col md:h-[calc(100vh-52px)] overflow-hidden">
+          {/* Video container - Thêm aspect-video cho mobile */}
+          <div className="w-full aspect-video md:flex-1 bg-[#1f1f1f] relative">
+            <div className="absolute inset-0 flex items-center justify-center">
+              {videoUrl ? (
+                <VideoPlayer
+                  key={key}
+                  fileId={videoUrl}
+                  isPlaying={isPlaying}
+                  onEnded={handleVideoEnd}
+                  onTimeUpdate={handleTimeUpdate}
+                  autoPlay={true}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full">
+                  <p className="text-gray-400">
+                    Vui lòng chọn một bài học để bắt đầu
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Video Info */}
-          <div className="flex-none p-3 md:p-6 border-t border-gray-800 bg-[#1f1f1f]">
-            <h1 className="text-sm md:text-xl font-medium text-gray-200">
+          <div className="flex-none p-3 md:p-4 border-t border-gray-800 bg-[#1f1f1f]">
+            <h1 className="text-sm md:text-lg font-medium text-gray-200 line-clamp-2">
               {activeLesson?.title || "Chưa có bài học nào được chọn"}
             </h1>
           </div>
         </div>
 
         {/* Course Content Section */}
-        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 h-[calc(100vh-52px)]">
+        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 h-[calc(100vh-52px-56px-var(--video-height))] md:h-[calc(100vh-52px)]">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}

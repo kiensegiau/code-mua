@@ -195,7 +195,7 @@ export default forwardRef(
         <div className="flex-none border-b border-gray-800 w-full">
           <div className="flex items-center w-full">
             <button
-              className={`px-4 py-3 text-base font-medium relative w-full
+              className={`px-4 py-2.5 text-base font-medium relative w-full
               ${
                 activeLesson
                   ? "text-[#ff4d4f] border-b-2 border-[#ff4d4f]"
@@ -207,7 +207,7 @@ export default forwardRef(
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-4">
           {chapters
             ?.slice()
             .sort(sortByNumber)

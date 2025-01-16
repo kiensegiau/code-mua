@@ -2,6 +2,25 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 
+// Thêm custom CSS để override video.js styles
+const customStyles = `
+.video-js {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+.vjs-tech {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+`;
+
 export default function VideoPlayer({
   fileId,
   onEnded,
@@ -13,6 +32,17 @@ export default function VideoPlayer({
   const playerRef = useRef(null);
   const [currentPart, setCurrentPart] = useState(0);
   const previousRequestRef = useRef(null);
+
+  // Thêm custom styles khi component mount
+  useEffect(() => {
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = customStyles;
+    document.head.appendChild(styleSheet);
+
+    return () => {
+      document.head.removeChild(styleSheet);
+    };
+  }, []);
 
   // Hàm để hủy request cũ
   const cancelPreviousRequest = useCallback(() => {
@@ -57,16 +87,17 @@ export default function VideoPlayer({
     if (!fileId || !containerRef.current || playerRef.current) return;
 
     const videoElement = document.createElement("video");
-    videoElement.className = "video-js vjs-big-play-centered";
+    videoElement.className = "video-js";
     containerRef.current.innerHTML = "";
     containerRef.current.appendChild(videoElement);
 
     const player = videojs(videoElement, {
       controls: true,
-      fluid: true,
+      fluid: false,
       responsive: true,
       aspectRatio: "16:9",
       autoplay: autoPlay,
+      playbackRates: [0.5, 1, 1.25, 1.5, 2],
       sources: [
         {
           src: getVideoUrl(currentPart),
@@ -126,6 +157,10 @@ export default function VideoPlayer({
   }, [currentPart, getVideoUrl, fileId, cancelPreviousRequest]);
 
   return (
-    <div key={key} ref={containerRef} className="video-player-container" />
+    <div 
+      key={key} 
+      ref={containerRef} 
+      className="w-full h-full relative"
+    />
   );
 }
