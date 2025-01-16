@@ -12,7 +12,6 @@ import {
   Bell,
   Wallet,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
@@ -56,15 +55,8 @@ console.log(profile);
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo.png"
-              alt="ShareAcademy Logo"
-              width={32}
-              height={32}
-              className="w-7 h-7 md:w-8 md:h-8"
-            />
-            <span className="font-bold text-base md:text-lg text-[#ff4d4f]">
-              ShareAcademy
+            <span className="font-black text-lg md:text-xl bg-gradient-to-r from-[#ff4d4f] to-[#ff7875] text-transparent bg-clip-text tracking-wider">
+              KHOAHOC<span className="text-[#ff4d4f]">.LIVE</span>
             </span>
           </Link>
         </div>
