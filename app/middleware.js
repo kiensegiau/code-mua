@@ -1,38 +1,48 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getAuth } from "firebase/auth";
-import { app } from "./_utils/firebase";
-import { Spin } from 'antd';
-
-const LoadingSpinner = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <Spin size="large" tip="Đang tải..." />
-  </div>
-);
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken');
   const publicPaths = ["/sign-in", "/sign-up", "/forgot-password"];
   const path = request.nextUrl.pathname;
 
-  console.log('Token:', token);
-  console.log('Path:', path);
+  // Cho phép truy cập các static files và API routes
+  if (
+    path.startsWith('/_next') ||
+    path.startsWith('/api') ||
+    path.startsWith('/static') ||
+    path === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
 
+  console.log('🔒 Middleware - Token:', token ? 'Exists' : 'None');
+  console.log('🛣️ Middleware - Path:', path);
+
+  // Nếu không có token và đang truy cập route được bảo vệ
   if (!token && !publicPaths.includes(path)) {
+    console.log('⚠️ No token, redirecting to sign-in');
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
+  // Nếu có token và đang truy cập public routes
   if (token && publicPaths.includes(path)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (loading) {
-    return <LoadingSpinner />;
+    console.log('✅ Has token, redirecting to dashboard');
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };
