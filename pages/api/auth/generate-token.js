@@ -1,9 +1,13 @@
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
-export default function handler(req, res) {
+// Tạo secret key cho jose
+const accessSecretKey = new TextEncoder().encode(ACCESS_TOKEN_SECRET);
+const refreshSecretKey = new TextEncoder().encode(REFRESH_TOKEN_SECRET);
+
+export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { user } = req.body;
     if (!user || !user.uid || !user.email) {
@@ -11,8 +15,17 @@ export default function handler(req, res) {
     }
 
     try {
-      const accessToken = jwt.sign({ uid: user.uid, email: user.email }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign({ uid: user.uid }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+      // Tạo access token
+      const accessToken = await new jose.SignJWT({ uid: user.uid, email: user.email })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('15m')
+        .sign(accessSecretKey);
+
+      // Tạo refresh token
+      const refreshToken = await new jose.SignJWT({ uid: user.uid })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('7d')
+        .sign(refreshSecretKey);
       
       res.status(200).json({ accessToken, refreshToken });
     } catch (error) {

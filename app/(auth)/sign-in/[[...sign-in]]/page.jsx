@@ -4,7 +4,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/app/_utils/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { generateTokens } from '@/app/_utils/jwt';
+import { generateTokens, setTokenCookie } from '@/app/_utils/jwt';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -27,15 +27,25 @@ export default function SignIn() {
     }
 
     try {
+      console.log("🔑 Attempting login for:", email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("✅ Firebase login successful");
+      
       const user = userCredential.user;
+      console.log("👤 User info:", { email: user.email, uid: user.uid });
+      
       const { accessToken, refreshToken } = await generateTokens(user);
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      console.log("🎟️ Tokens generated");
+      
+      // Lưu token vào cookie thay vì localStorage
+      setTokenCookie(accessToken);
+      
       toast.success('Đăng nhập thành công!');
+      console.log("🚀 Redirecting to home page");
       router.push('/');
+      router.refresh(); // Refresh để middleware nhận biết cookie mới
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error);
+      console.error('❌ Login error:', error);
       let errorMessage = 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.';
       switch (error.code) {
         case 'auth/invalid-email':
