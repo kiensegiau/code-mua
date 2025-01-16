@@ -1,166 +1,136 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import videojs from "video.js";
-import "video.js/dist/video-js.css";
-
-// Thêm custom CSS để override video.js styles
-const customStyles = `
-.video-js {
-  width: 100% !important;
-  height: 100% !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-}
-.vjs-tech {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-}
-`;
+import { useEffect, useRef, useState } from 'react';
+import Plyr from 'plyr-react';
+import 'plyr-react/plyr.css';
 
 export default function VideoPlayer({
   fileId,
   onEnded,
   onTimeUpdate,
+  onNext,
+  onPrevious,
   autoPlay = true,
-  key,
 }) {
-  const containerRef = useRef(null);
   const playerRef = useRef(null);
-  const [currentPart, setCurrentPart] = useState(0);
-  const previousRequestRef = useRef(null);
 
-  // Thêm custom styles khi component mount
   useEffect(() => {
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = customStyles;
-    document.head.appendChild(styleSheet);
+    console.log('VideoPlayer mounted/updated with fileId:', fileId);
+    console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+  }, [fileId]);
 
-    return () => {
-      document.head.removeChild(styleSheet);
-    };
-  }, []);
-
-  // Hàm để hủy request cũ
-  const cancelPreviousRequest = useCallback(() => {
-    if (previousRequestRef.current) {
-      previousRequestRef.current.abort();
-      previousRequestRef.current = null;
-    }
-  }, []);
-
-  // Tạo URL một lần và cache lại
-  const getVideoUrl = useCallback(
-    (part) => {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      return fileId.startsWith("http")
-        ? `${fileId}&part=${part}`
-        : `${baseUrl}${fileId}&part=${part}`;
+  const options = {
+    controls: [
+      'play-large',
+      'rewind',
+      'play',
+      'fast-forward',
+      'progress',
+      'current-time',
+      'duration',
+      'mute',
+      'volume',
+      'settings',
+      'fullscreen'
+    ],
+    settings: ['captions', 'quality', 'speed'],
+    speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+    keyboard: { focused: true, global: true },
+    tooltips: { controls: true, seek: true },
+    invertTime: false,
+    quality: {
+      default: 1080,
+      options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240]
     },
-    [fileId]
-  );
+    i18n: {
+      restart: 'Restart',
+      rewind: 'Rewind {seektime}s',
+      play: 'Play',
+      pause: 'Pause',
+      fastForward: 'Forward {seektime}s',
+      seek: 'Seek',
+      played: 'Played',
+      buffered: 'Buffered',
+      currentTime: 'Current time',
+      duration: 'Duration',
+      volume: 'Volume',
+      mute: 'Mute',
+      unmute: 'Unmute',
+      enableCaptions: 'Enable captions',
+      disableCaptions: 'Disable captions',
+      enterFullscreen: 'Enter fullscreen',
+      exitFullscreen: 'Exit fullscreen',
+      frameTitle: 'Player for {title}',
+      settings: 'Settings',
+      speed: 'Speed',
+      normal: 'Normal',
+      quality: 'Quality',
+      loop: 'Loop',
+      start: 'Start',
+      end: 'End',
+      all: 'All',
+      reset: 'Reset',
+      disabled: 'Disabled',
+      advertisement: 'Ad',
+    },
+    events: [
+      'ready',
+      'play',
+      'pause',
+      'ended',
+      'loadeddata',
+      'loadedmetadata',
+      'error'
+    ]
+  };
 
-  // Xử lý khi seek video
-  const handleSeek = useCallback(() => {
-    if (playerRef.current) {
-      cancelPreviousRequest();
-    }
-  }, [cancelPreviousRequest]);
+  const videoUrl = fileId.startsWith('http') 
+    ? fileId 
+    : `${process.env.NEXT_PUBLIC_API_URL}${fileId}`;
+  
+  console.log('Constructed video URL:', videoUrl);
 
-  // Cleanup khi component unmount hoặc fileId thay đổi
-  useEffect(() => {
-    return () => {
-      cancelPreviousRequest();
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-    };
-  }, [fileId, cancelPreviousRequest]);
-
-  // Khởi tạo player
-  useEffect(() => {
-    if (!fileId || !containerRef.current || playerRef.current) return;
-
-    const videoElement = document.createElement("video");
-    videoElement.className = "video-js";
-    containerRef.current.innerHTML = "";
-    containerRef.current.appendChild(videoElement);
-
-    const player = videojs(videoElement, {
-      controls: true,
-      fluid: false,
-      responsive: true,
-      aspectRatio: "16:9",
-      autoplay: autoPlay,
-      playbackRates: [0.5, 1, 1.25, 1.5, 2],
-      sources: [
-        {
-          src: getVideoUrl(currentPart),
-          type: "video/mp4",
-        },
-      ],
-    });
-
-    // Thêm event listeners
-    player.on("ready", () => {
-      console.log("Player ready");
-    });
-
-    player.on("error", (e) => {
-      console.error("Video player error:", player.error());
-    });
-
-    player.on("ended", () => {
-      console.log("Video ended event fired");
-      if (onEnded) {
-        console.log("Calling onEnded callback");
-        onEnded();
-      }
-    });
-
-    player.on("seeking", handleSeek);
-
-    if (onTimeUpdate) {
-      player.on("timeupdate", () => {
-        onTimeUpdate(player.currentTime());
-      });
-    }
-
-    playerRef.current = player;
-  }, [fileId, onEnded, handleSeek]);
-
-  // Cập nhật source khi part hoặc fileId thay đổi
-  useEffect(() => {
-    if (!playerRef.current) return;
-
-    // Hủy request cũ trước khi tải video mới
-    cancelPreviousRequest();
-
-    const videoUrl = getVideoUrl(currentPart);
-
-    // Lưu XMLHttpRequest mới
-    const xhr = new XMLHttpRequest();
-    previousRequestRef.current = xhr;
-
-    playerRef.current.src({
+  const source = {
+    type: 'video',
+    sources: [{
       src: videoUrl,
-      type: "video/mp4",
-    });
+      type: 'video/mp4',
+    }]
+  };
 
-    // Reset time về 0 khi đổi video
-    playerRef.current.currentTime(0);
-  }, [currentPart, getVideoUrl, fileId, cancelPreviousRequest]);
+  const handleReady = () => {
+    console.log('Player is ready');
+  };
+
+  const handleLoadedData = () => {
+    console.log('Video data loaded');
+  };
+
+  const handleLoadedMetadata = () => {
+    console.log('Video metadata loaded');
+  };
 
   return (
-    <div 
-      key={key} 
-      ref={containerRef} 
-      className="w-full h-full relative"
-    />
+    <div className="w-full h-full">
+      <Plyr
+        ref={playerRef}
+        source={source}
+        options={options}
+        autoPlay={autoPlay}
+        onReady={handleReady}
+        onLoadedData={handleLoadedData}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={() => {
+          console.log('Video ended');
+          onEnded?.();
+        }}
+        onTimeUpdate={(e) => {
+          const time = e.target.currentTime;
+          console.log('Time update:', time);
+          onTimeUpdate?.(time);
+        }}
+        onError={(error) => {
+          console.error('Plyr error:', error);
+        }}
+      />
+    </div>
   );
 }

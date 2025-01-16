@@ -1,4 +1,5 @@
 import { Inter, Outfit } from 'next/font/google'
+import 'plyr-react/plyr.css'
 import './globals.css'
 import { AuthProvider } from './_context/AuthContext'
 import Toast from './(router)/_components/Toast'

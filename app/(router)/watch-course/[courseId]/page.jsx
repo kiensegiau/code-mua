@@ -122,6 +122,51 @@ export default function WatchCourse({ params }) {
     }
   };
 
+  // Thêm handlers cho next/previous
+  const handleNext = useCallback(() => {
+    if (!activeLesson || !activeChapter || !activeVideo) return;
+
+    // Lấy danh sách video trong lesson hiện tại
+    const currentLessonVideos = activeLesson.files
+      .filter(f => f.type?.includes('video'))
+      .sort((a, b) => {
+        const numA = getNumberFromTitle(a.name);
+        const numB = getNumberFromTitle(b.name);
+        return numA - numB;
+      });
+
+    const currentVideoIndex = currentLessonVideos.findIndex(
+      v => v.driveFileId === activeVideo.driveFileId
+    );
+
+    const nextVideo = currentLessonVideos[currentVideoIndex + 1];
+    if (nextVideo) {
+      handleLessonClick(activeLesson, activeChapter, nextVideo);
+    }
+  }, [activeLesson, activeChapter, activeVideo]);
+
+  const handlePrevious = useCallback(() => {
+    if (!activeLesson || !activeChapter || !activeVideo) return;
+
+    // Lấy danh sách video trong lesson hiện tại
+    const currentLessonVideos = activeLesson.files
+      .filter(f => f.type?.includes('video'))
+      .sort((a, b) => {
+        const numA = getNumberFromTitle(a.name);
+        const numB = getNumberFromTitle(b.name);
+        return numA - numB;
+      });
+
+    const currentVideoIndex = currentLessonVideos.findIndex(
+      v => v.driveFileId === activeVideo.driveFileId
+    );
+
+    const prevVideo = currentLessonVideos[currentVideoIndex - 1];
+    if (prevVideo) {
+      handleLessonClick(activeLesson, activeChapter, prevVideo);
+    }
+  }, [activeLesson, activeChapter, activeVideo]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#141414] flex items-center justify-center">
@@ -208,9 +253,10 @@ export default function WatchCourse({ params }) {
                 <VideoPlayer
                   key={key}
                   fileId={videoUrl}
-                  isPlaying={isPlaying}
                   onEnded={handleVideoEnd}
                   onTimeUpdate={handleTimeUpdate}
+                  onNext={handleNext}
+                  onPrevious={handlePrevious}
                   autoPlay={true}
                 />
               ) : (
