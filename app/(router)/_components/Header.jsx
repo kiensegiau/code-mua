@@ -28,6 +28,7 @@ function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+console.log(profile);
 
   const handleSignOut = () => {
     auth.signOut();

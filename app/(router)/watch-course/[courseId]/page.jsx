@@ -128,7 +128,7 @@ export default function WatchCourse({ params }) {
   }
 
   return (
-    <div className="h-screen bg-[#141414] flex flex-col">
+    <div className="h-screen bg-[#141414] flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-[#1f1f1f] border-b border-gray-800 flex-none">
         <div className="max-w-[1600px] mx-auto px-4">
@@ -192,9 +192,9 @@ export default function WatchCourse({ params }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 md:grid md:grid-cols-[1fr_380px] flex flex-col min-h-0">
+      <div className="flex-1 md:grid md:grid-cols-[1fr_380px] flex flex-col min-h-0 overflow-hidden">
         {/* Video Player Section */}
-        <div className="flex-none md:flex md:flex-col md:h-full">
+        <div className="flex-none md:flex md:flex-col md:h-full overflow-hidden">
           <div className="w-full aspect-video bg-[#1f1f1f] relative">
             {videoUrl ? (
               <VideoPlayer
@@ -222,8 +222,8 @@ export default function WatchCourse({ params }) {
           </div>
         </div>
 
-        {/* Course Content Section - Full width on mobile, sidebar on desktop */}
-        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 overflow-y-auto">
+        {/* Course Content Section */}
+        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 h-[calc(100vh-52px)]">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}

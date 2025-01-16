@@ -191,7 +191,7 @@ export default forwardRef(
     };
 
     return (
-      <div className="h-screen bg-[#1f1f1f] shadow-lg flex flex-col border-l border-gray-800">
+      <div className="h-full bg-[#1f1f1f] shadow-lg flex flex-col border-l border-gray-800">
         <div className="flex-none border-b border-gray-800 w-full">
           <div className="flex items-center w-full">
             <button
@@ -207,7 +207,7 @@ export default forwardRef(
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-scroll">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {chapters
             ?.slice()
             .sort(sortByNumber)
