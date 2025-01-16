@@ -105,3 +105,30 @@ body{
 .button:hover {
   background-color: #4F46E5;
 }
+
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) translateX(20px);
+    opacity: 0;
+  }
+}
+
+.animate-float {
+  animation: float 5s infinite;
+}
+
+/* Thêm các variant cho animation delay */
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-700 {
+  animation-delay: 700ms;
+}
