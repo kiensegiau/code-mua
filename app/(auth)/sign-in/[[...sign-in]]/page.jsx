@@ -37,17 +37,13 @@ export default function SignIn() {
       const { accessToken, refreshToken } = await generateTokens(user);
       console.log("🎟️ Tokens generated");
       
-      // Lưu token vào cookie
-      await setTokenCookie(accessToken);
-      console.log("🍪 Token saved to cookie");
+      // Lưu token vào cookie thay vì localStorage
+      setTokenCookie(accessToken);
       
       toast.success('Đăng nhập thành công!');
-      
-      // Đợi một chút để toast message hiển thị
-      setTimeout(() => {
-        // Reload lại trang hoàn toàn
-        window.location.replace('/');
-      }, 500);
+      console.log("🚀 Redirecting to home page");
+      router.push('/');
+      router.refresh(); // Refresh để middleware nhận biết cookie mới
     } catch (error) {
       console.error('❌ Login error:', error);
       let errorMessage = 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.';
