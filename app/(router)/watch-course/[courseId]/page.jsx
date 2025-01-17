@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CourseContent from "./components/CourseContent";
+import { useVideoNavigation } from "./hooks/useVideoNavigation";
 
 const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
@@ -46,6 +47,35 @@ export default function WatchCourse({ params }) {
   const router = useRouter();
   const courseContentRef = useRef();
 
+  const handleLessonClick = useCallback((lesson, chapter, file) => {
+    setActiveLesson(lesson);
+    setActiveChapter(chapter);
+
+    if (file) {
+      if (file.type.includes("video")) {
+        setVideoUrl(file.proxyUrl);
+        setActiveVideo(file);
+        setIsPlaying(true);
+        setKey((prev) => prev + 1);
+      } else {
+        window.open(
+          `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
+          "_blank"
+        );
+      }
+    }
+  }, []);
+
+  const { handleNext, handlePrevious } = useVideoNavigation({
+    activeLesson,
+    activeChapter,
+    activeVideo,
+    courseInfo,
+    setExpandedLessonId,
+    setExpandedChapterIndex,
+    handleLessonClick,
+  });
+
   const handleVideoEnd = useCallback(() => {
     if (courseContentRef.current) {
       courseContentRef.current.handleVideoEnd();
@@ -68,25 +98,6 @@ export default function WatchCourse({ params }) {
   useEffect(() => {
     fetchCourseInfo();
   }, [fetchCourseInfo]);
-
-  const handleLessonClick = (lesson, chapter, file) => {
-    setActiveLesson(lesson);
-    setActiveChapter(chapter);
-
-    if (file) {
-      if (file.type.includes("video")) {
-        setVideoUrl(file.proxyUrl);
-        setActiveVideo(file);
-        setIsPlaying(true);
-        setKey((prev) => prev + 1);
-      } else {
-        window.open(
-          `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
-          "_blank"
-        );
-      }
-    }
-  };
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
@@ -122,50 +133,17 @@ export default function WatchCourse({ params }) {
     }
   };
 
-  // Thêm handlers cho next/previous
-  const handleNext = useCallback(() => {
-    if (!activeLesson || !activeChapter || !activeVideo) return;
+  // Thêm helper function để sắp xếp
+  const getNumberFromTitle = (text = "") => {
+    const match = text.match(/(?:^|\.)?\s*(\d+)/);
+    return match ? parseInt(match[1]) : 999999;
+  };
 
-    // Lấy danh sách video trong lesson hiện tại
-    const currentLessonVideos = activeLesson.files
-      .filter(f => f.type?.includes('video'))
-      .sort((a, b) => {
-        const numA = getNumberFromTitle(a.name);
-        const numB = getNumberFromTitle(b.name);
-        return numA - numB;
-      });
-
-    const currentVideoIndex = currentLessonVideos.findIndex(
-      v => v.driveFileId === activeVideo.driveFileId
-    );
-
-    const nextVideo = currentLessonVideos[currentVideoIndex + 1];
-    if (nextVideo) {
-      handleLessonClick(activeLesson, activeChapter, nextVideo);
-    }
-  }, [activeLesson, activeChapter, activeVideo]);
-
-  const handlePrevious = useCallback(() => {
-    if (!activeLesson || !activeChapter || !activeVideo) return;
-
-    // Lấy danh sách video trong lesson hiện tại
-    const currentLessonVideos = activeLesson.files
-      .filter(f => f.type?.includes('video'))
-      .sort((a, b) => {
-        const numA = getNumberFromTitle(a.name);
-        const numB = getNumberFromTitle(b.name);
-        return numA - numB;
-      });
-
-    const currentVideoIndex = currentLessonVideos.findIndex(
-      v => v.driveFileId === activeVideo.driveFileId
-    );
-
-    const prevVideo = currentLessonVideos[currentVideoIndex - 1];
-    if (prevVideo) {
-      handleLessonClick(activeLesson, activeChapter, prevVideo);
-    }
-  }, [activeLesson, activeChapter, activeVideo]);
+  const sortFiles = (a, b) => {
+    const numA = getNumberFromTitle(a.name);
+    const numB = getNumberFromTitle(b.name);
+    return numA - numB;
+  };
 
   if (loading) {
     return (

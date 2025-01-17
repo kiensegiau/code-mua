@@ -73,7 +73,29 @@ export default forwardRef(
           onLessonClick(nextLesson, activeChapter, firstVideo);
         }
       } else {
-        toast.success("Đã hoàn thành chương học!");
+        // Tìm chapter tiếp theo
+        const sortedChapters = chapters.sort(sortByNumber);
+        const currentChapterIndex = sortedChapters.findIndex(
+          c => c.id === activeChapter.id
+        );
+
+        const nextChapter = sortedChapters[currentChapterIndex + 1];
+        if (nextChapter) {
+          const firstLesson = nextChapter.lessons.sort(sortByNumber)[0];
+          if (firstLesson) {
+            const firstVideo = firstLesson.files
+              .filter(f => f.type?.includes('video'))
+              .sort(sortFiles)[0];
+
+            if (firstVideo) {
+              setExpandedChapterIndex(currentChapterIndex + 1);
+              setExpandedLessonId(firstLesson.id);
+              onLessonClick(firstLesson, nextChapter, firstVideo);
+              return;
+            }
+          }
+        }
+        toast.success("Đã hoàn thành khóa học!");
       }
     };
 

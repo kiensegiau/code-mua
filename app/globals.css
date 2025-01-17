@@ -186,3 +186,30 @@ body{
 .plyr--paused .plyr__controls {
   opacity: 1 !important;
 }
+
+/* Ẩn controls sau 2 giây không di chuyển chuột */
+.plyr--video.plyr--hide-controls .plyr__controls,
+.plyr--video.plyr--hide-controls .group button {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Hiện controls khi hover */
+.plyr--video:hover .plyr__controls,
+.plyr--video:hover .group button {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+/* Transition mượt mà */
+.plyr__controls,
+.group button {
+  transition: opacity 0.3s ease !important;
+}
+
+/* Luôn hiện controls khi video đang pause */
+.plyr--paused .plyr__controls,
+.plyr--paused .group button {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
