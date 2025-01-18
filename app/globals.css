@@ -153,8 +153,8 @@ body{
 
 .plyr__control--prev svg,
 .plyr__control--next svg {
-  width: 18px;
-  height: 18px;
+  width: 14px !important;
+  height: 14px !important;
 }
 
 /* Vị trí của các nút */
@@ -212,4 +212,36 @@ body{
 .plyr--paused .group button {
   opacity: 1 !important;
   pointer-events: auto;
+}
+
+/* Đảm bảo container video có position relative */
+.plyr {
+  position: relative !important;
+  height: 100% !important;
+}
+
+/* Đảm bảo video lấp đầy container */
+.plyr__video-wrapper {
+  height: 100% !important;
+  padding: 0 !important;
+}
+
+/* Đảm bảo nút navigation nằm trên cùng */
+.plyr__controls {
+  z-index: 50 !important;
+}
+
+/* Style cho nút navigation */
+.group:hover .group-hover\:flex {
+  display: flex !important;
+}
+
+/* Hover effect cho nút */
+.group button:hover {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Đảm bảo nút luôn nằm trên video */
+.z-[51] {
+  z-index: 51 !important;
 }

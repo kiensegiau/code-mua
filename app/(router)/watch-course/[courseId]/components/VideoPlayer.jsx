@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Plyr from 'plyr-react';
 import { toast } from 'sonner';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
@@ -21,27 +21,45 @@ export default function VideoPlayer({
     handleMouseLeave 
   } = useControlsVisibility();
 
-  const videoUrl = useCallback(() => {
-    if (!fileId) return '';
-    return fileId.startsWith('http') 
-      ? fileId 
-      : `${process.env.NEXT_PUBLIC_API_URL}/api/proxy/files?id=${fileId}`;
+  const videoUrl = useMemo(() => {
+    if (!fileId) {
+      console.warn('No fileId provided');
+      return '';
+    }
+
+    if (fileId.includes('/api/proxy/files?id=')) {
+      console.log('FileId already contains API path');
+      return `${process.env.NEXT_PUBLIC_API_URL}${fileId}`;
+    }
+
+    if (fileId.startsWith('http')) {
+      console.log('FileId is full URL:', fileId);
+      return fileId;
+    }
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/proxy/files?id=${fileId}`;
+    console.log('Constructed video URL:', url);
+    return url;
   }, [fileId]);
+
+  const source = useMemo(() => ({
+    type: 'video',
+    sources: [{
+      src: videoUrl,
+      type: 'video/mp4',
+    }]
+  }), [videoUrl]);
 
   const handleError = useCallback((error) => {
     console.error('Player error:', error);
+    console.log('Current video URL:', videoUrl);
+    console.log('Current fileId:', fileId);
     toast.error('Có lỗi khi phát video');
-  }, []);
+  }, [fileId, videoUrl]);
 
-  const handleVideoEnd = useCallback(() => {
-    console.log('Video ended, playing next video');
-    onNext?.();
-  }, [onNext]);
-
-  const handleTimeUpdate = useCallback((e) => {
-    const time = e.target.currentTime;
-    onTimeUpdate?.(time);
-  }, [onTimeUpdate]);
+  useEffect(() => {
+    console.log('FileId received:', fileId);
+  }, [fileId]);
 
   useEffect(() => {
     const container = playerRef.current?.elements?.container;
@@ -60,49 +78,65 @@ export default function VideoPlayer({
   }, [onPrevious, onNext]);
 
   return (
-    <div 
-      className={`w-full h-full relative group ${!isControlsVisible ? 'plyr--hide-controls' : ''}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      <NavigationButton
-        direction="previous"
-        onClick={onPrevious}
-        className="left-4"
-      />
-      <NavigationButton
-        direction="next"
-        onClick={onNext}
-        className="right-4"
-      />
+    <div className="relative w-full h-full">
+      <div 
+        className={`
+          absolute inset-0 
+          group 
+          ${!isControlsVisible ? 'plyr--hide-controls' : ''}
+        `}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <NavigationButton
+          direction="previous"
+          onClick={onPrevious}
+        />
+        <NavigationButton
+          direction="next"
+          onClick={onNext}
+        />
 
-      <Plyr
-        ref={playerRef}
-        source={{
-          type: 'video',
-          sources: [{
-            src: videoUrl(),
-            type: 'video/mp4',
-          }]
-        }}
-        options={PLAYER_OPTIONS}
-        autoPlay={autoPlay}
-        onReady={() => console.log('Player ready')}
-        onLoadedData={() => console.log('Video data loaded')}
-        onLoadedMetadata={() => console.log('Video metadata loaded')}
-        onEnded={handleVideoEnd}
-        onTimeUpdate={handleTimeUpdate}
-        onError={handleError}
-      />
+        <Plyr
+          ref={playerRef}
+          source={source}
+          options={PLAYER_OPTIONS}
+          autoPlay={autoPlay}
+          onReady={() => console.log('Player ready')}
+          onLoadedData={() => console.log('Video data loaded')}
+          onLoadedMetadata={() => console.log('Video metadata loaded')}
+          onEnded={() => {
+            console.log('Video ended');
+            onEnded?.();
+          }}
+          onTimeUpdate={(e) => {
+            const time = e.target.currentTime;
+            onTimeUpdate?.(time);
+          }}
+          onError={handleError}
+        />
+      </div>
     </div>
   );
 }
 
-const NavigationButton = ({ direction, onClick, className }) => (
+const NavigationButton = ({ direction, onClick }) => (
   <button 
     onClick={onClick}
-    className={`hidden group-hover:flex absolute top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center rounded-full bg-black/50 hover:bg-[#ff4d4f]/80 transition-all duration-200 z-10 ${className}`}
+    className={`
+      hidden group-hover:flex 
+      absolute top-1/2 -translate-y-1/2 
+      w-10 h-10
+      items-center justify-center 
+      bg-black/30
+      hover:bg-black/50
+      transition-all duration-200 
+      z-[51] 
+      ${direction === 'previous' ? 'left-0' : 'right-0'}
+    `}
   >
-    {direction === 'previous' ? <PreviousIcon /> : <NextIcon />}
+    <div className="w-5 h-5 text-white/90"> 
+      {direction === 'previous' ? <PreviousIcon /> : <NextIcon />}
+    </div>
   </button>
 );
