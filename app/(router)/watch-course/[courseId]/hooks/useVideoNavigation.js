@@ -190,9 +190,13 @@ export const useVideoNavigation = ({
         return;
       }
 
+      console.log(
+        "No more video in current lesson, finding previous lesson..."
+      );
+
       // 2. Try last video of previous lesson in current chapter
-      let prevLesson = findPreviousLesson();
-      console.log("Initial previous lesson:", prevLesson);
+      let currentLesson = activeLesson;
+      let prevLesson = findPreviousLesson(currentLesson);
 
       while (prevLesson) {
         console.log("Checking lesson:", prevLesson);
@@ -208,37 +212,49 @@ export const useVideoNavigation = ({
           return;
         }
 
-        // If no video found, continue to find previous lesson
-        console.log("No video found, finding previous lesson...");
-        prevLesson = findPreviousLesson(prevLesson);
+        console.log("No video found, moving to previous lesson...");
+        currentLesson = prevLesson;
+        prevLesson = findPreviousLesson(currentLesson);
       }
 
-      console.log("No more lesson in current chapter, go to previous chapter");
+      console.log(
+        "No more lesson with video in current chapter, moving to previous chapter..."
+      );
 
       // 3. Try last video of last lesson in previous chapter
-      const prevChapter = findPreviousChapter();
-      console.log("Previous chapter:", prevChapter);
-      if (prevChapter) {
-        const lastLesson = prevChapter.lessons.sort(sortItems).pop();
-        if (lastLesson) {
-          const lastVideo = lastLesson.files
+      let currentChapter = activeChapter;
+      let prevChapter = findPreviousChapter(currentChapter);
+
+      while (prevChapter) {
+        console.log("Checking chapter:", prevChapter);
+        const lastLessonWithVideo = [...prevChapter.lessons]
+          .sort(sortItems)
+          .reverse()
+          .find((lesson) =>
+            lesson.files.some((f) => f.type?.includes("video"))
+          );
+
+        if (lastLessonWithVideo) {
+          const lastVideo = lastLessonWithVideo.files
             .filter((f) => f.type?.includes("video"))
             .sort((a, b) => sortItems(a, b, "name"))
             .pop();
 
-          if (lastVideo) {
-            console.log(
-              "Last video of last lesson in previous chapter:",
-              lastVideo
-            );
-            setExpandedChapterIndex((prevIndex) => prevIndex - 1);
-            setExpandedLessonId(lastLesson.id);
-            handleLessonClick(lastLesson, prevChapter, lastVideo);
-            return;
-          }
+          console.log("Found last video of chapter:", lastVideo);
+          setExpandedChapterIndex((prevIndex) => prevIndex - 1);
+          setExpandedLessonId(lastLessonWithVideo.id);
+          handleLessonClick(lastLessonWithVideo, prevChapter, lastVideo);
+          return;
         }
+
+        console.log(
+          "No lesson with video found, moving to previous chapter..."
+        );
+        currentChapter = prevChapter;
+        prevChapter = findPreviousChapter(currentChapter);
       }
 
+      console.log("Reached the beginning of the course");
       toast("Đã về đầu khóa học!");
     } catch (error) {
       console.error("Error navigating to previous video:", error);
