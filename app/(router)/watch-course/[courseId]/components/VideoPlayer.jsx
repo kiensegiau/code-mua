@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import Plyr from 'plyr-react';
-import { toast } from 'sonner';
-import { useControlsVisibility } from '../hooks/useControlsVisibility';
-import { PLAYER_OPTIONS } from '../constants/playerOptions';
-import { PreviousIcon, NextIcon } from './icons/NavigationIcons';
-import 'plyr-react/plyr.css';
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import Plyr from "plyr-react";
+import { toast } from "sonner";
+import { useControlsVisibility } from "../hooks/useControlsVisibility";
+import { PLAYER_OPTIONS } from "../constants/playerOptions";
+import { PreviousIcon, NextIcon } from "./icons/NavigationIcons";
+import "plyr-react/plyr.css";
 
 export default function VideoPlayer({
   fileId,
@@ -15,86 +15,103 @@ export default function VideoPlayer({
   autoPlay = true,
 }) {
   const playerRef = useRef(null);
-  const { 
-    isControlsVisible, 
-    handleMouseMove, 
-    handleMouseLeave 
-  } = useControlsVisibility();
+  const { isControlsVisible, handleMouseMove, handleMouseLeave } =
+    useControlsVisibility();
 
   const videoUrl = useMemo(() => {
     if (!fileId) {
-      console.warn('No fileId provided');
-      return '';
+      console.warn("No fileId provided");
+      return "";
     }
 
-    if (fileId.includes('/api/proxy/files?id=')) {
-      console.log('FileId already contains API path');
+    if (fileId.includes("/api/proxy/files?id=")) {
+      console.log("FileId already contains API path");
       return `${process.env.NEXT_PUBLIC_API_URL}${fileId}`;
     }
 
-    if (fileId.startsWith('http')) {
-      console.log('FileId is full URL:', fileId);
+    if (fileId.startsWith("http")) {
+      console.log("FileId is full URL:", fileId);
       return fileId;
     }
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/api/proxy/files?id=${fileId}`;
-    console.log('Constructed video URL:', url);
+    console.log("Constructed video URL:", url);
     return url;
   }, [fileId]);
 
-  const source = useMemo(() => ({
-    type: 'video',
-    sources: [{
-      src: videoUrl,
-      type: 'video/mp4',
-    }]
-  }), [videoUrl]);
+  const source = useMemo(
+    () => ({
+      type: "video",
+      sources: [
+        {
+          src: videoUrl,
+          type: "video/mp4",
+        },
+      ],
+    }),
+    [videoUrl]
+  );
 
-  const handleError = useCallback((error) => {
-    console.error('Player error:', error);
-    console.log('Current video URL:', videoUrl);
-    console.log('Current fileId:', fileId);
-    toast.error('Có lỗi khi phát video');
-  }, [fileId, videoUrl]);
+  const handleError = useCallback(
+    (error) => {
+      console.error("Player error:", error);
+      console.log("Current video URL:", videoUrl);
+      console.log("Current fileId:", fileId);
+      toast.error("Có lỗi khi phát video");
+    },
+    [fileId, videoUrl]
+  );
 
   useEffect(() => {
-    console.log('FileId received:', fileId);
+    console.log("FileId received:", fileId);
   }, [fileId]);
 
   useEffect(() => {
     const container = playerRef.current?.elements?.container;
     if (!container) return;
 
-    const handlePreviousVideo = () => onPrevious?.();
-    const handleNextVideo = () => onNext?.();
+    const handlePreviousVideo = () => {
+      console.log("Received previousVideo event");
+      onPrevious?.();
+    };
+    const handleNextVideo = () => {
+      console.log("Received nextVideo event");
+      onNext?.();
+    };
 
-    container.addEventListener('previousVideo', handlePreviousVideo);
-    container.addEventListener('nextVideo', handleNextVideo);
+    container.addEventListener("previousVideo", handlePreviousVideo);
+    container.addEventListener("nextVideo", handleNextVideo);
 
     return () => {
-      container.removeEventListener('previousVideo', handlePreviousVideo);
-      container.removeEventListener('nextVideo', handleNextVideo);
+      container.removeEventListener("previousVideo", handlePreviousVideo);
+      container.removeEventListener("nextVideo", handleNextVideo);
     };
   }, [onPrevious, onNext]);
 
   return (
     <div className="relative w-full h-full">
-      <div 
+      <div
         className={`
           absolute inset-0 
           group 
-          ${!isControlsVisible ? 'plyr--hide-controls' : ''}
+          ${!isControlsVisible ? "plyr--hide-controls" : ""}
         `}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <NavigationButton
           direction="previous"
-          onClick={onPrevious}
+          onClick={() => {
+            console.log("Clicked previous button");
+            onPrevious?.();
+          }}
         />
         <NavigationButton
           direction="next"
-          onClick={onNext}
+          onClick={() => {
+            console.log("Clicked next button");
+            onNext?.();
+          }}
         />
 
         <Plyr
@@ -102,11 +119,11 @@ export default function VideoPlayer({
           source={source}
           options={PLAYER_OPTIONS}
           autoPlay={autoPlay}
-          onReady={() => console.log('Player ready')}
-          onLoadedData={() => console.log('Video data loaded')}
-          onLoadedMetadata={() => console.log('Video metadata loaded')}
+          onReady={() => console.log("Player ready")}
+          onLoadedData={() => console.log("Video data loaded")}
+          onLoadedMetadata={() => console.log("Video metadata loaded")}
           onEnded={() => {
-            console.log('Video ended');
+            console.log("Video ended");
             onEnded?.();
           }}
           onTimeUpdate={(e) => {
@@ -121,7 +138,7 @@ export default function VideoPlayer({
 }
 
 const NavigationButton = ({ direction, onClick }) => (
-  <button 
+  <button
     onClick={onClick}
     className={`
       hidden group-hover:flex 
@@ -132,11 +149,11 @@ const NavigationButton = ({ direction, onClick }) => (
       hover:bg-black/50
       transition-all duration-200 
       z-[51] 
-      ${direction === 'previous' ? 'left-0' : 'right-0'}
+      ${direction === "previous" ? "left-0" : "right-0"}
     `}
   >
-    <div className="w-5 h-5 text-white/90"> 
-      {direction === 'previous' ? <PreviousIcon /> : <NextIcon />}
+    <div className="w-5 h-5 text-white/90">
+      {direction === "previous" ? <PreviousIcon /> : <NextIcon />}
     </div>
   </button>
 );

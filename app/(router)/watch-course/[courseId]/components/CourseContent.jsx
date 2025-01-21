@@ -44,7 +44,7 @@ export default forwardRef(
 
       // 2. Tìm vị trí video hiện tại trong danh sách đã sắp xếp
       const currentVideoIndex = sortedVideoFiles.findIndex(
-        (f) => f.driveFileId === activeVideo.driveFileId
+        (f) => f.id === activeVideo.id
       );
 
       // 3. Lấy video tiếp theo trong lesson hiện tại
@@ -76,7 +76,7 @@ export default forwardRef(
         // Tìm chapter tiếp theo
         const sortedChapters = chapters.sort(sortByNumber);
         const currentChapterIndex = sortedChapters.findIndex(
-          c => c.id === activeChapter.id
+          (c) => c.id === activeChapter.id
         );
 
         const nextChapter = sortedChapters[currentChapterIndex + 1];
@@ -84,7 +84,7 @@ export default forwardRef(
           const firstLesson = nextChapter.lessons.sort(sortByNumber)[0];
           if (firstLesson) {
             const firstVideo = firstLesson.files
-              .filter(f => f.type?.includes('video'))
+              .filter((f) => f.type?.includes("video"))
               .sort(sortFiles)[0];
 
             if (firstVideo) {
@@ -119,7 +119,20 @@ export default forwardRef(
     };
 
     const handleFileClick = (file) => {
-      setActiveFileId(file.driveFileId);
+      console.log("Clicked file:", file.name, file.type, file.id, file._id);
+      if (file.type?.includes("video")) {
+        setActiveFileId((prevId) => {
+          const newId = file.id || file._id;
+          if (prevId !== newId) {
+            console.log("activeFileId changed:", prevId, "->", newId);
+            return newId;
+          }
+          return prevId;
+        });
+      } else {
+        setActiveFileId(null);
+      }
+      console.log("activeFileId after set:", activeFileId);
       if (onLessonClick) {
         onLessonClick(activeLesson, activeChapter, file);
       }
@@ -147,69 +160,77 @@ export default forwardRef(
 
     // Hàm render files
     const renderFiles = (files) => {
-      return files.map((file) => (
-        <div
-          key={file.driveFileId}
-          onClick={() => handleFileClick(file)}
-          className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group
-            ${
-              activeFileId === file.driveFileId
-                ? "bg-[#ff4d4f]/10"
-                : "hover:bg-gray-800/50"
-            }`}
-        >
-          <div className="flex items-center w-full min-w-0">
-            <div
-              className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3
+      return files.map((file) => {
+        console.log(
+          "Rendering file:",
+          file.name,
+          "activeVideo:",
+          activeVideo?.name
+        );
+        return (
+          <div
+            key={file.id || file._id}
+            onClick={() => handleFileClick(file)}
+            className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group
               ${
-                activeFileId === file.driveFileId
+                activeVideo?.id === file.id
                   ? "bg-[#ff4d4f]/10"
-                  : "bg-gray-800 group-hover:bg-[#ff4d4f]/5"
+                  : "hover:bg-gray-800/50"
               }`}
-            >
-              {file.type?.includes("video") ? (
-                <IoPlayCircleOutline
-                  className={`w-3 h-3
-                  ${
-                    activeFileId === file.driveFileId
-                      ? "text-[#ff4d4f]"
-                      : "text-gray-400 group-hover:text-[#ff4d4f]/60"
-                  }`}
-                />
-              ) : file.type?.includes("document") ? (
-                <IoDocumentOutline
-                  className={`w-3 h-3
-                  ${
-                    activeFileId === file.driveFileId
-                      ? "text-[#ff4d4f]"
-                      : "text-gray-400 group-hover:text-[#ff4d4f]/60"
-                  }`}
-                />
-              ) : (
-                <IoLinkOutline
-                  className={`w-3 h-3
-                  ${
-                    activeFileId === file.driveFileId
-                      ? "text-[#ff4d4f]"
-                      : "text-gray-400 group-hover:text-[#ff4d4f]/60"
-                  }`}
-                />
-              )}
+          >
+            <div className="flex items-center w-full min-w-0">
+              <div
+                className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3
+                ${
+                  activeVideo?.id === file.id
+                    ? "bg-[#ff4d4f]/10"
+                    : "bg-gray-800 group-hover:bg-[#ff4d4f]/5"
+                }`}
+              >
+                {file.type?.includes("video") ? (
+                  <IoPlayCircleOutline
+                    className={`w-3 h-3
+                    ${
+                      activeVideo?.id === file.id
+                        ? "text-[#ff4d4f]"
+                        : "text-gray-400 group-hover:text-[#ff4d4f]/60"
+                    }`}
+                  />
+                ) : file.type?.includes("document") ? (
+                  <IoDocumentOutline
+                    className={`w-3 h-3
+                    ${
+                      activeVideo?.id === file.id
+                        ? "text-[#ff4d4f]"
+                        : "text-gray-400 group-hover:text-[#ff4d4f]/60"
+                    }`}
+                  />
+                ) : (
+                  <IoLinkOutline
+                    className={`w-3 h-3
+                    ${
+                      activeVideo?.id === file.id
+                        ? "text-[#ff4d4f]"
+                        : "text-gray-400 group-hover:text-[#ff4d4f]/60"
+                    }`}
+                  />
+                )}
+              </div>
+              <span
+                className={`text-sm truncate
+                ${
+                  activeVideo?.id === file.id
+                    ? "text-[#ff4d4f] font-medium"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
+                title={file.name}
+              >
+                {file.name}
+              </span>
             </div>
-            <span
-              className={`text-sm truncate
-              ${
-                activeFileId === file.driveFileId
-                  ? "text-[#ff4d4f] font-medium"
-                  : "text-gray-400 group-hover:text-gray-300"
-              }`}
-              title={file.name}
-            >
-              {file.name}
-            </span>
           </div>
-        </div>
-      ));
+        );
+      });
     };
 
     return (
