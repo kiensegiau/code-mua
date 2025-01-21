@@ -171,54 +171,28 @@ export default forwardRef(
           <div
             key={file.id || file._id}
             onClick={() => handleFileClick(file)}
-            className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group
-              ${
-                activeVideo?.id === file.id
-                  ? "bg-[#ff4d4f]/10"
-                  : "hover:bg-gray-800/50"
-              }`}
+            className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group hover:bg-gray-800/50`}
           >
             <div className="flex items-center w-full min-w-0">
               <div
-                className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3
-                ${
-                  activeVideo?.id === file.id
-                    ? "bg-[#ff4d4f]/10"
-                    : "bg-gray-800 group-hover:bg-[#ff4d4f]/5"
-                }`}
+                className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 bg-gray-800 group-hover:bg-[#ff4d4f]/5`}
               >
                 {file.type?.includes("video") ? (
                   <IoPlayCircleOutline
-                    className={`w-3 h-3
-                    ${
-                      activeVideo?.id === file.id
-                        ? "text-[#ff4d4f]"
-                        : "text-gray-400 group-hover:text-[#ff4d4f]/60"
-                    }`}
+                    className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
                   />
                 ) : file.type?.includes("document") ? (
                   <IoDocumentOutline
-                    className={`w-3 h-3
-                    ${
-                      activeVideo?.id === file.id
-                        ? "text-[#ff4d4f]"
-                        : "text-gray-400 group-hover:text-[#ff4d4f]/60"
-                    }`}
+                    className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
                   />
                 ) : (
                   <IoLinkOutline
-                    className={`w-3 h-3
-                    ${
-                      activeVideo?.id === file.id
-                        ? "text-[#ff4d4f]"
-                        : "text-gray-400 group-hover:text-[#ff4d4f]/60"
-                    }`}
+                    className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
                   />
                 )}
               </div>
               <span
-                className={`text-sm truncate
-                ${
+                className={`text-sm truncate ${
                   activeVideo?.id === file.id
                     ? "text-[#ff4d4f] font-medium"
                     : "text-gray-400 group-hover:text-gray-300"
