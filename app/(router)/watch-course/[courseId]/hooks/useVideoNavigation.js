@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { sortByName, sortByTitle } from "../utils/sorting";
 
@@ -9,8 +9,11 @@ export const useVideoNavigation = ({
   courseInfo,
   setExpandedLessonId,
   setExpandedChapterIndex,
-  handleLessonClick,
+  handleLessonClick: originalHandleLessonClick,
 }) => {
+  // Ref để tránh gọi restoreVideoState khi component mount lần đầu nếu đã có active video
+  const isFirstMount = useRef(true);
+
   const getNumberFromTitle = useCallback((text = "") => {
     const match = text.match(/(?:^|\.)?\s*(\d+)/);
     return match ? parseInt(match[1]) : 999999;
@@ -95,13 +98,120 @@ export const useVideoNavigation = ({
     return sortedChapters[currentIndex + 1];
   }, [courseInfo, activeChapter]);
 
+  const handleLessonClickWrapper = useCallback(
+    (lesson, chapter, video) => {
+      if (!lesson || !chapter || !video) {
+        console.error("Missing required parameters:", {
+          lesson,
+          chapter,
+          video,
+        });
+        return;
+      }
+
+      try {
+        // Save current video state to localStorage
+        localStorage.setItem(
+          "activeVideo",
+          JSON.stringify({
+            videoId: video.id,
+            lessonId: lesson.id,
+            chapterId: chapter.id,
+            timestamp: Date.now(), // Thêm timestamp để biết thời điểm lưu
+          })
+        );
+
+        // Call the original handleLessonClick function
+        originalHandleLessonClick(lesson, chapter, video);
+      } catch (error) {
+        console.error("Error in handleLessonClickWrapper:", error);
+        toast.error("Có lỗi xảy ra khi chuyển video");
+      }
+    },
+    [originalHandleLessonClick]
+  );
+
+  useEffect(() => {
+    const restoreVideoState = () => {
+      try {
+        // Check if there's active video info in localStorage
+        const activeVideoInfo = localStorage.getItem("activeVideo");
+        if (!activeVideoInfo) return;
+
+        const videoState = JSON.parse(activeVideoInfo);
+        const { videoId, lessonId, chapterId, timestamp } = videoState;
+
+        // Validate required fields
+        if (!videoId || !lessonId || !chapterId) {
+          console.warn("Invalid video state in localStorage:", videoState);
+          return;
+        }
+
+        // Skip restore if we already have an active video
+        if (activeVideo && activeLesson && activeChapter) {
+          return;
+        }
+
+        // Find the corresponding chapter, lesson and video
+        const chapter = courseInfo.chapters.find((c) => c.id === chapterId);
+        if (!chapter) {
+          console.warn("Chapter not found:", chapterId);
+          return;
+        }
+
+        const lesson = chapter.lessons.find((l) => l.id === lessonId);
+        if (!lesson) {
+          console.warn("Lesson not found:", lessonId);
+          return;
+        }
+
+        const video = lesson.files.find((f) => f.id === videoId);
+        if (!video) {
+          console.warn("Video not found:", videoId);
+          return;
+        }
+
+        // Open the video and expand the lesson list
+        const chapterIndex = courseInfo.chapters.indexOf(chapter);
+        setExpandedChapterIndex(chapterIndex);
+        setExpandedLessonId(lessonId);
+        handleLessonClickWrapper(lesson, chapter, video);
+
+        console.log("Video state restored successfully:", {
+          video: video.name,
+          lesson: lesson.title,
+          chapter: chapter.title,
+          savedAt: new Date(timestamp).toLocaleString(),
+        });
+      } catch (error) {
+        console.error("Error restoring video state:", error);
+      }
+    };
+
+    // Chỉ restore state khi:
+    // 1. Component mount lần đầu và chưa có active video
+    // 2. courseInfo thay đổi và chưa có active video
+    if (courseInfo?.chapters && (!activeVideo || isFirstMount.current)) {
+      restoreVideoState();
+      isFirstMount.current = false;
+    }
+  }, [
+    courseInfo,
+    activeVideo,
+    activeLesson,
+    activeChapter,
+    handleLessonClickWrapper,
+    setExpandedLessonId,
+    setExpandedChapterIndex,
+  ]);
+
   const handleNext = useCallback(() => {
     try {
       // 1. Try next video in current lesson
       const nextVideo = findNextVideo();
       console.log("Next video:", nextVideo);
       if (nextVideo) {
-        handleLessonClick(activeLesson, activeChapter, nextVideo);
+        handleLessonClickWrapper(activeLesson, activeChapter, nextVideo);
         return;
       }
 
@@ -120,7 +230,7 @@ export const useVideoNavigation = ({
         if (firstVideo) {
           console.log("Found first video of lesson:", firstVideo);
           setExpandedLessonId(nextLesson.id);
-          handleLessonClick(nextLesson, activeChapter, firstVideo);
+          handleLessonClickWrapper(nextLesson, activeChapter, firstVideo);
           return;
         }
 
@@ -153,7 +263,11 @@ export const useVideoNavigation = ({
           console.log("Found first video of chapter:", firstVideo);
           setExpandedChapterIndex((prevIndex) => prevIndex + 1);
           setExpandedLessonId(firstLessonWithVideo.id);
-          handleLessonClick(firstLessonWithVideo, nextChapter, firstVideo);
+          handleLessonClickWrapper(
+            firstLessonWithVideo,
+            nextChapter,
+            firstVideo
+          );
           return;
         }
 
@@ -174,7 +288,7 @@ export const useVideoNavigation = ({
     findNextVideo,
     findNextLesson,
     findNextChapter,
-    handleLessonClick,
+    handleLessonClickWrapper,
     setExpandedLessonId,
     setExpandedChapterIndex,
     sortItems,
@@ -186,7 +300,7 @@ export const useVideoNavigation = ({
       const prevVideo = findPreviousVideo();
       console.log("Previous video:", prevVideo);
       if (prevVideo) {
-        handleLessonClick(activeLesson, activeChapter, prevVideo);
+        handleLessonClickWrapper(activeLesson, activeChapter, prevVideo);
         return;
       }
 
@@ -208,7 +322,7 @@ export const useVideoNavigation = ({
         if (lastVideo) {
           console.log("Found last video of lesson:", lastVideo);
           setExpandedLessonId(prevLesson.id);
-          handleLessonClick(prevLesson, activeChapter, lastVideo);
+          handleLessonClickWrapper(prevLesson, activeChapter, lastVideo);
           return;
         }
 
@@ -243,7 +357,7 @@ export const useVideoNavigation = ({
           console.log("Found last video of chapter:", lastVideo);
           setExpandedChapterIndex((prevIndex) => prevIndex - 1);
           setExpandedLessonId(lastLessonWithVideo.id);
-          handleLessonClick(lastLessonWithVideo, prevChapter, lastVideo);
+          handleLessonClickWrapper(lastLessonWithVideo, prevChapter, lastVideo);
           return;
         }
 
@@ -266,7 +380,7 @@ export const useVideoNavigation = ({
     findPreviousVideo,
     findPreviousLesson,
     findPreviousChapter,
-    handleLessonClick,
+    handleLessonClickWrapper,
     setExpandedLessonId,
     setExpandedChapterIndex,
     sortItems,
@@ -281,5 +395,6 @@ export const useVideoNavigation = ({
     findPreviousLesson,
     findNextChapter,
     findPreviousChapter,
+    handleLessonClick: handleLessonClickWrapper, // Export wrapper instead of original
   };
 };
