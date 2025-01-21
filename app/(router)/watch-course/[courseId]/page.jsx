@@ -27,7 +27,7 @@ const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
 });
 
-const aspectRatio = 9/16;
+const aspectRatio = 9 / 16;
 const videoHeight = `${100 * aspectRatio}vw`;
 
 export default function WatchCourse({ params }) {
@@ -154,7 +154,7 @@ export default function WatchCourse({ params }) {
   }
 
   return (
-    <div 
+    <div
       className="h-screen bg-[#141414] flex flex-col overflow-hidden"
       style={{ "--video-height": videoHeight }}
     >
@@ -224,8 +224,11 @@ export default function WatchCourse({ params }) {
       <div className="flex-1 md:grid md:grid-cols-[1fr_380px] flex flex-col min-h-0 overflow-hidden">
         {/* Video Player Section */}
         <div className="flex-none md:flex md:flex-col md:h-[calc(100vh-52px)] overflow-hidden">
-          {/* Video container - Thêm aspect-video cho mobile */}
-          <div className="w-full aspect-video md:flex-1 bg-[#1f1f1f] relative">
+          {/* Video container */}
+          <div
+            className="w-full bg-[#1f1f1f] relative"
+            style={{ height: "var(--video-height)" }}
+          >
             <div className="absolute inset-0 flex items-center justify-center">
               {videoUrl ? (
                 <VideoPlayer
@@ -250,7 +253,19 @@ export default function WatchCourse({ params }) {
           {/* Video Info */}
           <div className="flex-none p-3 md:p-4 border-t border-gray-800 bg-[#1f1f1f]">
             <h1 className="text-sm md:text-lg font-medium text-gray-200 line-clamp-2">
-              {activeLesson?.title || "Chưa có bài học nào được chọn"}
+              {activeLesson ? (
+                <>
+                  {activeLesson.title}
+                  {activeVideo && (
+                    <>
+                      <span className="mx-2 text-gray-400">|</span>
+                      {activeVideo.name}
+                    </>
+                  )}
+                </>
+              ) : (
+                "Chưa có bài học nào được chọn"
+              )}
             </h1>
           </div>
         </div>
