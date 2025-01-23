@@ -17,6 +17,7 @@ export default function VideoPlayer({
   const playerRef = useRef(null);
   const { isControlsVisible, handleMouseMove, handleMouseLeave } =
     useControlsVisibility();
+  const [videoMetadata, setVideoMetadata] = useState(null);
 
   const videoUrl = useMemo(() => {
     if (!fileId) {
@@ -39,18 +40,83 @@ export default function VideoPlayer({
     return url;
   }, [fileId]);
 
-  const source = useMemo(
-    () => ({
-      type: "video",
-      sources: [
-        {
-          src: videoUrl,
-          type: "video/mp4",
-        },
-      ],
-    }),
-    [videoUrl]
+  const fetchVideoMetadata = useCallback(async () => {
+    try {
+      const response = await fetch(videoUrl, { method: "HEAD" });
+      if (!response.ok) {
+        throw new Error("Failed to fetch video metadata");
+      }
+
+      const totalChunks = parseInt(response.headers.get("X-Total-Chunks"));
+      const chunkSize = parseInt(response.headers.get("X-Chunk-Size"));
+      const maxChunkSize = parseInt(response.headers.get("X-Max-Chunk-Size"));
+
+      setVideoMetadata({
+        totalChunks,
+        chunkSize,
+        maxChunkSize,
+      });
+    } catch (error) {
+      console.error("Error fetching video metadata:", error);
+      toast.error("Có lỗi khi tải thông tin video");
+    }
+  }, [videoUrl]);
+
+  const handleSeek = useCallback(
+    async (seekPosition) => {
+      if (!videoMetadata) return;
+
+      const { totalChunks, chunkSize } = videoMetadata;
+      const chunkIndex = Math.floor(seekPosition / (chunkSize / 1000));
+      const chunkUrl = `${videoUrl}&range=${chunkIndex * chunkSize}-${
+        (chunkIndex + 1) * chunkSize - 1
+      }`;
+
+      try {
+        const response = await fetch(chunkUrl);
+        if (!response.ok) {
+          throw new Error("Failed to fetch video chunk");
+        }
+
+        const chunkData = await response.arrayBuffer();
+        const videoElement = playerRef.current?.elements?.media;
+        if (videoElement) {
+          const mediaSource = new MediaSource();
+          videoElement.src = URL.createObjectURL(mediaSource);
+          mediaSource.addEventListener("sourceopen", () => {
+            const sourceBuffer = mediaSource.addSourceBuffer(
+              response.headers.get("Content-Type")
+            );
+            sourceBuffer.appendBuffer(chunkData);
+            sourceBuffer.addEventListener("updateend", () => {
+              if (!sourceBuffer.updating && mediaSource.readyState === "open") {
+                mediaSource.endOfStream();
+                videoElement.currentTime = seekPosition;
+              }
+            });
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching video chunk:", error);
+        toast.error("Có lỗi khi tải video chunk");
+      }
+    },
+    [videoUrl, videoMetadata]
   );
+
+  useEffect(() => {
+    fetchVideoMetadata();
+  }, [fetchVideoMetadata]);
+
+  useEffect(() => {
+    const videoElement = playerRef.current?.elements?.media;
+    if (videoElement) {
+      videoElement.addEventListener("seeking", () => {
+        const seekPosition = videoElement.currentTime;
+        handleSeek(seekPosition);
+      });
+    }
+  }, [handleSeek]);
 
   const handleError = useCallback(
     (error) => {
@@ -71,89 +137,57 @@ export default function VideoPlayer({
     if (!container) return;
 
     const handlePreviousVideo = () => {
-      console.log("Received previousVideo event");
       onPrevious?.();
     };
+
     const handleNextVideo = () => {
-      console.log("Received nextVideo event");
       onNext?.();
     };
 
-    container.addEventListener("previousVideo", handlePreviousVideo);
-    container.addEventListener("nextVideo", handleNextVideo);
+    const previousButton = container.querySelector(
+      ".plyr__controls__item.plyr__control--prev"
+    );
+    const nextButton = container.querySelector(
+      ".plyr__controls__item.plyr__control--next"
+    );
+
+    previousButton?.addEventListener("click", handlePreviousVideo);
+    nextButton?.addEventListener("click", handleNextVideo);
 
     return () => {
-      container.removeEventListener("previousVideo", handlePreviousVideo);
-      container.removeEventListener("nextVideo", handleNextVideo);
+      previousButton?.removeEventListener("click", handlePreviousVideo);
+      nextButton?.removeEventListener("click", handleNextVideo);
     };
-  }, [onPrevious, onNext]);
+  }, [onNext, onPrevious]);
 
   return (
-    <div className="relative w-full h-full">
-      <div
-        className={`
-          absolute inset-0 
-          group 
-          ${!isControlsVisible ? "plyr--hide-controls" : ""}
-        `}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <NavigationButton
-          direction="previous"
-          onClick={() => {
-            console.log("Clicked previous button");
-            onPrevious?.();
-          }}
-        />
-        <NavigationButton
-          direction="next"
-          onClick={() => {
-            console.log("Clicked next button");
-            onNext?.();
-          }}
-        />
-
-        <Plyr
-          ref={playerRef}
-          source={source}
-          options={PLAYER_OPTIONS}
-          autoPlay={autoPlay}
-          onReady={() => console.log("Player ready")}
-          onLoadedData={() => console.log("Video data loaded")}
-          onLoadedMetadata={() => console.log("Video metadata loaded")}
-          onEnded={() => {
-            console.log("Video ended");
-            onEnded?.();
-          }}
-          onTimeUpdate={(e) => {
-            const time = e.target.currentTime;
-            onTimeUpdate?.(time);
-          }}
-          onError={handleError}
-        />
-      </div>
+    <div
+      className="relative w-full"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Plyr
+        ref={playerRef}
+        source={videoUrl}
+        options={PLAYER_OPTIONS}
+        autoPlay={autoPlay}
+      />
+      {isControlsVisible && (
+        <div className="absolute top-1/2 left-0 right-0 flex items-center justify-between px-4 transform -translate-y-1/2">
+          <button
+            className="p-2 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 focus:outline-none"
+            onClick={onPrevious}
+          >
+            <PreviousIcon className="w-6 h-6" />
+          </button>
+          <button
+            className="p-2 rounded-full bg-white bg-opacity-50 hover:bg-opacity-75 focus:outline-none"
+            onClick={onNext}
+          >
+            <NextIcon className="w-6 h-6" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-
-const NavigationButton = ({ direction, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`
-      hidden group-hover:flex 
-      absolute top-1/2 -translate-y-1/2 
-      w-10 h-10
-      items-center justify-center 
-      bg-black/30
-      hover:bg-black/50
-      transition-all duration-200 
-      z-[51] 
-      ${direction === "previous" ? "left-0" : "right-0"}
-    `}
-  >
-    <div className="w-5 h-5 text-white/90">
-      {direction === "previous" ? <PreviousIcon /> : <NextIcon />}
-    </div>
-  </button>
-);
