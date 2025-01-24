@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useControlsVisibility } from "../hooks/useControlsVisibility";
 import { PreviousIcon, NextIcon } from "./icons/NavigationIcons";
+import debounce from "lodash/debounce";
 
 export default function VideoPlayer({
   fileId,
@@ -17,6 +18,7 @@ export default function VideoPlayer({
   const [videoMetadata, setVideoMetadata] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const videoUrl = useMemo(() => {
     if (!fileId) {
@@ -48,6 +50,7 @@ export default function VideoPlayer({
         method: "HEAD",
         headers: {
           Accept: "*/*",
+          "Accept-Encoding": "identity",
         },
       });
 
@@ -55,18 +58,15 @@ export default function VideoPlayer({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const totalChunks = parseInt(response.headers.get("X-Total-Chunks"));
-      const chunkSize = parseInt(response.headers.get("X-Chunk-Size"));
-      const maxChunkSize = parseInt(response.headers.get("X-Max-Chunk-Size"));
-      const contentType = response.headers.get("Content-Type");
-      const contentLength = response.headers.get("Content-Length");
-
       const metadata = {
-        totalChunks,
-        chunkSize,
-        maxChunkSize,
-        contentType,
-        contentLength,
+        contentType: response.headers.get("Content-Type"),
+        contentLength: response.headers.get("Content-Length"),
+        acceptRanges: response.headers.get("Accept-Ranges"),
+        chunkSize: parseInt(response.headers.get("X-Chunk-Size") || "10485760"),
+        maxChunkSize: parseInt(
+          response.headers.get("X-Max-Chunk-Size") || "15728640"
+        ),
+        totalChunks: parseInt(response.headers.get("X-Total-Chunks") || "0"),
       };
 
       console.log("Video metadata:", metadata);
@@ -79,6 +79,83 @@ export default function VideoPlayer({
       setIsLoading(false);
     }
   }, [videoUrl]);
+
+  const handleSeek = useCallback(
+    async (time) => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      try {
+        setIsLoading(true);
+        const fileSize = videoMetadata?.contentLength;
+        if (!fileSize) {
+          throw new Error("Không có thông tin kích thước file");
+        }
+
+        const bytePosition = Math.floor((time / video.duration) * fileSize);
+        const CHUNK_SIZE = videoMetadata?.chunkSize || 10485760;
+        const MAX_CHUNK_SIZE = videoMetadata?.maxChunkSize || 15728640;
+        const chunkIndex = Math.floor(bytePosition / CHUNK_SIZE);
+        const chunkStart = chunkIndex * CHUNK_SIZE;
+
+        const maxRetries = 3;
+        let retryCount = 0;
+        let success = false;
+
+        while (retryCount < maxRetries && !success) {
+          try {
+            const response = await fetch(videoUrl, {
+              headers: {
+                Range: `bytes=${chunkStart}-`,
+                "Accept-Encoding": "identity",
+              },
+            });
+
+            if (!response.ok) {
+              throw new Error(`Seek failed with status: ${response.status}`);
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            video.currentTime = time;
+            success = true;
+
+            const nextChunkStart = (chunkIndex + 1) * CHUNK_SIZE;
+            if (
+              nextChunkStart < fileSize &&
+              nextChunkStart < (time + 30) * (fileSize / video.duration)
+            ) {
+              fetch(videoUrl, {
+                headers: {
+                  Range: `bytes=${nextChunkStart}-`,
+                  "Accept-Encoding": "identity",
+                },
+              }).catch(() => {});
+            }
+          } catch (error) {
+            retryCount++;
+            if (retryCount === maxRetries) {
+              throw error;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+      } catch (error) {
+        console.error("Seek error:", error);
+        toast.error("Có lỗi khi tua video, vui lòng thử lại");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [videoUrl, videoMetadata]
+  );
+
+  const debouncedSeek = useCallback(
+    debounce((time) => {
+      handleSeek(time);
+    }, 200),
+    [handleSeek]
+  );
 
   useEffect(() => {
     if (videoUrl) {
@@ -113,19 +190,41 @@ export default function VideoPlayer({
     };
     const handleWaiting = () => setIsLoading(true);
     const handlePlaying = () => setIsLoading(false);
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+      if (onTimeUpdate) onTimeUpdate(video.currentTime);
+    };
+    const handleSeeking = () => {
+      if (!video.paused) {
+        video.pause();
+      }
+      debouncedSeek(video.currentTime);
+    };
+    const handleSeeked = () => {
+      if (autoPlay) {
+        video.play().catch(() => {});
+      }
+    };
 
     video.addEventListener("loadstart", handleLoadStart);
     video.addEventListener("loadeddata", handleLoadedData);
     video.addEventListener("waiting", handleWaiting);
     video.addEventListener("playing", handlePlaying);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("seeking", handleSeeking);
+    video.addEventListener("seeked", handleSeeked);
 
     return () => {
       video.removeEventListener("loadstart", handleLoadStart);
       video.removeEventListener("loadeddata", handleLoadedData);
       video.removeEventListener("waiting", handleWaiting);
       video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("seeking", handleSeeking);
+      video.removeEventListener("seeked", handleSeeked);
+      debouncedSeek.cancel();
     };
-  }, [videoUrl, autoPlay]);
+  }, [videoUrl, autoPlay, handleSeek, onTimeUpdate, debouncedSeek]);
 
   if (error) {
     return (
@@ -165,6 +264,8 @@ export default function VideoPlayer({
           onError={handleError}
           onEnded={onEnded}
           onTimeUpdate={onTimeUpdate}
+          crossOrigin="anonymous"
+          controlsList="nodownload"
         >
           Trình duyệt của bạn không hỗ trợ phát video.
         </video>
