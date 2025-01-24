@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useControlsVisibility } from "../hooks/useControlsVisibility";
 import { PreviousIcon, NextIcon } from "./icons/NavigationIcons";
 import debounce from "lodash/debounce";
+import throttle from "lodash/throttle";
 
 export default function VideoPlayer({
   fileId,
@@ -19,6 +20,7 @@ export default function VideoPlayer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [lastSeekTime, setLastSeekTime] = useState(0);
 
   const videoUrl = useMemo(() => {
     if (!fileId) {
@@ -98,17 +100,37 @@ export default function VideoPlayer({
         const chunkIndex = Math.floor(bytePosition / CHUNK_SIZE);
         const chunkStart = chunkIndex * CHUNK_SIZE;
 
+        console.log("Seeking to time:", time);
+        console.log("Byte position:", bytePosition);
+        console.log("Chunk index:", chunkIndex);
+        console.log("Chunk start:", chunkStart);
+
         const maxRetries = 3;
         let retryCount = 0;
         let success = false;
 
         while (retryCount < maxRetries && !success) {
           try {
+            setIsLoading(true);
+
+            console.log("Fetching chunk, retry count:", retryCount);
+            console.log("Fetch headers:", {
+              Range: `bytes=${chunkStart}-`,
+              "Accept-Encoding": "identity",
+            });
+
             const response = await fetch(videoUrl, {
               headers: {
                 Range: `bytes=${chunkStart}-`,
                 "Accept-Encoding": "identity",
+                "CF-Cache-Status": retryCount === 0 ? "MISS" : "REVALIDATE",
               },
+            });
+
+            console.log("Fetch response:", {
+              ok: response.ok,
+              status: response.status,
+              headers: Object.fromEntries(response.headers.entries()),
             });
 
             if (!response.ok) {
@@ -118,6 +140,8 @@ export default function VideoPlayer({
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             video.currentTime = time;
+            setLastSeekTime(time);
+            console.log("Set currentTime to:", time);
             success = true;
 
             const nextChunkStart = (chunkIndex + 1) * CHUNK_SIZE;
@@ -125,6 +149,7 @@ export default function VideoPlayer({
               nextChunkStart < fileSize &&
               nextChunkStart < (time + 30) * (fileSize / video.duration)
             ) {
+              console.log("Preloading next chunk from byte:", nextChunkStart);
               fetch(videoUrl, {
                 headers: {
                   Range: `bytes=${nextChunkStart}-`,
@@ -133,11 +158,13 @@ export default function VideoPlayer({
               }).catch(() => {});
             }
           } catch (error) {
+            console.error("Chunk fetch error:", error);
             retryCount++;
             if (retryCount === maxRetries) {
+              setIsLoading(false);
+              toast.error("Lỗi khi tải chunk video, vui lòng thử lại sau");
               throw error;
             }
-            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         }
       } catch (error) {
@@ -151,9 +178,9 @@ export default function VideoPlayer({
   );
 
   const debouncedSeek = useCallback(
-    debounce((time) => {
+    throttle((time) => {
       handleSeek(time);
-    }, 200),
+    }, 500),
     [handleSeek]
   );
 
@@ -187,6 +214,20 @@ export default function VideoPlayer({
           console.warn("AutoPlay failed:", error);
         });
       }
+
+      const fileSize = videoMetadata?.contentLength;
+      const CHUNK_SIZE = videoMetadata?.chunkSize || 10485760;
+      if (fileSize && CHUNK_SIZE) {
+        const thirdChunkStart = 2 * CHUNK_SIZE;
+        if (thirdChunkStart < fileSize) {
+          fetch(videoUrl, {
+            headers: {
+              Range: `bytes=${thirdChunkStart}-`,
+              "Accept-Encoding": "identity",
+            },
+          }).catch(() => {});
+        }
+      }
     };
     const handleWaiting = () => setIsLoading(true);
     const handlePlaying = () => setIsLoading(false);
@@ -201,7 +242,7 @@ export default function VideoPlayer({
       debouncedSeek(video.currentTime);
     };
     const handleSeeked = () => {
-      if (autoPlay) {
+      if (autoPlay && Math.abs(video.currentTime - lastSeekTime) < 0.5) {
         video.play().catch(() => {});
       }
     };
