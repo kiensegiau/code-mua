@@ -52,8 +52,19 @@ export default function WatchCourse({ params }) {
     setActiveChapter(chapter);
 
     if (file) {
+      console.log("File clicked:", {
+        file,
+        helvidUrl: file.helvidUrl,
+        proxyUrl: file.proxyUrl,
+        type: file.type
+      });
+      
       if (file.type.includes("video")) {
-        setVideoUrl(file.proxyUrl);
+        // Chỉ lấy ID từ helvidUrl nếu nó là URL đầy đủ
+        const helvidId = file.helvidUrl.includes('helvid.net/play/index/') 
+          ? file.helvidUrl.split('helvid.net/play/index/')[1]
+          : file.helvidUrl;
+        setVideoUrl(helvidId);
         setActiveVideo(file);
         setIsPlaying(true);
         setKey((prev) => prev + 1);
@@ -230,10 +241,10 @@ export default function WatchCourse({ params }) {
             style={{ height: "var(--video-height)" }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              {videoUrl ? (
+              {activeVideo ? (
                 <VideoPlayer
                   key={key}
-                  fileId={videoUrl}
+                  file={activeVideo}
                   onEnded={handleVideoEnd}
                   onTimeUpdate={handleTimeUpdate}
                   onNext={handleNext}
