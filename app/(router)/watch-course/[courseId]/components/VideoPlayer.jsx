@@ -28,10 +28,19 @@ export default function VideoPlayer({
   }
 
   // Xử lý URL video dựa trên thông tin file
-  const videoUrl = file.helvidUrl 
-    ? `https://helvid.net/play/index/${file.helvidUrl.replace('https://helvid.net/play/index/', '')}`
-    : '';
+  const getVideoUrl = () => {
+    if (!file.helvidUrl) return '';
+    
+    // Nếu helvidUrl đã là URL đầy đủ
+    if (file.helvidUrl.startsWith('https://helvid.net/play/index/')) {
+      return file.helvidUrl;
+    }
+    
+    // Nếu helvidUrl chỉ là ID
+    return `https://helvid.net/play/index/${file.helvidUrl}`;
+  };
 
+  const videoUrl = getVideoUrl();
   console.log("Final video URL:", videoUrl);
 
   return (

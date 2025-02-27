@@ -60,11 +60,6 @@ export default function WatchCourse({ params }) {
       });
       
       if (file.type.includes("video")) {
-        // Chỉ lấy ID từ helvidUrl nếu nó là URL đầy đủ
-        const helvidId = file.helvidUrl.includes('helvid.net/play/index/') 
-          ? file.helvidUrl.split('helvid.net/play/index/')[1]
-          : file.helvidUrl;
-        setVideoUrl(helvidId);
         setActiveVideo(file);
         setIsPlaying(true);
         setKey((prev) => prev + 1);
