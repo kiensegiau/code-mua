@@ -19,7 +19,9 @@ import {
   BookOpen,
   Tag,
   Star,
-  UserPlus
+  UserPlus,
+  Bell,
+  Download
 } from 'lucide-react';
 
 export default function CommunityPage() {
@@ -202,6 +204,62 @@ export default function CommunityPage() {
     e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
     // Xử lý logic tìm thành viên
     alert('Đang mở công cụ tìm kiếm thành viên...');
+  };
+
+  // Xử lý khi nhấn nút báo cáo bài viết
+  const handleReportPost = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic báo cáo bài viết
+    alert('Đã mở form báo cáo bài viết!');
+  };
+
+  // Xử lý khi nhấn nút lưu bài viết
+  const handleSavePost = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic lưu bài viết
+    alert('Đã lưu bài viết để đọc sau!');
+  };
+
+  // Xử lý khi nhấn nút đánh dấu sự kiện quan trọng
+  const handleMarkImportant = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic đánh dấu sự kiện
+    alert('Đã đánh dấu sự kiện là quan trọng!');
+  };
+
+  // Xử lý khi nhấn nút đề xuất sự kiện
+  const handleSuggestEvent = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic đề xuất sự kiện
+    alert('Đã mở form đề xuất sự kiện!');
+  };
+
+  // Xử lý khi nhấn nút đánh giá thành viên
+  const handleRateMember = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic đánh giá thành viên
+    alert('Đã mở form đánh giá thành viên!');
+  };
+
+  // Xử lý khi nhấn nút xem lịch sử hoạt động
+  const handleViewActivityHistory = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic xem lịch sử hoạt động
+    alert('Đang tải lịch sử hoạt động...');
+  };
+
+  // Xử lý khi nhấn nút tải tài liệu
+  const handleDownloadResource = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic tải tài liệu
+    alert('Đang tải tài liệu...');
+  };
+
+  // Xử lý khi nhấn nút đăng ký nhận thông báo
+  const handleSubscribeNotifications = (e) => {
+    e.stopPropagation(); // Ngăn sự kiện lan truyền lên phần tử cha
+    // Xử lý logic đăng ký nhận thông báo
+    alert('Đã đăng ký nhận thông báo từ cộng đồng!');
   };
 
   useEffect(() => {
@@ -446,6 +504,20 @@ export default function CommunityPage() {
                       <span>Thích</span>
                     </button>
                     <button 
+                      onClick={handleSavePost}
+                      className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                    >
+                      <BookOpen className="w-5 h-5" />
+                      <span>Lưu</span>
+                    </button>
+                    <button 
+                      onClick={handleReportPost}
+                      className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                    >
+                      <Tag className="w-5 h-5" />
+                      <span>Báo cáo</span>
+                    </button>
+                    <button 
                       onClick={handleShare}
                       className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
                     >
@@ -497,6 +569,20 @@ export default function CommunityPage() {
                         #{tag}
                       </span>
                     ))}
+                  </div>
+                  
+                  <div className="bg-[#252525] rounded-lg p-4 mb-6 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium mb-1">Tài liệu đính kèm</h3>
+                      <p className="text-sm text-gray-400">Tài liệu tham khảo cho phương pháp học tập</p>
+                    </div>
+                    <button 
+                      onClick={handleDownloadResource}
+                      className="flex items-center space-x-2 bg-[#2a2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#333] transition-colors"
+                    >
+                      <Download className="w-5 h-5" />
+                      <span>Tải xuống</span>
+                    </button>
                   </div>
                   
                   <div className="border-t border-gray-700 pt-6 mt-6">
@@ -728,6 +814,13 @@ export default function CommunityPage() {
                       <span>Thêm vào lịch</span>
                     </button>
                     <button 
+                      onClick={handleMarkImportant}
+                      className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                    >
+                      <Star className="w-5 h-5" />
+                      <span>Đánh dấu</span>
+                    </button>
+                    <button 
                       onClick={handleShare}
                       className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
                     >
@@ -832,13 +925,22 @@ export default function CommunityPage() {
               <>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold">Sự kiện sắp diễn ra</h2>
-                  <button 
-                    className="flex items-center space-x-2 bg-[#ff4d4f] text-white px-4 py-2 rounded-lg hover:bg-[#ff3538] transition-colors"
-                    onClick={handleEventCalendar}
-                  >
-                    <Calendar className="w-5 h-5" />
-                    <span>Lịch sự kiện</span>
-                  </button>
+                  <div className="flex space-x-3">
+                    <button 
+                      className="flex items-center space-x-2 border border-[#ff4d4f] text-[#ff4d4f] px-4 py-2 rounded-lg hover:bg-[#ff4d4f]/10 transition-colors"
+                      onClick={handleSuggestEvent}
+                    >
+                      <PlusCircle className="w-5 h-5" />
+                      <span>Đề xuất sự kiện</span>
+                    </button>
+                    <button 
+                      className="flex items-center space-x-2 bg-[#ff4d4f] text-white px-4 py-2 rounded-lg hover:bg-[#ff3538] transition-colors"
+                      onClick={handleEventCalendar}
+                    >
+                      <Calendar className="w-5 h-5" />
+                      <span>Lịch sự kiện</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -928,6 +1030,20 @@ export default function CommunityPage() {
                     <span>Quay lại</span>
                   </button>
                   <div className="flex space-x-3">
+                    <button 
+                      onClick={handleRateMember}
+                      className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                    >
+                      <Star className="w-5 h-5" />
+                      <span>Đánh giá</span>
+                    </button>
+                    <button 
+                      onClick={handleViewActivityHistory}
+                      className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
+                    >
+                      <TrendingUp className="w-5 h-5" />
+                      <span>Lịch sử</span>
+                    </button>
                     <button 
                       onClick={handleConnect}
                       className="flex items-center space-x-2 text-gray-400 hover:text-[#ff4d4f] transition-colors"
@@ -1433,6 +1549,13 @@ export default function CommunityPage() {
               >
                 <MessageSquare className="w-5 h-5" />
                 <span>Tìm hiểu thêm</span>
+              </button>
+              <button 
+                className="bg-[#2a2a2a] text-white px-6 py-3 rounded-lg hover:bg-[#333] transition-colors flex items-center justify-center space-x-2"
+                onClick={handleSubscribeNotifications}
+              >
+                <Bell className="w-5 h-5" />
+                <span>Đăng ký thông báo</span>
               </button>
             </div>
           </motion.div>
