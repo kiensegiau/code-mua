@@ -67,10 +67,12 @@ export default function WatchCourse({ params }) {
         setIsPlaying(true);
         setKey((prev) => prev + 1);
       } else {
-        window.open(
-          `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
-          "_blank"
-        );
+        if (file.driveFileId) {
+          const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/view`;
+          window.open(driveViewUrl, "_blank");
+        } else {
+          toast.error("Không thể mở file này. Vui lòng liên hệ quản trị viên.");
+        }
       }
     }
   }, []);
@@ -314,10 +316,16 @@ export default function WatchCourse({ params }) {
       }
       handleLessonClick(activeLesson, activeChapter, file);
     } else {
-      window.open(
-        `${process.env.NEXT_PUBLIC_API_URL}${file.proxyUrl}`,
-        "_blank"
-      );
+      // Xử lý file ngoài video (tài liệu, PDF, v.v.)
+      // Chỉ sử dụng driveFileId để mở trực tiếp từ Google Drive
+      if (file.driveFileId) {
+        const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/view`;
+        console.log("Mở file từ Google Drive:", driveViewUrl);
+        window.open(driveViewUrl, "_blank");
+      } else {
+        // Thông báo lỗi nếu không có driveFileId
+        toast.error("Không thể mở file này. Vui lòng liên hệ quản trị viên.");
+      }
     }
   };
 
