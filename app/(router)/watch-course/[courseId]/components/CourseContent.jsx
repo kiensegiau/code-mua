@@ -14,9 +14,6 @@ import {
 } from "react-icons/io5";
 import { toast } from "sonner";
 
-// Thêm CSS toàn cục cho thanh cuộn
-import "./scrollbar.css";
-
 export default forwardRef(
   (
     {
