@@ -47,6 +47,9 @@ export default function WatchCourse({ params }) {
   const router = useRouter();
   const courseContentRef = useRef();
 
+  // Add new state to track initial loading
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const handleLessonClick = useCallback((lesson, chapter, file) => {
     setActiveLesson(lesson);
     setActiveChapter(chapter);
@@ -92,17 +95,197 @@ export default function WatchCourse({ params }) {
       setLoading(true);
       const course = await GlobalApi.getCourseById(params.courseId);
       setCourseInfo(course);
+      return course;
     } catch (error) {
       console.error("Lỗi khi lấy thông tin khóa học:", error);
       toast.error("Không thể tải thông tin khóa học");
+      return null;
     } finally {
       setLoading(false);
     }
   }, [params.courseId]);
 
+  // Restore last watched video
+  const restoreLastWatchedVideo = useCallback((course) => {
+    if (!course || !course.chapters) return false;
+    
+    try {
+      // Đọc dữ liệu từ cả hai nguồn
+      const lastWatchedVideoId = localStorage.getItem('lastWatchedVideoId');
+      const courseStateStr = localStorage.getItem('courseState');
+      let courseState = null;
+      
+      // Ưu tiên sử dụng courseState vì nó chứa thông tin đầy đủ hơn
+      if (courseStateStr) {
+        try {
+          courseState = JSON.parse(courseStateStr);
+          // Kiểm tra xem courseState có thuộc khóa học hiện tại không
+          if (courseState.courseId !== params.courseId) {
+            courseState = null;
+          }
+        } catch (e) {
+          console.error("Lỗi khi phân tích courseState:", e);
+        }
+      }
+      
+      // Sử dụng ID video từ courseState hoặc lastWatchedVideoId
+      const videoId = courseState?.videoId || lastWatchedVideoId;
+      
+      if (!videoId) {
+        console.log("Không tìm thấy ID video để khôi phục");
+        return false;
+      }
+      
+      console.log("Đang cố gắng khôi phục video đã xem:", videoId);
+      
+      // Tìm chương từ courseState nếu có
+      let targetChapter = null;
+      let targetLesson = null;
+      
+      if (courseState?.chapterId && courseState?.lessonId) {
+        targetChapter = course.chapters.find(c => c.id === courseState.chapterId);
+        if (targetChapter) {
+          targetLesson = targetChapter.lessons?.find(l => l.id === courseState.lessonId);
+        }
+      }
+      
+      // Tìm video trong cấu trúc khóa học
+      let foundVideo = null;
+      let foundLesson = null;
+      let foundChapter = null;
+      
+      // Nếu đã có target chapter và lesson, tìm video trong đó trước
+      if (targetChapter && targetLesson) {
+        foundVideo = (targetLesson.files || [])
+          .find(file => file.id === videoId && file.type?.includes("video"));
+          
+        if (foundVideo) {
+          foundLesson = targetLesson;
+          foundChapter = targetChapter;
+        }
+      }
+      
+      // Nếu không tìm thấy, tìm kiếm trong toàn bộ khóa học
+      if (!foundVideo) {
+        for (const chapter of course.chapters) {
+          for (const lesson of chapter.lessons || []) {
+            const videoFile = (lesson.files || [])
+              .find(file => file.id === videoId && file.type?.includes("video"));
+            
+            if (videoFile) {
+              foundVideo = videoFile;
+              foundLesson = lesson;
+              foundChapter = chapter;
+              break;
+            }
+          }
+          if (foundVideo) break;
+        }
+      }
+      
+      if (foundVideo && foundLesson && foundChapter) {
+        console.log("Đã tìm thấy video đã xem:", foundVideo.name);
+        
+        // Khôi phục trạng thái UI
+        const chapterIndex = course.chapters.indexOf(foundChapter);
+        setExpandedChapterIndex(chapterIndex);
+        setExpandedLessonId(foundLesson.id);
+        
+        // Khôi phục các mục đang hoạt động
+        setActiveChapter(foundChapter);
+        setActiveLesson(foundLesson);
+        setActiveVideo(foundVideo);
+        setKey(Date.now()); // Sử dụng timestamp để đảm bảo key luôn mới
+        
+        console.log("Đã khôi phục trạng thái video thành công");
+        return true;
+      } else {
+        console.log("Không tìm thấy video với ID:", videoId);
+      }
+    } catch (error) {
+      console.error("Lỗi khi khôi phục video đã xem cuối cùng:", error);
+    }
+    
+    return false;
+  }, [params.courseId]);
+
   useEffect(() => {
-    fetchCourseInfo();
-  }, [fetchCourseInfo]);
+    async function initialize() {
+      console.log("Đang khởi tạo trang khóa học...");
+      const course = await fetchCourseInfo();
+      if (course) {
+        console.log("Đã tải thông tin khóa học, đang khôi phục video...");
+        // Cố gắng khôi phục video đã xem cuối cùng
+        const restored = restoreLastWatchedVideo(course);
+        
+        // Nếu không khôi phục được, cố gắng tải video đầu tiên
+        if (!restored && course.chapters && course.chapters.length > 0) {
+          console.log("Không thể khôi phục video, đang tải video đầu tiên...");
+          const firstChapter = [...course.chapters].sort((a, b) => {
+            const numA = getNumberFromTitle(a.title);
+            const numB = getNumberFromTitle(b.title);
+            return numA - numB;
+          })[0];
+          
+          if (firstChapter && firstChapter.lessons && firstChapter.lessons.length > 0) {
+            const firstLesson = [...firstChapter.lessons].sort((a, b) => {
+              const numA = getNumberFromTitle(a.title);
+              const numB = getNumberFromTitle(b.title);
+              return numA - numB;
+            })[0];
+            
+            if (firstLesson && firstLesson.files && firstLesson.files.length > 0) {
+              const firstVideo = firstLesson.files
+                .filter(f => f.type?.includes("video"))
+                .sort(sortFiles)[0];
+              
+              if (firstVideo) {
+                console.log("Đã tìm thấy video đầu tiên:", firstVideo.name);
+                setExpandedChapterIndex(0);
+                setExpandedLessonId(firstLesson.id);
+                handleLessonClick(firstLesson, firstChapter, firstVideo);
+              }
+            }
+          }
+        }
+      }
+      
+      // Đánh dấu quá trình tải ban đầu đã hoàn thành
+      setIsInitialLoad(false);
+    }
+    
+    initialize();
+  }, [fetchCourseInfo, restoreLastWatchedVideo, handleLessonClick]);
+
+  // Save current video state on unmount or beforeunload
+  useEffect(() => {
+    const saveCurrentVideoState = () => {
+      if (activeVideo && activeLesson && activeChapter) {
+        console.log("Saving current video state before unload:", activeVideo.name);
+        
+        // Save current course state to localStorage
+        localStorage.setItem(
+          "courseState",
+          JSON.stringify({
+            courseId: params.courseId,
+            videoId: activeVideo.id,
+            lessonId: activeLesson.id,
+            chapterId: activeChapter.id,
+            timestamp: Date.now(),
+          })
+        );
+      }
+    };
+    
+    // Save on page unload
+    window.addEventListener('beforeunload', saveCurrentVideoState);
+    
+    return () => {
+      // Save on component unmount
+      saveCurrentVideoState();
+      window.removeEventListener('beforeunload', saveCurrentVideoState);
+    };
+  }, [activeVideo, activeLesson, activeChapter, params.courseId]);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
