@@ -60,6 +60,11 @@ export default function SignIn() {
       await setTokenCookie(accessToken);
       console.log("🍪 Token saved to cookie");
       
+      // Lưu token vào localStorage để sử dụng khi cần
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      console.log("💾 Tokens saved to localStorage");
+      
       toast.success('Đăng nhập thành công!');
       router.replace('/');
     } catch (error) {

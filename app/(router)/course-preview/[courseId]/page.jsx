@@ -219,8 +219,6 @@ function CoursePreview({ params }) {
                   <div className="p-6">
                     <CourseEnrollSection
                       courseInfo={course}
-                      onEnroll={handleEnrollCourse}
-                      isEnrolling={enrolling}
                     />
 
                     <div className="mt-6 space-y-4">

@@ -11,7 +11,7 @@ export const setTokenCookie = (token) => {
   try {
     console.log("🍪 Setting cookie with token:", token.substring(0, 20) + "...");
     // Set cookie với httpOnly và secure
-    document.cookie = `accessToken=${token}; path=/; max-age=86400; samesite=strict`;
+    document.cookie = `accessToken=${token}; path=/; max-age=604800; samesite=strict`; // 7 ngày = 604800 giây
     console.log("✅ Cookie set successfully");
     
     // Verify cookie was set

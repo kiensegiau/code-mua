@@ -18,13 +18,13 @@ export default async function handler(req, res) {
       // Tạo access token
       const accessToken = await new jose.SignJWT({ uid: user.uid, email: user.email })
         .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('15m')
+        .setExpirationTime('7d')
         .sign(accessSecretKey);
 
       // Tạo refresh token
       const refreshToken = await new jose.SignJWT({ uid: user.uid })
         .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('7d')
+        .setExpirationTime('30d')
         .sign(refreshSecretKey);
       
       res.status(200).json({ accessToken, refreshToken });
