@@ -467,7 +467,7 @@ export default function WatchCourse({ params }) {
         </div>
 
         {/* Course Content Section */}
-        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 h-[calc(100vh-52px-56px-var(--video-height))] md:h-[calc(100vh-52px)]">
+        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 h-[calc(100vh-52px-56px-var(--video-height))] md:h-[calc(100vh-52px)] custom-scrollbar">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}

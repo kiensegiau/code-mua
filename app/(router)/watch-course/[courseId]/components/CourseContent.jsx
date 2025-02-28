@@ -14,6 +14,9 @@ import {
 } from "react-icons/io5";
 import { toast } from "sonner";
 
+// Thêm CSS toàn cục cho thanh cuộn
+import "./scrollbar.css";
+
 export default forwardRef(
   (
     {
@@ -217,7 +220,7 @@ export default forwardRef(
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 pb-4">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-4 custom-scrollbar">
           {chapters
             ?.slice()
             .sort(sortByNumber)
