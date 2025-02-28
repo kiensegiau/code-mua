@@ -83,10 +83,9 @@ export default function WatchCourse({ params }) {
   });
 
   const handleVideoEnd = useCallback(() => {
-    if (courseContentRef.current) {
-      courseContentRef.current.handleVideoEnd();
-    }
-  }, []);
+    console.log("Video ended, navigating to next video");
+    handleNext();
+  }, [handleNext]);
 
   const fetchCourseInfo = useCallback(async () => {
     try {
