@@ -1,6 +1,8 @@
 "use client";
 import React from 'react';
 import { motion } from 'framer-motion';
+import { loadSlim } from "tsparticles-slim";
+import Particles from "react-tsparticles";
 import {
   Facebook,
   MessageCircle,
@@ -35,6 +37,61 @@ export default function HelpPage() {
         duration: 0.5
       }
     }
+  };
+
+  const particlesInit = async (engine) => {
+    await loadSlim(engine);
+  };
+
+  const particlesLoaded = async (container) => {
+    console.log("Particles container loaded", container);
+  };
+
+  const particlesConfig = {
+    background: {
+      color: {
+        value: "transparent",
+      },
+    },
+    particles: {
+      color: {
+        value: "#ff4d4f",
+      },
+      links: {
+        color: "#ff4d4f",
+        distance: 150,
+        enable: true,
+        opacity: 0.2,
+        width: 1,
+      },
+      move: {
+        direction: "none",
+        enable: true,
+        outModes: {
+          default: "bounce",
+        },
+        random: false,
+        speed: 1,
+        straight: false,
+      },
+      number: {
+        density: {
+          enable: true,
+          area: 800,
+        },
+        value: 50,
+      },
+      opacity: {
+        value: 0.3,
+      },
+      shape: {
+        type: "circle",
+      },
+      size: {
+        value: { min: 1, max: 3 },
+      },
+    },
+    detectRetina: true,
   };
 
   const contactMethods = [
@@ -101,7 +158,43 @@ export default function HelpPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#141414] text-gray-200">
+    <div className="min-h-screen bg-[#141414] text-gray-200 relative overflow-hidden">
+      {/* Particles Background */}
+      <div className="absolute inset-0 z-0">
+        <Particles
+          id="tsparticles"
+          init={particlesInit}
+          loaded={particlesLoaded}
+          options={particlesConfig}
+        />
+      </div>
+
+      {/* Floating elements in the background */}
+      <div className="fixed inset-0 pointer-events-none">
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-64 h-64 bg-[#ff4d4f]/5 rounded-full"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, 50, 0],
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.1, 0.3],
+            }}
+            transition={{
+              duration: 15 + i * 2,
+              repeat: Infinity,
+              repeatType: "reverse",
+              delay: i * 5,
+            }}
+            style={{
+              left: `${20 + i * 30}%`,
+              top: `${30 + i * 20}%`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-[#1f1f1f] to-[#141414] py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
