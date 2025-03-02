@@ -13,7 +13,7 @@ function Layout({ children }) {
 
   return (
     <MobileMenuProvider>
-      <div className="min-h-screen bg-[#141414] text-white">
+      <div className="min-h-screen bg-[var(--background-color)] text-[var(--text-color)]">
         {/* Header - cố định ở trên cùng */}
         <Header />
 

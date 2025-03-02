@@ -234,133 +234,145 @@ const ForumContainer = ({ initialTopics = [] }) => {
 
     return (
       <div className="container mx-auto px-4 py-8">
-        <motion.div
-          key={`detail-${selectedTopic.id}-${renderKey}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
+        <div
+          key={renderKey}
+          className="forum-container bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
         >
-          <TopicDetail
-            topic={selectedTopic}
-            onCloseDetail={handleCloseDetail}
-            onLike={handleLike}
-            onSavePost={() => {
-              console.log("Lưu bài viết:", selectedTopic.id);
+          <motion.div
+            key={`detail-${selectedTopic.id}-${renderKey}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <TopicDetail
+              topic={selectedTopic}
+              onCloseDetail={handleCloseDetail}
+              onLike={handleLike}
+              onSavePost={() => {
+                console.log("Lưu bài viết:", selectedTopic.id);
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "save_post",
-                lastTopicId: selectedTopic.id,
-              }));
-            }}
-            onReportPost={() => {
-              console.log("Báo cáo bài viết:", selectedTopic.id);
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "save_post",
+                  lastTopicId: selectedTopic.id,
+                }));
+              }}
+              onReportPost={() => {
+                console.log("Báo cáo bài viết:", selectedTopic.id);
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "report_post",
-                lastTopicId: selectedTopic.id,
-              }));
-            }}
-            onShare={() => {
-              console.log("Chia sẻ bài viết:", selectedTopic.id);
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "report_post",
+                  lastTopicId: selectedTopic.id,
+                }));
+              }}
+              onShare={() => {
+                console.log("Chia sẻ bài viết:", selectedTopic.id);
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "share_post",
-                lastTopicId: selectedTopic.id,
-              }));
-            }}
-            onDownloadResource={() => {
-              console.log(
-                "Tải xuống tài nguyên từ bài viết:",
-                selectedTopic.id
-              );
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "share_post",
+                  lastTopicId: selectedTopic.id,
+                }));
+              }}
+              onDownloadResource={() => {
+                console.log(
+                  "Tải xuống tài nguyên từ bài viết:",
+                  selectedTopic.id
+                );
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "download_resource",
-                lastTopicId: selectedTopic.id,
-              }));
-            }}
-            onSubmitComment={(comment) => {
-              console.log(
-                "Gửi bình luận cho bài viết:",
-                selectedTopic.id,
-                comment
-              );
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "download_resource",
+                  lastTopicId: selectedTopic.id,
+                }));
+              }}
+              onSubmitComment={(comment) => {
+                console.log(
+                  "Gửi bình luận cho bài viết:",
+                  selectedTopic.id,
+                  comment
+                );
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "submit_comment",
-                lastTopicId: selectedTopic.id,
-              }));
-            }}
-            onMessage={() => {
-              console.log("Gửi tin nhắn về bài viết:", selectedTopic.id);
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "submit_comment",
+                  lastTopicId: selectedTopic.id,
+                }));
+              }}
+              onMessage={() => {
+                console.log("Gửi tin nhắn về bài viết:", selectedTopic.id);
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "message",
-                lastTopicId: selectedTopic.id,
-              }));
-            }}
-          />
-        </motion.div>
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "message",
+                  lastTopicId: selectedTopic.id,
+                }));
+              }}
+            />
+          </motion.div>
+        </div>
       </div>
     );
   } else if (isCreatingPost) {
     console.log("Hiển thị form tạo bài viết");
     return (
       <div className="container mx-auto px-4 py-8">
-        <motion.div
-          key={`create-${renderKey}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
+        <div
+          key={renderKey}
+          className="forum-container bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
         >
-          <CreatePostForm
-            onClose={handleCloseCreatePost}
-            onSubmit={handleSubmitPost}
-          />
-        </motion.div>
+          <motion.div
+            key={`create-${renderKey}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <CreatePostForm
+              onClose={handleCloseCreatePost}
+              onSubmit={handleSubmitPost}
+            />
+          </motion.div>
+        </div>
       </div>
     );
   } else {
     console.log("Hiển thị danh sách topic");
     return (
       <div className="container mx-auto px-4 py-8">
-        <motion.div
-          key={`list-${renderKey}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
+        <div
+          key={renderKey}
+          className="forum-container bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
         >
-          <ForumTopicList
-            topics={filteredTopics}
-            onSelectTopic={handleSelectTopic}
-            onCreatePost={handleCreatePost}
-            onSearch={handleSearch}
-            onViewMorePosts={() => {
-              console.log("Xem thêm bài viết");
+          <motion.div
+            key={`list-${renderKey}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ForumTopicList
+              topics={filteredTopics}
+              onSelectTopic={handleSelectTopic}
+              onCreatePost={handleCreatePost}
+              onSearch={handleSearch}
+              onViewMorePosts={() => {
+                console.log("Xem thêm bài viết");
 
-              // Log thông tin để debug
-              setDebugInfo((prev) => ({
-                ...prev,
-                lastAction: "view_more_posts",
-              }));
-            }}
-          />
-        </motion.div>
+                // Log thông tin để debug
+                setDebugInfo((prev) => ({
+                  ...prev,
+                  lastAction: "view_more_posts",
+                }));
+              }}
+            />
+          </motion.div>
+        </div>
       </div>
     );
   }

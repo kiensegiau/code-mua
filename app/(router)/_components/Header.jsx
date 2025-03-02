@@ -11,10 +11,13 @@ import {
   Settings,
   Bell,
   Wallet,
+  Sun,
+  Moon,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
+import { useTheme } from "@/app/_context/ThemeContext";
 import { auth, db } from "@/app/_utils/firebase";
 import { useRouter } from "next/navigation";
 import SideNav from "./SideNav";
@@ -23,6 +26,7 @@ import { useMobileMenu } from "@/app/_context/MobileMenuContext";
 
 function Header() {
   const { user, profile } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -41,12 +45,12 @@ function Header() {
 
   return (
     <>
-      <div className="px-3 md:px-4 py-2 bg-[#141414] flex justify-between items-center border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
+      <div className="px-3 md:px-4 py-2 bg-[var(--header-background)] flex justify-between items-center border-b border-[var(--border-color)] fixed top-0 left-0 right-0 z-50">
         <div className="flex items-center gap-2">
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
-            className="hover:bg-gray-800 p-1.5 rounded-lg transition-colors"
+            className="hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors"
           >
             {isMobileMenuOpen ? (
               <X className="h-5 w-5 text-gray-400" />
@@ -72,7 +76,7 @@ function Header() {
               placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-full bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
+              className="w-full pl-10 pr-4 py-2 rounded-full bg-[var(--input-background)] border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-[var(--text-color)] placeholder:text-gray-500"
             />
           </div>
         </div>
@@ -81,16 +85,33 @@ function Header() {
           {/* Search Icon - Mobile */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="md:hidden hover:bg-gray-800 p-1.5 rounded-lg transition-colors"
+            className="md:hidden hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors"
           >
             <Search className="h-5 w-5 text-gray-400" />
           </button>
 
+          {/* Nút chuyển chế độ sáng/tối */}
+          <button
+            onClick={toggleTheme}
+            className="hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors"
+            aria-label={
+              theme === "dark"
+                ? "Chuyển sang chế độ sáng"
+                : "Chuyển sang chế độ tối"
+            }
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5 text-gray-400" />
+            ) : (
+              <Moon className="h-5 w-5 text-gray-400" />
+            )}
+          </button>
+
           {/* Số dư - Desktop */}
           {user && (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 rounded-full border border-gray-700">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[var(--card-background)]/50 rounded-full border border-[var(--border-color)]">
               <Wallet className="h-4 w-4 text-[#ff4d4f]" />
-              <span className="text-sm font-medium text-gray-300">
+              <span className="text-sm font-medium text-[var(--text-color)]">
                 {new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",
@@ -102,7 +123,7 @@ function Header() {
           )}
 
           {/* Notifications */}
-          <button className="relative hover:bg-gray-800 p-1.5 rounded-lg transition-colors">
+          <button className="relative hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors">
             <Bell className="text-gray-400 h-5 w-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-[#ff4d4f] rounded-full"></span>
           </button>
@@ -112,21 +133,21 @@ function Header() {
               {/* User Menu Button */}
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 hover:bg-gray-800 p-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-2 hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors"
               >
-                <div className="w-7 h-7 rounded-full bg-gray-800 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-[var(--card-background)] flex items-center justify-center">
                   <User className="h-4 w-4 text-[#ff4d4f]" />
                 </div>
-                <span className="hidden md:inline text-sm font-medium text-gray-300">
+                <span className="hidden md:inline text-sm font-medium text-[var(--text-color)]">
                   {profile?.fullName?.split(" ").pop() || "User"}
                 </span>
               </button>
 
               {/* User Menu Dropdown */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-1 w-48 bg-[#1f1f1f] rounded-lg shadow-lg border border-gray-800 py-1">
+                <div className="absolute right-0 mt-1 w-48 bg-[var(--card-background)] rounded-lg shadow-lg border border-[var(--border-color)] py-1">
                   {/* Số dư - Mobile */}
-                  <div className="md:hidden flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border-b border-gray-800">
+                  <div className="md:hidden flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border-b border-[var(--border-color)]">
                     <Wallet className="h-4 w-4 text-[#ff4d4f]" />
                     <span>
                       {new Intl.NumberFormat("vi-VN", {
@@ -140,21 +161,21 @@ function Header() {
 
                   <Link
                     href="/profile"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-[#ff4d4f]"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
                   >
                     <User className="h-4 w-4" />
                     <span>Hồ sơ</span>
                   </Link>
                   <Link
                     href="/my-courses"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-[#ff4d4f]"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
                   >
                     <Book className="h-4 w-4" />
                     <span>Khóa học của tôi</span>
                   </Link>
                   <Link
                     href="/settings"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-[#ff4d4f]"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
                   >
                     <Settings className="h-4 w-4" />
                     <span>Cài đặt</span>
@@ -184,13 +205,13 @@ function Header() {
 
       {/* Mobile Search Bar */}
       {isSearchOpen && (
-        <div className="fixed top-[48px] left-0 right-0 p-2 bg-[#141414] border-b border-gray-800 z-40 md:hidden">
-          <div className="flex items-center gap-2 bg-gray-800/50 py-1.5 px-3 rounded-full border border-gray-700">
+        <div className="fixed top-[48px] left-0 right-0 p-2 bg-[var(--header-background)] border-b border-[var(--border-color)] z-40 md:hidden">
+          <div className="flex items-center gap-2 bg-[var(--input-background)]/50 py-1.5 px-3 rounded-full border border-[var(--border-color)]">
             <Search className="h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
-              className="bg-transparent outline-none w-full text-sm text-gray-300 placeholder:text-gray-500"
+              className="bg-transparent outline-none w-full text-sm text-[var(--text-color)] placeholder:text-gray-500"
               autoFocus
             />
           </div>
@@ -199,7 +220,7 @@ function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed top-[48px] left-0 bottom-0 w-64 bg-[#141414] z-40 md:hidden overflow-y-auto border-r border-gray-800">
+        <div className="fixed top-[48px] left-0 bottom-0 w-64 bg-[var(--sidebar-background)] z-40 md:hidden overflow-y-auto border-r border-[var(--border-color)]">
           <SideNav />
         </div>
       )}

@@ -126,7 +126,7 @@ function SideNav() {
       >
         <div
           className={`p-1.5 rounded-md ${
-            active ? "bg-[#ff4d4f]/10" : "bg-gray-800"
+            active ? "bg-[#ff4d4f]/10" : "bg-[var(--card-background)]"
           }`}
         >
           <Icon
@@ -152,7 +152,7 @@ function SideNav() {
   };
 
   return (
-    <div className="fixed top-[48px] left-0 w-64 h-[calc(100vh-48px)] bg-[#141414] border-r border-gray-800 overflow-y-auto z-40 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+    <div className="fixed top-[48px] left-0 w-64 h-[calc(100vh-48px)] bg-[var(--sidebar-background)] border-r border-[var(--border-color)] overflow-y-auto z-40 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
       <div className="py-4 flex flex-col gap-2">
         {/* Main Menu */}
         <div className="px-3">
@@ -162,7 +162,7 @@ function SideNav() {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-violet-100 my-2" />
+        <div className="h-px bg-[var(--border-color)] my-2" />
 
         {/* Support Menu */}
         <div className="px-3">
@@ -175,11 +175,11 @@ function SideNav() {
         {user && (
           <Link
             href="/profile"
-            className="block px-4 py-3 mx-3 mt-2 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
+            className="block px-4 py-3 mx-3 mt-2 bg-[var(--card-background)]/50 hover:bg-[var(--hover-color)] rounded-lg transition-colors group"
             onClick={handleUserProfileClick}
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center transition-colors">
+              <div className="w-8 h-8 rounded-full bg-[var(--card-background)] group-hover:bg-[var(--hover-color)] flex items-center justify-center transition-colors">
                 {user.photoURL ? (
                   <img
                     src={user.photoURL}
@@ -191,7 +191,7 @@ function SideNav() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-300 truncate group-hover:text-white transition-colors">
+                <p className="text-sm font-medium text-[var(--text-color)] truncate group-hover:text-[var(--text-color)] transition-colors">
                   {user.email}
                 </p>
                 <p className="text-xs text-[#ff4d4f]">Xem trang cá nhân</p>
@@ -202,7 +202,7 @@ function SideNav() {
       </div>
 
       {/* Hiển thị bottom navigation trên thiết bị di động */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#141414] border-t border-gray-800 flex justify-around items-center p-2 z-50">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--sidebar-background)] border-t border-[var(--border-color)] flex justify-around items-center p-2 z-50">
         {menuItems.slice(0, 4).map((item, index) => {
           const Icon = item.icon;
           const active = isActive(item.href);

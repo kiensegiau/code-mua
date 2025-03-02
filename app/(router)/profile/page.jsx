@@ -151,7 +151,7 @@ export default function Profile() {
               {/* Profile Image */}
               <div className="absolute left-4 -bottom-12 md:-bottom-16">
                 <div className="relative">
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white bg-white overflow-hidden">
+                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-[var(--card-background)] bg-white overflow-hidden">
                     <Image
                       src={profile.photoURL || "/default-avatar.png"}
                       alt="Profile"
@@ -161,7 +161,7 @@ export default function Profile() {
                     />
                   </div>
                   {isEditing && (
-                    <button className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full hover:bg-primary/90">
+                    <button className="absolute bottom-0 right-0 p-2 bg-[#ff4d4f] text-white rounded-full hover:bg-[#ff4d4f]/90">
                       <Camera className="w-4 h-4" />
                     </button>
                   )}
@@ -175,7 +175,7 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
                         Họ và tên
                       </label>
                       <input
@@ -187,12 +187,12 @@ export default function Profile() {
                             fullName: e.target.value,
                           })
                         }
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                         placeholder="Nhập họ và tên của bạn"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
                         Nghề nghiệp
                       </label>
                       <input
@@ -204,12 +204,12 @@ export default function Profile() {
                             occupation: e.target.value,
                           })
                         }
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                         placeholder="VD: Software Developer"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
                         Số điện thoại
                       </label>
                       <input
@@ -221,12 +221,12 @@ export default function Profile() {
                             phoneNumber: e.target.value,
                           })
                         }
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                         placeholder="Nhập số điện thoại của bạn"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
                         Địa chỉ
                       </label>
                       <input
@@ -238,12 +238,12 @@ export default function Profile() {
                             location: e.target.value,
                           })
                         }
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                         placeholder="VD: Hà Nội, Việt Nam"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
                         Học vấn
                       </label>
                       <input
@@ -255,12 +255,12 @@ export default function Profile() {
                             education: e.target.value,
                           })
                         }
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                         placeholder="VD: Đại học Bách Khoa Hà Nội"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-400 mb-1">
                         Website
                       </label>
                       <input
@@ -272,14 +272,14 @@ export default function Profile() {
                             website: e.target.value,
                           })
                         }
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                         placeholder="VD: https://yourwebsite.com"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
                       Giới thiệu bản thân
                     </label>
                     <textarea
@@ -290,7 +290,7 @@ export default function Profile() {
                           bio: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary h-24"
+                      className="w-full px-4 py-2.5 bg-[var(--input-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors h-24"
                       placeholder="Viết một vài điều về bản thân..."
                     />
                   </div>
@@ -299,7 +299,7 @@ export default function Profile() {
                     <button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="w-full sm:w-auto px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors flex items-center justify-center"
                     >
                       {isSaving ? (
                         <>
@@ -312,7 +312,7 @@ export default function Profile() {
                     </button>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="w-full sm:w-auto px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="px-6 py-2.5 bg-transparent border border-[var(--border-color)] text-[var(--text-color)] rounded-lg hover:bg-[var(--hover-color)] transition-colors"
                     >
                       Hủy
                     </button>

@@ -1,0 +1,587 @@
+/* File này chứa các class Tailwind đã được cập nhật để sử dụng biến theme */
+
+/* Card styles */
+.theme-card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Text styles */
+.theme-text {
+  color: var(--text-color);
+}
+
+.theme-text-secondary {
+  color: #a0a0a0;
+}
+
+/* Background styles */
+.theme-bg {
+  background-color: var(--background-color);
+}
+
+.theme-bg-card {
+  background-color: var(--card-background);
+}
+
+/* Border styles */
+.theme-border {
+  border-color: var(--border-color);
+}
+
+/* Button styles */
+.theme-button {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-button:hover {
+  background-color: var(--hover-color);
+}
+
+/* Input styles */
+.theme-input {
+  background-color: var(--input-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-input::placeholder {
+  color: #a0a0a0;
+}
+
+/* Dropdown styles */
+.theme-dropdown {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+/* Link styles */
+.theme-link {
+  color: #ff4d4f;
+}
+
+.theme-link:hover {
+  text-decoration: underline;
+}
+
+/* Custom scrollbar for themed elements */
+.theme-scrollbar::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+.theme-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+}
+
+/* Divider */
+.theme-divider {
+  background-color: var(--border-color);
+}
+
+/* Auto-apply theme to common elements */
+/* Sử dụng các selector cụ thể để override các style mặc định */
+
+/* Cards */
+.card,
+.bg-\[\#1a1a1a\],
+.bg-\[\#1f1f1f\],
+.bg-\[\#222\],
+.bg-\[\#252525\],
+.bg-\[\#282828\],
+.bg-\[\#202020\],
+div[class*="bg-gray-8"],
+div[class*="bg-gray-9"] {
+  background-color: var(--card-background) !important;
+  border-color: var(--border-color) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Text elements */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+div {
+  color: var(--text-color);
+}
+
+/* Backgrounds */
+.bg-\[\#141414\] {
+  background-color: var(--background-color) !important;
+}
+
+/* Borders */
+.border-gray-800,
+.border-gray-700,
+.border-gray-900,
+.border-gray-600 {
+  border-color: var(--border-color) !important;
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  background-color: var(--input-background);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+/* Buttons that don't have primary colors */
+button:not([class*="bg-[#ff"]):not([class*="bg-red-"]):not(
+    [class*="bg-blue-"]
+  ):not([class*="bg-green-"]):not([class*="bg-yellow-"]):not(
+    [class*="bg-purple-"]
+  ):not([class*="bg-indigo-"]):not([class*="bg-pink-"]) {
+  background-color: var(--card-background);
+}
+
+/* Preserve text colors for active and hover states */
+.text-white,
+.text-black,
+.text-gray-100,
+.text-gray-200,
+.text-gray-300,
+.text-gray-400,
+.text-gray-500,
+.text-gray-600,
+.text-gray-700,
+.text-gray-800,
+.text-gray-900 {
+  color: var(--text-color);
+}
+
+/* Bổ sung thêm các quy tắc chi tiết hơn */
+
+/* Đảm bảo các styled text có màu phù hợp */
+[data-theme="light"] .card-title,
+[data-theme="light"] .text-xl,
+[data-theme="light"] .text-2xl,
+[data-theme="light"] .text-3xl,
+[data-theme="light"] .text-4xl,
+[data-theme="light"] .font-bold,
+[data-theme="light"] .font-semibold,
+[data-theme="light"] .font-medium {
+  color: var(--text-color) !important;
+}
+
+/* Các thẻ có màu sắc cụ thể */
+.text-white {
+  color: var(--text-color) !important;
+}
+
+/* Các phần tử nghịch đảo màu */
+[data-theme="light"] .text-white {
+  color: #333 !important;
+}
+
+[data-theme="light"] .bg-white {
+  background-color: #f8f9fa !important;
+}
+
+/* Các phần tử có độ trong suốt */
+[data-theme="light"] .bg-opacity-10,
+[data-theme="light"] .bg-opacity-20,
+[data-theme="light"] .bg-opacity-30 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Scrollbar cho light theme */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] * {
+  scrollbar-color: rgba(0, 0, 0, 0.2) #f0f0f0;
+}
+
+/* Fix cho các thẻ inline-block và inline */
+[data-theme="light"] span,
+[data-theme="light"] small,
+[data-theme="light"] a:not(.text-[#ff4d4f]) {
+  color: var(--text-color);
+}
+
+/* Fix cho các phần tử form */
+[data-theme="light"] label {
+  color: var(--text-color);
+}
+
+/* Fix cho các phần tử với màu cố định */
+[data-theme="light"] [class*="text-gray-"],
+[data-theme="light"] [class*="text-white"] {
+  color: var(--text-color) !important;
+}
+
+/* Các lớp background cụ thể */
+[data-theme="light"] .bg-\[\#1f1f1f\]/50,
+[data-theme="light"] .bg-gray-800/50,
+[data-theme="light"] .bg-gray-900/50,
+[data-theme="light"] .bg-\[\#1a1a1a\]/50 {
+  background-color: rgba(240, 240, 240, 0.5) !important;
+}
+
+/* Card styles trong light theme */
+[data-theme="light"] .card {
+  background-color: #fff !important;
+  border: 1px solid #e1e1e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Table styles */
+[data-theme="light"] table,
+[data-theme="light"] th,
+[data-theme="light"] td {
+  border-color: var(--border-color) !important;
+}
+
+/* Fix cho hover states */
+[data-theme="light"] .hover\:bg-gray-800:hover {
+  background-color: var(--hover-color) !important;
+}
+
+/* Button và input focus */
+[data-theme="light"] button:focus,
+[data-theme="light"] input:focus {
+  outline-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Badge fixes */
+[data-theme="light"] .bg-\[\#ff4d4f\]/10 {
+  background-color: rgba(255, 77, 79, 0.1) !important;
+}
+
+/* Ensures cards background is appropriate for light theme */
+[data-theme="light"] [class*="bg-[#"] {
+  background-color: var(--card-background) !important;
+}
+
+/* Fix cho các icon và biểu tượng */
+[data-theme="light"] svg:not([class*="text-[#ff"]):not([class*="text-red-"]) {
+  color: inherit;
+}
+
+/* WelcomeBanner specific styles */
+.bg-grid-white\/5 {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 5%)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+}
+
+.bg-grid-black\/5 {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(0 0 0 / 5%)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+}
+
+/* Cải thiện hiển thị màu nền gradient trong light theme */
+[data-theme="light"] .from-\[\#1f1f1f\] {
+  --tw-gradient-from: #f0f0f0 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+[data-theme="light"] .to-\[\#121212\] {
+  --tw-gradient-to: #ffffff !important;
+}
+
+/* Cải thiện các card của WelcomeBanner trong theme sáng */
+[data-theme="light"] .WelcomeBanner h1,
+[data-theme="light"] .WelcomeBanner .text-xl,
+[data-theme="light"] .WelcomeBanner .text-2xl,
+[data-theme="light"] .WelcomeBanner .text-3xl {
+  color: #333 !important;
+}
+
+[data-theme="light"] .WelcomeBanner p,
+[data-theme="light"] .WelcomeBanner .text-gray-400 {
+  color: #666 !important;
+}
+
+/* Đảm bảo các text trong welcome banner có màu phù hợp */
+[data-theme="light"] .welcome-text {
+  color: #333 !important;
+}
+
+[data-theme="light"] .welcome-subtext {
+  color: #666 !important;
+}
+
+/* Fix cho card item trong theme sáng */
+[data-theme="light"] .welcome-card {
+  background-color: #fff !important;
+  border-color: #e1e1e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Style cho nền welcome banner */
+.welcome-banner-bg-dark {
+  background: linear-gradient(135deg, #1f1f1f 0%, #121212 100%);
+}
+
+.welcome-banner-bg-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+/* Styles dành riêng cho các theme */
+
+/* ===== CÁC QUY TẮC ÁP DỤNG CHUNG CHO CẢ LIGHT VÀ DARK ===== */
+[data-theme] {
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* ===== DARK THEME RULES ===== */
+[data-theme="dark"] {
+  --text-color: #ffffff;
+  --background-color: #121212;
+  --background-secondary: #1a1a1a;
+  --card-background: #1f1f1f;
+  --card-hover: #2d2d2d;
+  --border-color: #333333;
+  --input-background: #1e1e1e;
+  --primary-color: #ff4d4f;
+  --muted-text: #a0a0a0;
+}
+
+/* ===== LIGHT THEME RULES ===== */
+[data-theme="light"] {
+  --text-color: #333333;
+  --background-color: #ffffff;
+  --background-secondary: #f5f5f5;
+  --card-background: #ffffff;
+  --card-hover: #f0f0f0;
+  --border-color: #e0e0e0;
+  --input-background: #f0f0f0;
+  --primary-color: #ff4d4f;
+  --muted-text: #666666;
+}
+
+/* WELCOME SECTION COLOR FIXES */
+[data-theme="light"] .welcome-section {
+  background-color: var(--background-secondary) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .welcome-section * {
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .welcome-section h1,
+[data-theme="light"] .welcome-section h2,
+[data-theme="light"] .welcome-section .text-white {
+  color: var(--text-color) !important;
+}
+
+/* SIDEBAR COLOR FIXES */
+[data-theme="light"] .sidebar {
+  background-color: var(--background-secondary) !important;
+  border-right: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .sidebar-link {
+  color: var(--text-color);
+}
+
+[data-theme="light"] .sidebar-link:hover {
+  background-color: var(--card-hover);
+}
+
+[data-theme="light"] .sidebar-link.active {
+  background-color: rgba(255, 77, 79, 0.1);
+  color: var(--primary-color);
+}
+
+/* ===== COMMUNITY PAGE THEME FIXES ===== */
+/* Forum Topic List */
+[data-theme="light"] .ForumTopicList input,
+[data-theme="light"] .ForumContainer input,
+[data-theme="light"] .community-page input {
+  background-color: var(--input-background) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .ForumTopicList h2,
+[data-theme="light"] .ForumContainer h2,
+[data-theme="light"] .community-page h2 {
+  color: var(--text-color) !important;
+}
+
+/* Forum Topic */
+[data-theme="light"] .bg-\[\#1f1f1f\],
+[data-theme="light"] .bg-\[\#222222\],
+[data-theme="light"] .bg-\[\#2d2d2d\],
+[data-theme="light"] .bg-\[\#333333\] {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-gray-400 {
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .text-gray-500 {
+  color: var(--muted-text) !important;
+}
+
+/* Hover states for forum topics */
+[data-theme="light"] .hover\:bg-\[\#222222\]:hover {
+  background-color: var(--card-hover) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Buttons */
+[data-theme="light"] .bg-\[\#ff4d4f\] {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+[data-theme="light"] .text-\[\#ff4d4f\] {
+  color: var(--primary-color) !important;
+}
+
+[data-theme="light"] .text-blue-400,
+[data-theme="light"] .text-blue-500 {
+  color: #3b82f6 !important; /* Giữ màu xanh cho các tag */
+}
+
+/* Fix cho border trong community */
+[data-theme="light"] .border-gray-700,
+[data-theme="light"] .border-gray-800,
+[data-theme="light"] .border-transparent {
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .border-blue-500 {
+  border-color: #3b82f6 !important; /* Giữ màu xanh cho border khi active */
+}
+
+/* Forum container styles */
+.forum-container {
+  background-color: var(--card-background) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+}
+
+[data-theme="light"] .forum-container {
+  background-color: var(--card-background) !important;
+}
+
+[data-theme="light"] .bg-\[\#111111\] {
+  background-color: var(--card-background) !important;
+}
+
+/* Làm đẹp giao diện cho light theme */
+[data-theme="light"] {
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 4px 6px var(--shadow-color);
+}
+
+[data-theme="dark"] {
+  --shadow-color: rgba(0, 0, 0, 0.25);
+  --card-shadow: 0 4px 6px var(--shadow-color);
+}
+
+/* Đảm bảo văn bản đọc được trên light theme */
+[data-theme="light"] p,
+[data-theme="light"] span:not(.bg-\[\#ff4d4f\] *),
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6,
+[data-theme="light"] div:not(.bg-\[\#ff4d4f\]):not(.text-\[\#ff4d4f\]) {
+  color: var(--text-color);
+}
+
+/* WelcomeBanner Styles */
+.welcome-banner-bg-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-color: #e5e7eb;
+}
+
+.welcome-banner-bg-dark {
+  background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);
+  border-color: #333333;
+}
+
+/* Fix màu chữ trong WelcomeBanner */
+[data-theme="light"] .welcome-text {
+  color: #333333 !important;
+}
+
+[data-theme="light"] .welcome-subtext {
+  color: #666666 !important;
+}
+
+[data-theme="light"] .welcome-banner-bg-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+}
+
+[data-theme="light"] .welcome-card {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="light"] .theme-input {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="light"] .bg-grid-black\/5 {
+  opacity: 0.05 !important;
+}
+
+/* Sửa lỗi cho các lớp đặc biệt trong welcome section */
+[data-theme="light"] .WelcomeBanner .search-icon {
+  color: #666666 !important;
+}
+
+/* Đảm bảo các lớp text-gray-* hiển thị đúng màu */
+[data-theme="light"] .text-gray-200,
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-gray-400,
+[data-theme="light"] .text-gray-500,
+[data-theme="light"] .text-gray-600 {
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .text-gray-800,
+[data-theme="light"] .text-gray-900 {
+  color: #333333 !important;
+}
+
+/* Làm mờ nền lưới */
+[data-theme="light"] .bg-grid-black\/5 {
+  background-size: 30px 30px;
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+[data-theme="dark"] .bg-grid-white\/5 {
+  background-size: 30px 30px;
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}

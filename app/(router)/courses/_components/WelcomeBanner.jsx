@@ -1,6 +1,7 @@
 "use client";
 import React, { memo } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
+import { useTheme } from "@/app/_context/ThemeContext";
 import {
   Sparkles,
   Rocket,
@@ -15,6 +16,8 @@ import Link from "next/link";
 // Wrap component bằng memo để tránh render không cần thiết
 const WelcomeBanner = memo(function WelcomeBanner() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isLightTheme = theme === "light";
 
   // Giảm độ phức tạp của animation để cải thiện hiệu suất
   const containerVariants = {
@@ -40,14 +43,23 @@ const WelcomeBanner = memo(function WelcomeBanner() {
 
   return (
     <motion.div
-      className="relative overflow-hidden bg-gradient-to-br from-[#1f1f1f] to-[#121212] rounded-xl border border-gray-800 shadow-xl"
+      className={`relative overflow-hidden rounded-xl shadow-xl theme-card border theme-border WelcomeBanner welcome-section
+        ${
+          isLightTheme
+            ? "welcome-banner-bg-light"
+            : "welcome-banner-bg-dark border-gray-800"
+        }`}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       layout="position" // Giúp tránh reflow
     >
       {/* Grid background */}
-      <div className="absolute inset-0 bg-grid-white/5" />
+      <div
+        className={`absolute inset-0 ${
+          isLightTheme ? "bg-grid-black/5" : "bg-grid-white/5"
+        }`}
+      />
 
       {/* Blob decorations - static để giảm tải */}
       <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-[#ff4d4f]/10 rounded-full blur-3xl" />
@@ -57,7 +69,9 @@ const WelcomeBanner = memo(function WelcomeBanner() {
       <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between">
         <motion.div className="max-w-2xl" variants={containerVariants}>
           <motion.h1
-            className="text-2xl md:text-3xl font-bold text-gray-200 mb-3"
+            className={`text-2xl md:text-3xl font-bold mb-3 welcome-text ${
+              isLightTheme ? "text-gray-800" : "text-gray-200"
+            }`}
             variants={itemVariants}
           >
             {user ? (
@@ -73,7 +87,9 @@ const WelcomeBanner = memo(function WelcomeBanner() {
           </motion.h1>
 
           <motion.p
-            className="text-gray-400 text-sm md:text-base mb-6"
+            className={`text-sm md:text-base mb-6 welcome-subtext ${
+              isLightTheme ? "text-gray-600" : "text-gray-400"
+            }`}
             variants={itemVariants}
           >
             Học tập, phát triển và nâng cao kỹ năng của bạn với hơn 100+ khóa
@@ -86,11 +102,20 @@ const WelcomeBanner = memo(function WelcomeBanner() {
             variants={itemVariants}
           >
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                  isLightTheme ? "text-gray-500" : "text-gray-400"
+                }`}
+              />
               <input
                 type="text"
                 placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-[#2c2c2c] border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 text-sm text-gray-200 placeholder:text-gray-500"
+                className={`w-full pl-10 pr-4 py-2.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 text-sm placeholder:text-gray-500 theme-input
+                  ${
+                    isLightTheme
+                      ? "bg-white border border-gray-300 text-gray-800"
+                      : "bg-[#2c2c2c] border border-gray-700 text-gray-200"
+                  }`}
               />
             </div>
           </motion.div>
@@ -98,35 +123,97 @@ const WelcomeBanner = memo(function WelcomeBanner() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 md:gap-6">
             {/* Static elements thay vì animation */}
-            <div className="bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors hover:bg-gray-800/90">
+            <div
+              className={`rounded-lg p-4 border transition-colors welcome-card
+              ${
+                isLightTheme
+                  ? "bg-white/70 backdrop-blur-sm border-gray-200 hover:border-gray-300 hover:bg-white/90"
+                  : "bg-gray-800/70 backdrop-blur-sm border-gray-700 hover:border-gray-600 hover:bg-gray-800/90"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-4 h-4 text-[#ff4d4f]" />
-                <span className="text-gray-200 font-medium">100+</span>
+                <span
+                  className={`font-medium welcome-text ${
+                    isLightTheme ? "text-gray-800" : "text-gray-200"
+                  }`}
+                >
+                  100+
+                </span>
               </div>
-              <p className="text-gray-400 text-xs">Khóa học</p>
+              <p
+                className={`text-xs welcome-subtext ${
+                  isLightTheme ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                Khóa học
+              </p>
             </div>
 
-            <div className="bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors hover:bg-gray-800/90">
+            <div
+              className={`rounded-lg p-4 border transition-colors welcome-card
+              ${
+                isLightTheme
+                  ? "bg-white/70 backdrop-blur-sm border-gray-200 hover:border-gray-300 hover:bg-white/90"
+                  : "bg-gray-800/70 backdrop-blur-sm border-gray-700 hover:border-gray-600 hover:bg-gray-800/90"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="w-4 h-4 text-[#ff4d4f]" />
-                <span className="text-gray-200 font-medium">50+</span>
+                <span
+                  className={`font-medium welcome-text ${
+                    isLightTheme ? "text-gray-800" : "text-gray-200"
+                  }`}
+                >
+                  50+
+                </span>
               </div>
-              <p className="text-gray-400 text-xs">Giảng viên</p>
+              <p
+                className={`text-xs welcome-subtext ${
+                  isLightTheme ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                Giảng viên
+              </p>
             </div>
 
-            <div className="bg-gray-800/70 backdrop-blur-sm rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors hover:bg-gray-800/90">
+            <div
+              className={`rounded-lg p-4 border transition-colors welcome-card
+              ${
+                isLightTheme
+                  ? "bg-white/70 backdrop-blur-sm border-gray-200 hover:border-gray-300 hover:bg-white/90"
+                  : "bg-gray-800/70 backdrop-blur-sm border-gray-700 hover:border-gray-600 hover:bg-gray-800/90"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-1">
                 <Rocket className="w-4 h-4 text-[#ff4d4f]" />
-                <span className="text-gray-200 font-medium">1000+</span>
+                <span
+                  className={`font-medium welcome-text ${
+                    isLightTheme ? "text-gray-800" : "text-gray-200"
+                  }`}
+                >
+                  1000+
+                </span>
               </div>
-              <p className="text-gray-400 text-xs">Học viên</p>
+              <p
+                className={`text-xs welcome-subtext ${
+                  isLightTheme ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                Học viên
+              </p>
             </div>
           </div>
         </motion.div>
 
         {/* Featured course card */}
         <motion.div
-          className="hidden md:block w-72 lg:w-80 bg-[#2c2c2c] rounded-lg border border-gray-700 overflow-hidden shadow-lg mt-6 md:mt-0"
+          className={`hidden md:block w-72 lg:w-80 rounded-lg overflow-hidden shadow-lg mt-6 md:mt-0 welcome-card
+            ${
+              isLightTheme
+                ? "bg-white border border-gray-200"
+                : "bg-[#2c2c2c] border border-gray-700"
+            }`}
           variants={itemVariants}
         >
           <div className="h-28 bg-gradient-to-r from-[#ff4d4f]/80 to-[#ff7875]/80 relative">
@@ -138,10 +225,18 @@ const WelcomeBanner = memo(function WelcomeBanner() {
             </div>
           </div>
           <div className="p-4">
-            <h3 className="text-gray-200 font-semibold mb-1">
+            <h3
+              className={`font-semibold mb-1 welcome-text ${
+                isLightTheme ? "text-gray-800" : "text-gray-200"
+              }`}
+            >
               Luyện thi THPT Quốc Gia
             </h3>
-            <p className="text-gray-400 text-xs mb-3">
+            <p
+              className={`text-xs mb-3 welcome-subtext ${
+                isLightTheme ? "text-gray-600" : "text-gray-400"
+              }`}
+            >
               Chuẩn bị tốt nhất cho kỳ thi quan trọng
             </p>
             <Link href="/courses/grade-12">

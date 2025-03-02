@@ -1,15 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useTheme } from "@/app/_context/ThemeContext";
 
 function WatchCourseLayout({ children }) {
   const [isMounted, setIsMounted] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#141414] text-white">
+    <div className="min-h-screen bg-[var(--background-color)] text-[var(--text-color)]">
       {/* Layout riêng cho watch-course không có sidebar và header chung */}
       <main className="w-full">
         {isMounted ? (

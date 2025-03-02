@@ -1,3 +1,4 @@
+@import "./theme-classes.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +9,7 @@
   height: 4px;
 }
 
+/* Dark Theme scrollbar (mặc định) */
 ::-webkit-scrollbar-track {
   background: #1a1a1a;
   border-radius: 3px;
@@ -27,6 +29,28 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(80, 80, 80, 0.5) #1a1a1a;
+}
+
+/* Light Theme scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox scrollbar for light theme */
+[data-theme="light"] * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) #f0f0f0;
 }
 
 /* Custom scrollbar classes for specific elements */
@@ -54,6 +78,23 @@
   background-color: rgba(120, 120, 120, 0.6);
 }
 
+/* Custom scrollbar for light theme */
+[data-theme="light"] .custom-scrollbar {
+  scrollbar-color: rgba(0, 0, 0, 0.2) #f0f0f0;
+}
+
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
 /* Hide scrollbar but keep functionality */
 .custom-scrollbar-hidden {
   scrollbar-width: thin;
@@ -72,6 +113,7 @@
   background-color: transparent;
 }
 
+/* Hover effect for dark theme */
 .custom-scrollbar-hidden:hover {
   scrollbar-color: rgba(80, 80, 80, 0.5) #1a1a1a;
 }
@@ -86,6 +128,24 @@
 
 .custom-scrollbar-hidden:hover::-webkit-scrollbar-thumb:hover {
   background-color: rgba(120, 120, 120, 0.6);
+}
+
+/* Hover effect for light theme */
+[data-theme="light"] .custom-scrollbar-hidden:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.2) #f0f0f0;
+}
+
+[data-theme="light"] .custom-scrollbar-hidden:hover::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+[data-theme="light"] .custom-scrollbar-hidden:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"]
+  .custom-scrollbar-hidden:hover::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .fixed-size {
@@ -333,18 +393,89 @@ body {
   z-index: 51 !important;
 }
 
-:root {
+/* CSS Variables for theming */
+:root,
+[data-theme="dark"] {
   --foreground-rgb: 255, 255, 255;
   --background-rgb: 20, 20, 20;
   --primary-color: #ff4d4f;
   --primary-hover: #f5222d;
   --secondary-color: #252525;
   --secondary-hover: #333333;
+  --background-color: #141414;
+  --text-color: #ffffff;
+  --card-background: #1f1f1f;
+  --border-color: #333333;
+  --header-background: #141414;
+  --sidebar-background: #141414;
+  --input-background: #1f1f1f;
+  --hover-color: #2a2a2a;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --text-muted: #a0a0a0;
+  --text-primary: #ff4d4f;
+  --text-secondary: #a0a0a0;
 }
 
+[data-theme="light"] {
+  --background-color: #f8f9fa;
+  --text-color: #333333;
+  --card-background: #ffffff;
+  --border-color: #e1e1e1;
+  --header-background: #ffffff;
+  --sidebar-background: #ffffff;
+  --input-background: #f0f0f0;
+  --hover-color: #e9ecef;
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 248, 249, 250;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --text-muted: #666666;
+  --text-primary: #ff4d4f;
+  --text-secondary: #666666;
+}
+
+/* Base styles for body */
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Additional theme overrides */
+[data-theme="light"] .text-gray-400 {
+  color: #666 !important;
+}
+
+[data-theme="light"] .text-gray-300 {
+  color: #555 !important;
+}
+
+/* Improve contrast in light theme */
+[data-theme="light"] .bg-[#1f1f1f],
+[data-theme="light"] .bg-[#141414],
+[data-theme="light"] .bg-[#1a1a1a],
+[data-theme="light"] .bg-[#252525] {
+  background-color: var(--card-background) !important;
+}
+
+/* Common element transitions */
+body,
+div,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+input,
+textarea,
+select {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 /* Button styles */
@@ -530,4 +661,285 @@ body {
 /* Utility classes for mobile fixes */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Thêm class xử lý các trường hợp cố định màu sắc */
+.force-dark-text {
+  color: var(--text-color) !important;
+}
+
+/* Xử lý đặc biệt cho các text element trong theme sáng */
+[data-theme="light"] .text-lg,
+[data-theme="light"] .text-xl,
+[data-theme="light"] .text-2xl,
+[data-theme="light"] .text-3xl,
+[data-theme="light"] .text-white {
+  color: var(--text-color) !important;
+}
+
+/* Xử lý đặc biệt cho các card và container */
+[data-theme="light"] .bg-\[\#1a1a1a\],
+[data-theme="light"] .bg-\[\#1f1f1f\],
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-900 {
+  background-color: var(--card-background) !important;
+}
+
+/* Xử lý shadow cho các container */
+[data-theme="light"] .shadow,
+[data-theme="light"] .shadow-md,
+[data-theme="light"] .shadow-lg {
+  box-shadow: var(--card-shadow) !important;
+}
+
+/* Cải thiện màu trắng trong welcome banner cho theme sáng */
+[data-theme="light"] .WelcomeBanner {
+  --welcome-bg-from: #ffffff;
+  --welcome-bg-to: #f8f9fa;
+  --welcome-card-bg: #ffffff;
+  --welcome-text-color: #333333;
+  --welcome-subtext-color: #666666;
+  --welcome-border-color: #e1e1e1;
+  --welcome-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .WelcomeBanner {
+  --welcome-bg-from: #1f1f1f;
+  --welcome-bg-to: #121212;
+  --welcome-card-bg: #2c2c2c;
+  --welcome-text-color: #ffffff;
+  --welcome-subtext-color: #a0a0a0;
+  --welcome-border-color: #333333;
+  --welcome-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.welcome-banner-bg-light {
+  background: linear-gradient(
+    135deg,
+    var(--welcome-bg-from) 0%,
+    var(--welcome-bg-to) 100%
+  );
+  border-color: var(--welcome-border-color);
+  box-shadow: var(--welcome-shadow);
+}
+
+.welcome-banner-bg-dark {
+  background: linear-gradient(
+    135deg,
+    var(--welcome-bg-from) 0%,
+    var(--welcome-bg-to) 100%
+  );
+  border-color: var(--welcome-border-color);
+  box-shadow: var(--welcome-shadow);
+}
+
+.welcome-text {
+  color: var(--welcome-text-color) !important;
+}
+
+.welcome-subtext {
+  color: var(--welcome-subtext-color) !important;
+}
+
+.welcome-card {
+  background-color: var(--welcome-card-bg) !important;
+  border-color: var(--welcome-border-color) !important;
+}
+
+/* Đảm bảo màu trắng trong card nổi bật không quá chói */
+[data-theme="light"] .welcome-card {
+  border: 1px solid #e9e9e9 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Text trong các card trên theme sáng */
+[data-theme="light"] .welcome-card .welcome-text {
+  color: #222 !important;
+}
+
+[data-theme="light"] .welcome-card .welcome-subtext {
+  color: #555 !important;
+}
+
+/* Fix cho màu nền trắng trong các card */
+[data-theme="light"] .bg-white {
+  background-color: #ffffff !important;
+}
+
+/* Đảm bảo contrast cho text trắng trong các badge */
+[data-theme="light"] .text-white.bg-\[\#ff4d4f\] {
+  color: #ffffff !important;
+}
+
+/* Đảm bảo màu trắng trong các phần tử cụ thể */
+[data-theme="light"] .bg-white\/20,
+[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .text-white.bg-\[\#ff4d4f\]\/10,
+[data-theme="light"] .text-white.bg-\[\#ff4d4f\]\/20 {
+  color: #ff4d4f !important;
+}
+
+/* Kết hợp chỉnh sửa màu trắng trong WelcomeBanner */
+[data-theme="light"] .WelcomeBanner .text-white {
+  color: #333 !important;
+}
+
+[data-theme="light"] .WelcomeBanner .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* COMMUNITY PAGE SPECIFIC STYLES */
+[data-theme="light"] .community-page {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .community-page .bg-\[\#121212\],
+[data-theme="light"] .community-page .bg-\[\#1a1a1a\],
+[data-theme="light"] .community-page .bg-\[\#1f1f1f\] {
+  background-color: var(--card-background) !important;
+}
+
+[data-theme="light"] .community-page .text-white,
+[data-theme="light"] .community-page .text-gray-100,
+[data-theme="light"] .community-page .text-gray-200,
+[data-theme="light"] .community-page .text-gray-300 {
+  color: var(--text-color) !important;
+}
+
+[data-theme="light"] .community-page .text-gray-400,
+[data-theme="light"] .community-page .text-gray-500 {
+  color: var(--muted-text) !important;
+}
+
+[data-theme="light"] .community-page input[type="text"],
+[data-theme="light"] .community-page textarea,
+[data-theme="light"] .community-page select {
+  background-color: var(--input-background) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="light"] .community-page button:not(.bg-\[\#ff4d4f\]) {
+  background-color: var(--card-background) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme="light"] .community-page .border-gray-700,
+[data-theme="light"] .community-page .border-gray-800,
+[data-theme="light"] .community-page .border-\[\#333333\] {
+  border-color: var(--border-color) !important;
+}
+
+/* Forum container specific styles */
+[data-theme="light"] .ForumContainer {
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Thêm class cho component ForumTopicList */
+.community-forum-section {
+  width: 100%;
+}
+
+[data-theme="light"] .community-forum-section h3,
+[data-theme="light"] .community-forum-section h2,
+[data-theme="light"] .community-forum-section p {
+  color: var(--text-color) !important;
+}
+
+/* Force màu text cho tất cả các phần tử */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-gray-100,
+[data-theme="light"] .text-gray-200,
+[data-theme="light"] .text-gray-300 {
+  color: var(--text-color) !important;
+}
+
+/* Giữ nguyên màu cho các phần tử đặc biệt */
+[data-theme="light"] .text-\[\#ff4d4f\],
+[data-theme="light"] .bg-\[\#ff4d4f\],
+[data-theme="light"] .hover\:bg-\[\#ff4d4f\]:hover {
+  color: #ff4d4f !important;
+}
+
+[data-theme="light"] .bg-\[\#ff4d4f\] {
+  background-color: #ff4d4f !important;
+}
+
+[data-theme="light"] .bg-\[\#ff4d4f\] * {
+  color: white !important;
+}
+
+/* Các lớp bổ sung */
+[data-theme="light"] .bg-\[\#1E1E1E\],
+[data-theme="light"] .bg-\[\#111111\],
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-900 {
+  background-color: var(--card-background) !important;
+}
+
+[data-theme="light"] .border-gray-700,
+[data-theme="light"] .border-gray-800 {
+  border-color: var(--border-color) !important;
+}
+
+/* Custom scrollbar styles cho tất cả trang web */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(80, 80, 80, 0.5) #1a1a1a;
+}
+
+html::-webkit-scrollbar {
+  width: 6px;
+}
+
+html::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: rgba(80, 80, 80, 0.5);
+  border-radius: 3px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(120, 120, 120, 0.6);
+}
+
+/* Light theme cho scrollbar của toàn trang */
+[data-theme="light"] html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) #f0f0f0;
+}
+
+[data-theme="light"] html::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+[data-theme="light"] html::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+[data-theme="light"] html::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Cập nhật scrollbar cho các element chỉ định */
+[data-theme="light"] .theme-scrollbar::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+[data-theme="light"] .theme-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
 }
