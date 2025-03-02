@@ -6,15 +6,42 @@ import { MobileMenuProvider } from "@/app/_context/MobileMenuContext";
 
 function Layout({ children }) {
   const [isMounted, setIsMounted] = useState(false);
+  const [themeInitialized, setThemeInitialized] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+
+    if (!themeInitialized) {
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark-theme");
+        document.documentElement.classList.remove("light-theme");
+      } else if (savedTheme === "light") {
+        document.documentElement.classList.remove("dark-theme");
+        document.documentElement.classList.add("light-theme");
+      } else {
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        if (prefersDark) {
+          document.documentElement.classList.add("dark-theme");
+          document.documentElement.classList.remove("light-theme");
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.classList.remove("dark-theme");
+          document.documentElement.classList.add("light-theme");
+          localStorage.setItem("theme", "light");
+        }
+      }
+
+      setThemeInitialized(true);
+    }
+  }, [themeInitialized]);
 
   return (
     <MobileMenuProvider>
       <div className="min-h-screen bg-[var(--background-color)] text-[var(--text-color)]">
-        {/* Header - cố định ở trên cùng */}
         <Header />
 
         <div className="flex pt-16">

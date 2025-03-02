@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useAuth } from "@/app/_context/AuthContext";
+import { useTheme } from "@/app/_context/ThemeContext";
 import {
   updatePassword,
   EmailAuthProvider,
@@ -13,37 +13,21 @@ import { toast } from "sonner";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Image from "next/image";
 import {
+  Loader2,
+  Moon,
+  Sun,
+  CheckCircle2,
   User,
   Lock,
   Bell,
-  Globe,
   Palette,
   CreditCard,
-  Shield,
-  Mail,
-  Phone,
   Camera,
-  Moon,
-  Sun,
-  Facebook,
-  Github,
-  Google,
-  Twitter,
-  ChevronRight,
-  CheckCircle2,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Loader2,
-  Briefcase,
-  MapPin,
-  Calendar,
-  GraduationCap,
-  Globe2,
 } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, profile, setProfile } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
   const [darkMode, setDarkMode] = useState(true);
   const router = useRouter();
@@ -61,6 +45,31 @@ export default function SettingsPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+
+  // State cho các tùy chọn thông báo
+  const [notificationSettings, setNotificationSettings] = useState([
+    {
+      title: "Thông báo khóa học",
+      description: "Nhận thông báo về bài học mới và cập nhật khóa học",
+      enabled: true,
+    },
+    {
+      title: "Thông báo bài tập",
+      description: "Nhận thông báo về bài tập và deadline",
+      enabled: true,
+    },
+    {
+      title: "Thông báo tin tức",
+      description: "Nhận thông báo về tin tức và sự kiện mới",
+      enabled: false,
+    },
+    {
+      title: "Email marketing",
+      description: "Nhận email về khuyến mãi và ưu đãi",
+      enabled: false,
+    },
+  ]);
 
   useEffect(() => {
     if (profile) {
@@ -83,31 +92,10 @@ export default function SettingsPage() {
     }
   }, [profile]);
 
-  // Thêm useEffect để xử lý dark mode
+  // Cập nhật darkMode từ theme context khi mount component
   useEffect(() => {
-    // Xác định theme hiện tại từ classList của html element
-    const isDarkTheme =
-      document.documentElement.classList.contains("dark-theme");
-    setDarkMode(isDarkTheme);
-
-    // Thêm event listener để theo dõi thay đổi theme
-    const handleThemeChange = (e) => {
-      if (e.target.classList.contains("dark-theme")) {
-        setDarkMode(true);
-      } else {
-        setDarkMode(false);
-      }
-    };
-
-    // Gắn và gỡ bỏ event listener
-    document.documentElement.addEventListener("classChange", handleThemeChange);
-    return () => {
-      document.documentElement.removeEventListener(
-        "classChange",
-        handleThemeChange
-      );
-    };
-  }, []);
+    setDarkMode(theme === "dark");
+  }, [theme]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -186,27 +174,6 @@ export default function SettingsPage() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.3,
-      },
-    },
-  };
-
   const getTabClassName = (tabId) => {
     return `w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
       activeTab === tabId
@@ -235,50 +202,46 @@ export default function SettingsPage() {
     }`;
   };
 
+  // Hàm xử lý bật/tắt thông báo
+  const toggleNotification = (index) => {
+    const updatedSettings = [...notificationSettings];
+    updatedSettings[index].enabled = !updatedSettings[index].enabled;
+    setNotificationSettings(updatedSettings);
+  };
+
+  // Hàm lưu cài đặt thông báo
+  const saveNotificationSettings = () => {
+    // Đây là nơi bạn sẽ gọi API để lưu cài đặt thông báo
+    toast.success("Đã lưu cài đặt thông báo thành công!");
+  };
+
   return (
     <div className="min-h-screen bg-[var(--background-color)] text-[var(--text-color)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Cài đặt tài khoản</h1>
           <p className="text-gray-400">
             Quản lý thông tin và tùy chỉnh tài khoản của bạn
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
-          {/* Sidebar */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-2"
-          >
+          <div className="space-y-2">
             {tabs.map((tab) => (
-              <motion.button
+              <button
                 key={tab.id}
-                variants={itemVariants}
                 onClick={() => setActiveTab(tab.id)}
                 className={getTabClassName(tab.id)}
               >
                 {renderTabIcon(tab.id)}
                 <span>{tab.label}</span>
-              </motion.button>
+              </button>
             ))}
-          </motion.div>
+          </div>
 
-          {/* Main Content */}
           <div className="bg-[var(--card-background)] rounded-2xl p-6">
             {activeTab === "profile" && (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 {loading ? (
                   <div className="flex justify-center items-center py-10">
                     <Loader2 className="w-8 h-8 animate-spin text-[#ff4d4f]" />
@@ -412,10 +375,7 @@ export default function SettingsPage() {
                     ) : (
                       <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Họ và tên
                             </label>
@@ -431,12 +391,9 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Email
                             </label>
@@ -446,12 +403,9 @@ export default function SettingsPage() {
                               value={user?.email || ""}
                               disabled
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Số điện thoại
                             </label>
@@ -467,12 +421,9 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Địa chỉ
                             </label>
@@ -488,12 +439,9 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Nghề nghiệp
                             </label>
@@ -509,12 +457,9 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Ngày sinh
                             </label>
@@ -529,12 +474,9 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Trình độ học vấn
                             </label>
@@ -550,12 +492,9 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
 
-                          <motion.div
-                            variants={itemVariants}
-                            className="space-y-2"
-                          >
+                          <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-400">
                               Website
                             </label>
@@ -571,13 +510,10 @@ export default function SettingsPage() {
                                 })
                               }
                             />
-                          </motion.div>
+                          </div>
                         </div>
 
-                        <motion.div
-                          variants={itemVariants}
-                          className="space-y-2"
-                        >
+                        <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-400">
                             Giới thiệu bản thân
                           </label>
@@ -592,36 +528,34 @@ export default function SettingsPage() {
                               })
                             }
                           />
-                        </motion.div>
+                        </div>
                       </div>
                     )}
                   </>
                 )}
-              </motion.div>
+              </div>
             )}
 
             {activeTab === "security" && (
               <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">
-                    Thay đổi mật khẩu
-                  </h3>
-                  <div className="grid grid-cols-1 gap-6 max-w-xl">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold">Đổi mật khẩu</h3>
+                  <div className="space-y-6 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg p-4">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-400">
                         Mật khẩu hiện tại
                       </label>
                       <div className="relative">
                         <input
-                          type="password"
-                          className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                          type={showOldPassword ? "text" : "password"}
+                          className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
                           placeholder="Nhập mật khẩu hiện tại"
                           value={oldPassword}
                           onChange={(e) => setOldPassword(e.target.value)}
                         />
                         <button
                           type="button"
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                           onClick={() => setShowOldPassword(!showOldPassword)}
                         >
                           {showOldPassword ? "Ẩn" : "Hiện"}
@@ -635,15 +569,15 @@ export default function SettingsPage() {
                       </label>
                       <div className="relative">
                         <input
-                          type="password"
-                          className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                          type={showNewPassword ? "text" : "password"}
+                          className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
                           placeholder="Nhập mật khẩu mới"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                         />
                         <button
                           type="button"
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                           onClick={() => setShowNewPassword(!showNewPassword)}
                         >
                           {showNewPassword ? "Ẩn" : "Hiện"}
@@ -657,9 +591,9 @@ export default function SettingsPage() {
                       </label>
                       <div className="relative">
                         <input
-                          type="password"
-                          className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
-                          placeholder="Nhập lại mật khẩu mới"
+                          type={showConfirmPassword ? "text" : "password"}
+                          className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
+                          placeholder="Xác nhận mật khẩu mới"
                           value={confirmNewPassword}
                           onChange={(e) =>
                             setConfirmNewPassword(e.target.value)
@@ -667,7 +601,7 @@ export default function SettingsPage() {
                         />
                         <button
                           type="button"
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                           onClick={() =>
                             setShowConfirmPassword(!showConfirmPassword)
                           }
@@ -677,114 +611,105 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <button
-                        onClick={handleChangePassword}
-                        disabled={
-                          isChangingPassword ||
-                          !oldPassword ||
-                          !newPassword ||
-                          !confirmNewPassword
-                        }
-                        className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        {isChangingPassword
-                          ? "Đang cập nhật..."
-                          : "Cập nhật mật khẩu"}
-                      </button>
-                    </div>
+                    <button
+                      className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff7875] transition-colors"
+                      onClick={handleChangePassword}
+                    >
+                      {isChangingPassword ? (
+                        <span className="flex items-center justify-center">
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Đang cập nhật...
+                        </span>
+                      ) : (
+                        "Đổi mật khẩu"
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">
-                    Bảo mật hai lớp
-                  </h3>
-                  <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold">Xác thực hai yếu tố</h3>
+                  <div className="space-y-6 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-[var(--hover-color)] rounded-lg">
-                          <div className="h-5 w-5 text-[#ff4d4f]">🔒</div>
-                        </div>
+                        <div className="text-[#ff4d4f]">🔒</div>
                         <div>
-                          <h4 className="text-base font-medium">
-                            Xác thực hai yếu tố
-                          </h4>
+                          <p className="font-medium">Xác thực hai yếu tố</p>
                           <p className="text-sm text-gray-400">
-                            Bảo vệ tài khoản của bạn với xác thực hai yếu tố
+                            Bảo vệ tài khoản bằng xác thực hai yếu tố
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-sm text-red-500">Chưa bật</span>
-                        <button className="px-4 py-2 bg-transparent border border-[#ff4d4f] text-[#ff4d4f] rounded-lg hover:bg-[#ff4d4f]/10 transition-colors">
-                          Thiết lập
-                        </button>
-                      </div>
+                      <button
+                        className={getToggleClassName(false)}
+                        onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                      >
+                        <span className={getToggleKnobClassName(false)} />
+                      </button>
                     </div>
+                    {twoFactorEnabled && (
+                      <div className="p-4 bg-[var(--background-color)] rounded-lg">
+                        <p className="text-sm">
+                          Xác thực hai yếu tố đã được bật. Bạn sẽ nhận được mã
+                          xác thực qua email mỗi khi đăng nhập.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">
-                    Liên kết tài khoản
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-[var(--hover-color)] rounded-lg">
-                            <div className="h-5 w-5 text-red-500">G</div>
-                          </div>
-                          <div>
-                            <h4 className="text-base font-medium">Google</h4>
-                            <p className="text-sm text-gray-400">
-                              Kết nối với tài khoản Google
-                            </p>
-                          </div>
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold">Kết nối mạng xã hội</h3>
+                  <div className="space-y-4 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-[#4285F4] flex items-center justify-center text-white">
+                          G
                         </div>
-                        <button className={getConnectedButtonClassName(false)}>
-                          Kết nối
-                        </button>
+                        <div>
+                          <p className="font-medium">Google</p>
+                          <p className="text-sm text-gray-400">
+                            Kết nối tài khoản với Google
+                          </p>
+                        </div>
                       </div>
+                      <button className="px-4 py-2 border border-[var(--border-color)] rounded-lg hover:bg-[var(--hover-color)] transition-colors">
+                        Kết nối
+                      </button>
                     </div>
 
-                    <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-[var(--hover-color)] rounded-lg">
-                            <div className="h-5 w-5 text-blue-500">F</div>
-                          </div>
-                          <div>
-                            <h4 className="text-base font-medium">Facebook</h4>
-                            <p className="text-sm text-gray-400">
-                              Kết nối với tài khoản Facebook
-                            </p>
-                          </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
+                          F
                         </div>
-                        <button className={getConnectedButtonClassName(false)}>
-                          Kết nối
-                        </button>
+                        <div>
+                          <p className="font-medium">Facebook</p>
+                          <p className="text-sm text-gray-400">
+                            Kết nối tài khoản với Facebook
+                          </p>
+                        </div>
                       </div>
+                      <button className="px-4 py-2 border border-[var(--border-color)] rounded-lg hover:bg-[var(--hover-color)] transition-colors">
+                        Kết nối
+                      </button>
                     </div>
 
-                    <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-[var(--hover-color)] rounded-lg">
-                            <div className="h-5 w-5 text-white">GH</div>
-                          </div>
-                          <div>
-                            <h4 className="text-base font-medium">Github</h4>
-                            <p className="text-sm text-gray-400">
-                              Kết nối với tài khoản Github
-                            </p>
-                          </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center text-white">
+                          GH
                         </div>
-                        <button className={getConnectedButtonClassName(false)}>
-                          Kết nối
-                        </button>
+                        <div>
+                          <p className="font-medium">GitHub</p>
+                          <p className="text-sm text-gray-400">
+                            Kết nối tài khoản với GitHub
+                          </p>
+                        </div>
                       </div>
+                      <button className="px-4 py-2 border border-[var(--border-color)] rounded-lg hover:bg-[var(--hover-color)] transition-colors">
+                        Kết nối
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -792,38 +717,11 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "notifications" && (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-8"
-              >
-                <motion.div variants={itemVariants} className="space-y-6">
+              <div className="space-y-8">
+                <div className="space-y-6">
                   <h3 className="text-xl font-semibold">Tùy chọn thông báo</h3>
                   <div className="space-y-4">
-                    {[
-                      {
-                        title: "Thông báo khóa học",
-                        description:
-                          "Nhận thông báo về bài học mới và cập nhật khóa học",
-                        enabled: true,
-                      },
-                      {
-                        title: "Thông báo bài tập",
-                        description: "Nhận thông báo về bài tập và deadline",
-                        enabled: true,
-                      },
-                      {
-                        title: "Thông báo tin tức",
-                        description: "Nhận thông báo về tin tức và sự kiện mới",
-                        enabled: false,
-                      },
-                      {
-                        title: "Email marketing",
-                        description: "Nhận email về khuyến mãi và ưu đãi",
-                        enabled: false,
-                      },
-                    ].map((notification, index) => (
+                    {notificationSettings.map((notification, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-4 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg"
@@ -836,6 +734,7 @@ export default function SettingsPage() {
                         </div>
                         <button
                           className={getToggleClassName(notification.enabled)}
+                          onClick={() => toggleNotification(index)}
                         >
                           <span
                             className={getToggleKnobClassName(
@@ -846,103 +745,78 @@ export default function SettingsPage() {
                       </div>
                     ))}
                   </div>
-                </motion.div>
-              </motion.div>
+                  <div className="pt-4">
+                    <button
+                      className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff7875] transition-colors"
+                      onClick={saveNotificationSettings}
+                    >
+                      Lưu cài đặt
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             {activeTab === "appearance" && (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-8"
-              >
-                <motion.div variants={itemVariants} className="space-y-6">
+              <div className="space-y-8">
+                <div className="space-y-6">
                   <h3 className="text-xl font-semibold">Tùy chỉnh giao diện</h3>
                   <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg">
                       <div className="flex items-center space-x-3">
-                        {darkMode ? (
-                          <Moon className="w-6 h-6" />
+                        {theme === "dark" ? (
+                          <div className="p-1.5 rounded-md bg-[var(--hover-color)]">
+                            <Moon className="w-5 h-5 text-[#ff4d4f]" />
+                          </div>
                         ) : (
-                          <Sun className="w-6 h-6" />
+                          <div className="p-1.5 rounded-md bg-[var(--hover-color)]">
+                            <Sun className="w-5 h-5 text-[#ff4d4f]" />
+                          </div>
                         )}
                         <div>
                           <p className="font-medium">Chế độ tối</p>
                           <p className="text-sm text-gray-400">
-                            Điều chỉnh giao diện sáng/tối
+                            {theme === "dark"
+                              ? "Đang sử dụng chế độ tối"
+                              : "Đang sử dụng chế độ sáng"}
                           </p>
                         </div>
                       </div>
                       <button
-                        onClick={() => {
-                          const newMode = !darkMode;
-                          setDarkMode(newMode);
-                          // Toggle class 'dark-theme' trên document
-                          if (newMode) {
-                            document.documentElement.classList.add(
-                              "dark-theme"
-                            );
-                            document.documentElement.classList.remove(
-                              "light-theme"
-                            );
-                          } else {
-                            document.documentElement.classList.remove(
-                              "dark-theme"
-                            );
-                            document.documentElement.classList.add(
-                              "light-theme"
-                            );
-                          }
-                          // Lưu theme vào localStorage
-                          localStorage.setItem(
-                            "theme",
-                            newMode ? "dark" : "light"
-                          );
-                          // Trigger custom event để thông báo theme đã thay đổi
-                          document.documentElement.dispatchEvent(
-                            new Event("classChange")
-                          );
-                        }}
-                        className={getToggleClassName(darkMode)}
+                        onClick={toggleTheme}
+                        className="px-4 py-2 border border-[var(--border-color)] rounded-lg hover:bg-[var(--hover-color)] transition-colors"
                       >
-                        <span className={getToggleKnobClassName(darkMode)} />
+                        {theme === "dark" ? "Chuyển sáng" : "Chuyển tối"}
                       </button>
                     </div>
 
-                    <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-400">
-                        Ngôn ngữ
-                      </label>
-                      <select className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]">
-                        <option value="vi">Tiếng Việt</option>
-                        <option value="en">English</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-400">
-                        Font chữ
-                      </label>
-                      <select className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]">
-                        <option value="system">Mặc định hệ thống</option>
-                        <option value="serif">Serif</option>
-                        <option value="sans">Sans-serif</option>
-                      </select>
+                    <div className="flex items-center justify-between p-4 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-1.5 rounded-md bg-[var(--hover-color)]">
+                          <Palette className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Màu chủ đạo</p>
+                          <p className="text-sm text-gray-400">
+                            Tùy chỉnh màu chính của ứng dụng
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="w-6 h-6 rounded-full bg-[#ff4d4f] border-2 border-white"></button>
+                        <button className="w-6 h-6 rounded-full bg-blue-500 border-2 border-transparent"></button>
+                        <button className="w-6 h-6 rounded-full bg-green-500 border-2 border-transparent"></button>
+                        <button className="w-6 h-6 rounded-full bg-purple-500 border-2 border-transparent"></button>
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
 
             {activeTab === "billing" && (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-8"
-              >
-                <motion.div variants={itemVariants} className="space-y-6">
+              <div className="space-y-8">
+                <div className="space-y-6">
                   <h3 className="text-xl font-semibold">
                     Thông tin thanh toán
                   </h3>
@@ -990,8 +864,8 @@ export default function SettingsPage() {
                       Nâng cấp gói
                     </button>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             )}
           </div>
         </div>

@@ -24,11 +24,7 @@ export function ThemeProvider({ children }) {
       const checkReadyState = () => {
         if (document.readyState === "complete") {
           applyTheme(theme);
-
-          // Thêm một hàm xử lý MutationObserver để theo dõi các phần tử mới được thêm vào DOM
-          setTimeout(() => {
-            addMutationObserver();
-          }, 500);
+          // Không sử dụng MutationObserver vì gây vấn đề hiệu suất
         } else {
           setTimeout(checkReadyState, 10);
         }
@@ -37,48 +33,15 @@ export function ThemeProvider({ children }) {
     }
   }, [isLoaded, theme]);
 
-  // Theo dõi các thay đổi trong DOM và áp dụng theme cho các phần tử mới
-  const addMutationObserver = () => {
-    if (
-      typeof window === "undefined" ||
-      typeof MutationObserver === "undefined"
-    )
-      return;
+  // Xóa bỏ MutationObserver vì gây vấn đề với pointer-events và hiệu suất
 
-    const observer = new MutationObserver((mutations) => {
-      // Khi DOM thay đổi, áp dụng lại theme
-      fixSpecificElements(theme);
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class", "style"],
-    });
-  };
-
-  // Xử lý các trường hợp đặc biệt khi thay đổi theme
+  // Xử lý các trường hợp đặc biệt khi thay đổi theme nhưng đơn giản hơn
   const fixSpecificElements = (currentTheme) => {
     if (typeof document === "undefined") return;
 
-    // Xử lý riêng cho các phần tử cố định màu sắc
-    if (currentTheme === "light") {
-      document
-        .querySelectorAll(
-          ".text-white, .text-gray-100, .text-gray-200, .text-gray-300"
-        )
-        .forEach((el) => {
-          if (!el.dataset.originalColor) {
-            el.dataset.originalColor = el.className;
-            el.classList.add("force-dark-text");
-          }
-        });
-    } else {
-      document.querySelectorAll("[data-original-color]").forEach((el) => {
-        el.classList.remove("force-dark-text");
-      });
-    }
+    // Đảm bảo pointer-events luôn được bật
+    document.body.style.pointerEvents = "auto";
+    document.documentElement.style.pointerEvents = "auto";
   };
 
   const applyTheme = (currentTheme) => {
@@ -96,27 +59,33 @@ export function ThemeProvider({ children }) {
     // Thêm data attribute cho theme vào document
     document.documentElement.setAttribute("data-theme", currentTheme);
 
-    // Force re-render các style
-    document.body.style.backgroundColor = "";
-    document.body.style.color = "";
-    setTimeout(() => {
-      document.body.style.backgroundColor = "var(--background-color)";
-      document.body.style.color = "var(--text-color)";
+    // Đảm bảo pointer-events luôn được bật
+    document.body.style.pointerEvents = "auto";
+    document.documentElement.style.pointerEvents = "auto";
 
-      // Xử lý các trường hợp đặc biệt
-      fixSpecificElements(currentTheme);
-    }, 0);
+    // Sửa lại không có setTimeout để tránh vấn đề bất đồng bộ
+    document.body.style.backgroundColor = "var(--background-color)";
+    document.body.style.color = "var(--text-color)";
+
+    // Xử lý các trường hợp đặc biệt
+    fixSpecificElements(currentTheme);
   };
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
+
+    // Đảm bảo pointer-events luôn được bật
+    document.body.style.pointerEvents = "auto";
+    document.documentElement.style.pointerEvents = "auto";
 
     // Lưu theme vào localStorage
     localStorage.setItem("theme", newTheme);
 
     // Áp dụng theme
     applyTheme(newTheme);
+
+    // Cập nhật state sau khi đã áp dụng các thay đổi DOM
+    setTheme(newTheme);
   };
 
   return (
