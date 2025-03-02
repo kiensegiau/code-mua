@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   BookOpen,
@@ -22,6 +22,7 @@ function SideNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { closeMobileMenu } = useMobileMenu();
+  const router = useRouter();
 
   const menuItems = [
     {
@@ -146,6 +147,7 @@ function SideNav() {
   };
 
   const handleUserProfileClick = () => {
+    router.push("/settings");
     if (window.innerWidth < 768) {
       closeMobileMenu();
     }
@@ -174,7 +176,7 @@ function SideNav() {
         {/* User Status */}
         {user && (
           <Link
-            href="/profile"
+            href="/settings"
             className="block px-4 py-3 mx-3 mt-2 bg-[var(--card-background)]/50 hover:bg-[var(--hover-color)] rounded-lg transition-colors group"
             onClick={handleUserProfileClick}
           >
@@ -194,7 +196,7 @@ function SideNav() {
                 <p className="text-sm font-medium text-[var(--text-color)] truncate group-hover:text-[var(--text-color)] transition-colors">
                   {user.email}
                 </p>
-                <p className="text-xs text-[#ff4d4f]">Xem trang cá nhân</p>
+                <p className="text-xs text-[#ff4d4f]">Quản lý tài khoản</p>
               </div>
             </div>
           </Link>

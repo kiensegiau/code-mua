@@ -1,6 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/app/_context/AuthContext";
+import {
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from "firebase/auth";
+import { auth } from "@/app/_utils/firebase";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import Image from "next/image";
 import {
   User,
   Lock,
@@ -21,19 +32,159 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  Briefcase,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  Globe2,
 } from "lucide-react";
 
 export default function SettingsPage() {
+  const { user, profile, setProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [darkMode, setDarkMode] = useState(true);
+  const router = useRouter();
 
+  // States từ trang Profile
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState({});
+  const [newPassword, setNewPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setEditedProfile({
+        ...profile,
+        occupation: profile.occupation || "",
+        location: profile.location || "",
+        education: profile.education || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
+        birthDate: profile.birthDate || "",
+        socialLinks: profile.socialLinks || {
+          facebook: "",
+          twitter: "",
+          linkedin: "",
+          github: "",
+        },
+      });
+      setLoading(false);
+    }
+  }, [profile]);
+
+  // Thêm useEffect để xử lý dark mode
+  useEffect(() => {
+    // Xác định theme hiện tại từ classList của html element
+    const isDarkTheme =
+      document.documentElement.classList.contains("dark-theme");
+    setDarkMode(isDarkTheme);
+
+    // Thêm event listener để theo dõi thay đổi theme
+    const handleThemeChange = (e) => {
+      if (e.target.classList.contains("dark-theme")) {
+        setDarkMode(true);
+      } else {
+        setDarkMode(false);
+      }
+    };
+
+    // Gắn và gỡ bỏ event listener
+    document.documentElement.addEventListener("classChange", handleThemeChange);
+    return () => {
+      document.documentElement.removeEventListener(
+        "classChange",
+        handleThemeChange
+      );
+    };
+  }, []);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const updatedUser = await GlobalApi.updateUserProfile(
+        user.uid,
+        editedProfile
+      );
+      if (updatedUser) {
+        setProfile(updatedUser);
+        setIsEditing(false);
+        toast.success("Thông tin đã được cập nhật thành công!");
+      } else {
+        toast.error("Không tìm thấy thông tin người dùng để cập nhật.");
+      }
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi cập nhật thông tin. Vui lòng thử lại.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+      return;
+    }
+    try {
+      setIsChangingPassword(true);
+      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      toast.success("Mật khẩu đã được thay đổi thành công!");
+    } catch (error) {
+      if (error.code === "auth/wrong-password") {
+        toast.error("Mật khẩu cũ không chính xác.");
+      } else {
+        toast.error("Đã xảy ra lỗi khi thay đổi mật khẩu. Vui lòng thử lại.");
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  // Thay đổi cấu trúc tabs để đảm bảo xử lý icons một cách rõ ràng hơn
   const tabs = [
-    { id: "profile", label: "Thông tin cá nhân", icon: User },
-    { id: "security", label: "Bảo mật", icon: Lock },
-    { id: "notifications", label: "Thông báo", icon: Bell },
-    { id: "appearance", label: "Giao diện", icon: Palette },
-    { id: "billing", label: "Thanh toán", icon: CreditCard },
+    { id: "profile", label: "Thông tin cá nhân" },
+    { id: "security", label: "Bảo mật" },
+    { id: "notifications", label: "Thông báo" },
+    { id: "appearance", label: "Giao diện" },
+    { id: "billing", label: "Thanh toán" },
   ];
+
+  // Tạo một hàm riêng để render icon dựa vào id
+  const renderTabIcon = (tabId) => {
+    switch (tabId) {
+      case "profile":
+        return <User className="w-5 h-5" />;
+      case "security":
+        return <Lock className="w-5 h-5" />;
+      case "notifications":
+        return <Bell className="w-5 h-5" />;
+      case "appearance":
+        return <Palette className="w-5 h-5" />;
+      case "billing":
+        return <CreditCard className="w-5 h-5" />;
+      default:
+        return null;
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -58,7 +209,9 @@ export default function SettingsPage() {
 
   const getTabClassName = (tabId) => {
     return `w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-      activeTab === tabId ? "bg-[#ff4d4f] text-white" : "hover:bg-white/5"
+      activeTab === tabId
+        ? "bg-[#ff4d4f] text-white"
+        : "hover:bg-[var(--hover-color)]"
     }`;
   };
 
@@ -72,7 +225,7 @@ export default function SettingsPage() {
 
   const getToggleClassName = (enabled) => {
     return `w-12 h-6 rounded-full transition-colors ${
-      enabled ? "bg-[#ff4d4f]" : "bg-gray-700"
+      enabled ? "bg-[#ff4d4f]" : "bg-[var(--border-color)]"
     } relative`;
   };
 
@@ -83,7 +236,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141414] text-gray-200">
+    <div className="min-h-screen bg-[var(--background-color)] text-[var(--text-color)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -111,14 +264,14 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={getTabClassName(tab.id)}
               >
-                <tab.icon className="w-5 h-5" />
+                {renderTabIcon(tab.id)}
                 <span>{tab.label}</span>
               </motion.button>
             ))}
           </motion.div>
 
           {/* Main Content */}
-          <div className="bg-[#1f1f1f] rounded-2xl p-6">
+          <div className="bg-[var(--card-background)] rounded-2xl p-6">
             {activeTab === "profile" && (
               <motion.div
                 variants={containerVariants}
@@ -126,168 +279,516 @@ export default function SettingsPage() {
                 animate="visible"
                 className="space-y-6"
               >
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gray-800 overflow-hidden">
-                      <img
-                        src="https://via.placeholder.com/96"
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
+                {loading ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#ff4d4f]" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold">
+                        Thông tin cá nhân
+                      </h3>
+                      {!isEditing ? (
+                        <button
+                          onClick={handleEdit}
+                          className="px-4 py-2 bg-[var(--card-background)] text-[#ff4d4f] rounded-lg border border-[#ff4d4f] hover:bg-[#ff4d4f]/10 transition-colors"
+                        >
+                          Chỉnh sửa
+                        </button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setIsEditing(false)}
+                            className="px-4 py-2 bg-[var(--card-background)] text-gray-400 rounded-lg border border-gray-700 hover:bg-gray-800 transition-colors"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            onClick={handleSave}
+                            className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors flex items-center gap-2"
+                            disabled={isSaving}
+                          >
+                            {isSaving && (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            )}
+                            Lưu thay đổi
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#ff4d4f] rounded-full flex items-center justify-center hover:bg-[#ff4d4f]/90 transition-colors">
-                      <Camera className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Nguyễn Văn A</h3>
-                    <p className="text-gray-400">Học sinh lớp 12</p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">
-                      Họ và tên
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      placeholder="Nguyễn Văn A"
-                    />
-                  </motion.div>
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className="relative">
+                        <div className="w-24 h-24 rounded-full bg-[var(--card-background)] overflow-hidden border-2 border-[var(--card-background)]">
+                          {profile?.photoURL ? (
+                            <img
+                              src={profile.photoURL}
+                              alt="Profile"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[var(--card-background)] text-[#ff4d4f]">
+                              <User className="w-12 h-12" />
+                            </div>
+                          )}
+                        </div>
+                        <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#ff4d4f] rounded-full flex items-center justify-center hover:bg-[#ff4d4f]/90 transition-colors">
+                          <Camera className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold">
+                          {profile?.displayName || "Họ và tên chưa cập nhật"}
+                        </h3>
+                        <p className="text-gray-400">
+                          {profile?.occupation || "Chưa cập nhật nghề nghiệp"}
+                        </p>
+                      </div>
+                    </div>
 
-                  <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      placeholder="example@email.com"
-                    />
-                  </motion.div>
+                    {!isEditing ? (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Họ và tên</p>
+                            <p className="font-medium">
+                              {profile?.displayName || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Email</p>
+                            <p className="font-medium">{user?.email}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">
+                              Số điện thoại
+                            </p>
+                            <p className="font-medium">
+                              {profile?.phoneNumber || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Địa chỉ</p>
+                            <p className="font-medium">
+                              {profile?.location || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Nghề nghiệp</p>
+                            <p className="font-medium">
+                              {profile?.occupation || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Ngày sinh</p>
+                            <p className="font-medium">
+                              {profile?.birthDate || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">
+                              Trình độ học vấn
+                            </p>
+                            <p className="font-medium">
+                              {profile?.education || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-400">Website</p>
+                            <p className="font-medium">
+                              {profile?.website || "Chưa cập nhật"}
+                            </p>
+                          </div>
+                        </div>
 
-                  <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">
-                      Số điện thoại
-                    </label>
-                    <input
-                      type="tel"
-                      className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      placeholder="0123456789"
-                    />
-                  </motion.div>
+                        <div className="space-y-1 pt-2">
+                          <p className="text-sm text-gray-400">Giới thiệu</p>
+                          <p className="font-medium">
+                            {profile?.bio || "Chưa có thông tin giới thiệu"}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Họ và tên
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              placeholder="Nguyễn Văn A"
+                              value={editedProfile.displayName || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  displayName: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
 
-                  <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">
-                      Trường học
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      placeholder="THPT Chu Văn An"
-                    />
-                  </motion.div>
-                </div>
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              className="w-full px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-400 cursor-not-allowed"
+                              value={user?.email || ""}
+                              disabled
+                            />
+                          </motion.div>
 
-                <motion.div variants={itemVariants} className="pt-4">
-                  <button className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors">
-                    Lưu thay đổi
-                  </button>
-                </motion.div>
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Số điện thoại
+                            </label>
+                            <input
+                              type="tel"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              placeholder="0123456789"
+                              value={editedProfile.phoneNumber || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  phoneNumber: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
+
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Địa chỉ
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              placeholder="Địa chỉ của bạn"
+                              value={editedProfile.location || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  location: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
+
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Nghề nghiệp
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              placeholder="Nghề nghiệp"
+                              value={editedProfile.occupation || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  occupation: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
+
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Ngày sinh
+                            </label>
+                            <input
+                              type="date"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              value={editedProfile.birthDate || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  birthDate: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
+
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Trình độ học vấn
+                            </label>
+                            <input
+                              type="text"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              placeholder="THPT Chu Văn An"
+                              value={editedProfile.education || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  education: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
+
+                          <motion.div
+                            variants={itemVariants}
+                            className="space-y-2"
+                          >
+                            <label className="block text-sm font-medium text-gray-400">
+                              Website
+                            </label>
+                            <input
+                              type="url"
+                              className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                              placeholder="https://example.com"
+                              value={editedProfile.website || ""}
+                              onChange={(e) =>
+                                setEditedProfile({
+                                  ...editedProfile,
+                                  website: e.target.value,
+                                })
+                              }
+                            />
+                          </motion.div>
+                        </div>
+
+                        <motion.div
+                          variants={itemVariants}
+                          className="space-y-2"
+                        >
+                          <label className="block text-sm font-medium text-gray-400">
+                            Giới thiệu bản thân
+                          </label>
+                          <textarea
+                            className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)] min-h-[100px] resize-none"
+                            placeholder="Giới thiệu ngắn về bản thân"
+                            value={editedProfile.bio || ""}
+                            onChange={(e) =>
+                              setEditedProfile({
+                                ...editedProfile,
+                                bio: e.target.value,
+                              })
+                            }
+                          />
+                        </motion.div>
+                      </div>
+                    )}
+                  </>
+                )}
               </motion.div>
             )}
 
             {activeTab === "security" && (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-8"
-              >
-                <motion.div variants={itemVariants} className="space-y-6">
-                  <h3 className="text-xl font-semibold">Đổi mật khẩu</h3>
-                  <div className="space-y-4">
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Thay đổi mật khẩu
+                  </h3>
+                  <div className="grid grid-cols-1 gap-6 max-w-xl">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-400">
                         Mật khẩu hiện tại
                       </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      />
+                      <div className="relative">
+                        <input
+                          type="password"
+                          className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                          placeholder="Nhập mật khẩu hiện tại"
+                          value={oldPassword}
+                          onChange={(e) => setOldPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                          onClick={() => setShowOldPassword(!showOldPassword)}
+                        >
+                          {showOldPassword ? "Ẩn" : "Hiện"}
+                        </button>
+                      </div>
                     </div>
+
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-400">
                         Mật khẩu mới
                       </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      />
+                      <div className="relative">
+                        <input
+                          type="password"
+                          className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                          placeholder="Nhập mật khẩu mới"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                        >
+                          {showNewPassword ? "Ẩn" : "Hiện"}
+                        </button>
+                      </div>
                     </div>
+
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-400">
                         Xác nhận mật khẩu mới
                       </label>
-                      <input
-                        type="password"
-                        className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
-                      />
-                    </div>
-                    <button className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors">
-                      Cập nhật mật khẩu
-                    </button>
-                  </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="space-y-6">
-                  <h3 className="text-xl font-semibold">Xác thực 2 lớp</h3>
-                  <div className="flex items-center justify-between p-4 bg-[#141414] rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Shield className="w-6 h-6 text-[#ff4d4f]" />
-                      <div>
-                        <p className="font-medium">Bảo mật 2 lớp qua SMS</p>
-                        <p className="text-sm text-gray-400">
-                          Bảo vệ tài khoản bằng mã xác thực gửi qua tin nhắn
-                        </p>
-                      </div>
-                    </div>
-                    <button className="px-4 py-2 border border-[#ff4d4f] text-[#ff4d4f] rounded-lg hover:bg-[#ff4d4f] hover:text-white transition-colors">
-                      Kích hoạt
-                    </button>
-                  </div>
-                </motion.div>
-
-                <motion.div variants={itemVariants} className="space-y-6">
-                  <h3 className="text-xl font-semibold">Tài khoản liên kết</h3>
-                  <div className="space-y-4">
-                    {[
-                      { icon: Google, name: "Google", connected: true },
-                      { icon: Facebook, name: "Facebook", connected: false },
-                      { icon: Github, name: "Github", connected: false },
-                    ].map((account) => (
-                      <div
-                        key={account.name}
-                        className="flex items-center justify-between p-4 bg-[#141414] rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <account.icon className="w-6 h-6" />
-                          <span>{account.name}</span>
-                        </div>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]"
+                          placeholder="Nhập lại mật khẩu mới"
+                          value={confirmNewPassword}
+                          onChange={(e) =>
+                            setConfirmNewPassword(e.target.value)
+                          }
+                        />
                         <button
-                          className={getConnectedButtonClassName(
-                            account.connected
-                          )}
+                          type="button"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                         >
-                          {account.connected ? "Đã kết nối" : "Kết nối"}
+                          {showConfirmPassword ? "Ẩn" : "Hiện"}
                         </button>
                       </div>
-                    ))}
+                    </div>
+
+                    <div>
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={
+                          isChangingPassword ||
+                          !oldPassword ||
+                          !newPassword ||
+                          !confirmNewPassword
+                        }
+                        className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {isChangingPassword
+                          ? "Đang cập nhật..."
+                          : "Cập nhật mật khẩu"}
+                      </button>
+                    </div>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Bảo mật hai lớp
+                  </h3>
+                  <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-[var(--hover-color)] rounded-lg">
+                          <div className="h-5 w-5 text-[#ff4d4f]">🔒</div>
+                        </div>
+                        <div>
+                          <h4 className="text-base font-medium">
+                            Xác thực hai yếu tố
+                          </h4>
+                          <p className="text-sm text-gray-400">
+                            Bảo vệ tài khoản của bạn với xác thực hai yếu tố
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <span className="text-sm text-red-500">Chưa bật</span>
+                        <button className="px-4 py-2 bg-transparent border border-[#ff4d4f] text-[#ff4d4f] rounded-lg hover:bg-[#ff4d4f]/10 transition-colors">
+                          Thiết lập
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Liên kết tài khoản
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-[var(--hover-color)] rounded-lg">
+                            <div className="h-5 w-5 text-red-500">G</div>
+                          </div>
+                          <div>
+                            <h4 className="text-base font-medium">Google</h4>
+                            <p className="text-sm text-gray-400">
+                              Kết nối với tài khoản Google
+                            </p>
+                          </div>
+                        </div>
+                        <button className={getConnectedButtonClassName(false)}>
+                          Kết nối
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-[var(--hover-color)] rounded-lg">
+                            <div className="h-5 w-5 text-blue-500">F</div>
+                          </div>
+                          <div>
+                            <h4 className="text-base font-medium">Facebook</h4>
+                            <p className="text-sm text-gray-400">
+                              Kết nối với tài khoản Facebook
+                            </p>
+                          </div>
+                        </div>
+                        <button className={getConnectedButtonClassName(false)}>
+                          Kết nối
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-[var(--hover-color)] rounded-lg">
+                            <div className="h-5 w-5 text-white">GH</div>
+                          </div>
+                          <div>
+                            <h4 className="text-base font-medium">Github</h4>
+                            <p className="text-sm text-gray-400">
+                              Kết nối với tài khoản Github
+                            </p>
+                          </div>
+                        </div>
+                        <button className={getConnectedButtonClassName(false)}>
+                          Kết nối
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {activeTab === "notifications" && (
@@ -325,7 +826,7 @@ export default function SettingsPage() {
                     ].map((notification, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-4 bg-[#141414] rounded-lg"
+                        className="flex items-center justify-between p-4 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg"
                       >
                         <div>
                           <p className="font-medium">{notification.title}</p>
@@ -359,7 +860,7 @@ export default function SettingsPage() {
                 <motion.div variants={itemVariants} className="space-y-6">
                   <h3 className="text-xl font-semibold">Tùy chỉnh giao diện</h3>
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-[#141414] rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg">
                       <div className="flex items-center space-x-3">
                         {darkMode ? (
                           <Moon className="w-6 h-6" />
@@ -374,7 +875,35 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => setDarkMode(!darkMode)}
+                        onClick={() => {
+                          const newMode = !darkMode;
+                          setDarkMode(newMode);
+                          // Toggle class 'dark-theme' trên document
+                          if (newMode) {
+                            document.documentElement.classList.add(
+                              "dark-theme"
+                            );
+                            document.documentElement.classList.remove(
+                              "light-theme"
+                            );
+                          } else {
+                            document.documentElement.classList.remove(
+                              "dark-theme"
+                            );
+                            document.documentElement.classList.add(
+                              "light-theme"
+                            );
+                          }
+                          // Lưu theme vào localStorage
+                          localStorage.setItem(
+                            "theme",
+                            newMode ? "dark" : "light"
+                          );
+                          // Trigger custom event để thông báo theme đã thay đổi
+                          document.documentElement.dispatchEvent(
+                            new Event("classChange")
+                          );
+                        }}
                         className={getToggleClassName(darkMode)}
                       >
                         <span className={getToggleKnobClassName(darkMode)} />
@@ -385,7 +914,7 @@ export default function SettingsPage() {
                       <label className="block text-sm font-medium text-gray-400">
                         Ngôn ngữ
                       </label>
-                      <select className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors">
+                      <select className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]">
                         <option value="vi">Tiếng Việt</option>
                         <option value="en">English</option>
                       </select>
@@ -395,7 +924,7 @@ export default function SettingsPage() {
                       <label className="block text-sm font-medium text-gray-400">
                         Font chữ
                       </label>
-                      <select className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors">
+                      <select className="w-full px-4 py-2.5 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors text-[var(--text-color)]">
                         <option value="system">Mặc định hệ thống</option>
                         <option value="serif">Serif</option>
                         <option value="sans">Sans-serif</option>
@@ -417,7 +946,7 @@ export default function SettingsPage() {
                   <h3 className="text-xl font-semibold">
                     Thông tin thanh toán
                   </h3>
-                  <div className="p-4 bg-[#141414] rounded-lg border border-green-500/30">
+                  <div className="p-4 bg-[var(--card-background)] rounded-lg border border-green-500/30">
                     <div className="flex items-center space-x-3 text-green-500">
                       <CheckCircle2 className="w-5 h-5" />
                       <p className="font-medium">Gói Premium - Còn 280 ngày</p>
@@ -425,7 +954,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 bg-[#141414] rounded-lg border border-gray-800">
+                    <div className="p-6 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
                       <h4 className="text-lg font-semibold mb-4">
                         Phương thức thanh toán
                       </h4>
@@ -440,7 +969,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="p-6 bg-[#141414] rounded-lg border border-gray-800">
+                    <div className="p-6 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
                       <h4 className="text-lg font-semibold mb-4">
                         Lịch sử thanh toán
                       </h4>
