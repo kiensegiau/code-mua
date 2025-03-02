@@ -94,79 +94,79 @@
   max-width: 100%; /* Đảm bảo khung không vượt quá chiều rộng của container */
   max-height: 100%; /* Đảm bảo khung không vượt quá chiều cao của container */
 }
-body{
+body {
   background-color: #f3f5f7;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
- 
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
- 
+
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
- 
+
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
- 
+
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
- 
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
- 
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
- 
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
- 
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
- 
+
     --radius: 0.5rem;
   }
- 
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
- 
+
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
- 
+
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
- 
+
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
- 
+
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
- 
+
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
- 
+
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
- 
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
- 
+
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
 }
- .ant-collapse-content-box{
+.ant-collapse-content-box {
   padding: 0px !important;
- }
- .ant-list-item-meta{
-  padding:0 16px  !important;
- }
+}
+.ant-list-item-meta {
+  padding: 0 16px !important;
+}
 @layer base {
   * {
     @apply border-border;
@@ -175,11 +175,11 @@ body{
     @apply bg-background text-foreground;
   }
 }
- 
+
 .hide-clerk-footer .cl-internal-1cf2lc9 {
   display: none !important;
 }
- 
+
 .hide-clerk-footer .cl-footerAction,
 .hide-clerk-footer .cl-footerPages {
   display: none !important;
@@ -190,7 +190,7 @@ body{
 }
 
 .button:hover {
-  background-color: #4F46E5;
+  background-color: #4f46e5;
 }
 
 @keyframes float {
@@ -331,4 +331,203 @@ body{
 /* Đảm bảo nút luôn nằm trên video */
 .z-[51] {
   z-index: 51 !important;
+}
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 20, 20, 20;
+  --primary-color: #ff4d4f;
+  --primary-hover: #f5222d;
+  --secondary-color: #252525;
+  --secondary-hover: #333333;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-[#ff4d4f] hover:bg-[#f5222d] text-white px-6 py-3 rounded-lg font-medium transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-[#252525] hover:bg-[#333333] text-white px-6 py-3 rounded-lg font-medium transition-colors;
+}
+
+.btn-outline {
+  @apply border border-[#ff4d4f] text-[#ff4d4f] hover:bg-[#ff4d4f] hover:text-white px-6 py-3 rounded-lg font-medium transition-colors;
+}
+
+/* Card styles */
+.card {
+  @apply bg-[#1a1a1a] rounded-lg overflow-hidden hover:shadow-lg transition-shadow;
+}
+
+.card-title {
+  @apply text-xl font-semibold text-white;
+}
+
+.card-body {
+  @apply p-6;
+}
+
+/* Layout utilities */
+.sidebar-link {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#252525] transition-colors;
+}
+
+.sidebar-link.active {
+  @apply bg-[#ff4d4f]/10 text-[#ff4d4f];
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--background-rgb));
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Responsive breakpoints */
+.xs\:block {
+  @media (min-width: 480px) {
+    display: block;
+  }
+}
+
+.xs\:h-\[300px\] {
+  @media (min-width: 480px) {
+    height: 300px;
+  }
+}
+
+.xs\:text-base {
+  @media (min-width: 480px) {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}
+
+.xs\:text-4xl {
+  @media (min-width: 480px) {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+/* Preloading fonts và resources */
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/outfit-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/outfit-bold.woff2") format("woff2");
+}
+
+/* Scrollbar custom */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+  border-radius: 2px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Image loading */
+.img-blur-in {
+  filter: blur(10px);
+  transition: filter 0.3s ease-in-out;
+}
+
+.img-blur-in.loaded {
+  filter: blur(0);
+}
+
+/* Touch optimizations */
+@media (hover: none) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Content visibility optimizations */
+.content-visibility-auto {
+  content-visibility: auto;
+}
+
+/* Reduce animation on preference */
+@media (prefers-reduced-motion: reduce) {
+  .motion-reduce {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* CSS Variables for Responsive Design */
+:root {
+  --header-height: 48px;
+  --sidebar-width: 0;
+  --sidebar-width-desktop: 256px;
+  --main-padding-x: 12px;
+  --main-padding-y: 12px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --main-padding-x: 16px;
+    --main-padding-y: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --sidebar-width: var(--sidebar-width-desktop);
+    --main-padding-x: 24px;
+    --main-padding-y: 24px;
+  }
+}
+
+/* Fallback for old browsers */
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+/* Utility classes for mobile fixes */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }

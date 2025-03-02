@@ -16,16 +16,18 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useAuth } from "@/app/_context/AuthContext";
+import { useMobileMenu } from "@/app/_context/MobileMenuContext";
 
 function SideNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { closeMobileMenu } = useMobileMenu();
 
   const menuItems = [
     {
       title: "Trang chủ",
       icon: Home,
-      href: "/",
+      href: "/home",
       color: "text-gray-400",
     },
     {
@@ -91,13 +93,10 @@ function SideNav() {
   ];
 
   const isActive = (href) => {
-    if (href === "/") {
-      return pathname === href;
+    if (href === "/home" && pathname === "/") {
+      return true;
     }
-    if (href === "/courses") {
-      return pathname === href;
-    }
-    return pathname === href;
+    return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   const NavItem = ({ item }) => {
@@ -105,6 +104,12 @@ function SideNav() {
     const active = isActive(item.href);
 
     if (item.requireAuth && !user) return null;
+
+    const handleItemClick = () => {
+      if (window.innerWidth < 768) {
+        closeMobileMenu();
+      }
+    };
 
     return (
       <Link
@@ -117,6 +122,7 @@ function SideNav() {
               : "text-gray-400 hover:bg-[#ff4d4f]/5 hover:text-[#ff4d4f]"
           }
         `}
+        onClick={handleItemClick}
       >
         <div
           className={`p-1.5 rounded-md ${
@@ -139,8 +145,14 @@ function SideNav() {
     );
   };
 
+  const handleUserProfileClick = () => {
+    if (window.innerWidth < 768) {
+      closeMobileMenu();
+    }
+  };
+
   return (
-    <div className="fixed top-[48px] left-0 w-64 h-[calc(100vh-48px)] bg-[#141414] border-r border-gray-800 overflow-y-auto">
+    <div className="fixed top-[48px] left-0 w-64 h-[calc(100vh-48px)] bg-[#141414] border-r border-gray-800 overflow-y-auto z-40 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
       <div className="py-4 flex flex-col gap-2">
         {/* Main Menu */}
         <div className="px-3">
@@ -164,6 +176,7 @@ function SideNav() {
           <Link
             href="/profile"
             className="block px-4 py-3 mx-3 mt-2 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
+            onClick={handleUserProfileClick}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center transition-colors">
@@ -186,6 +199,48 @@ function SideNav() {
             </div>
           </Link>
         )}
+      </div>
+
+      {/* Hiển thị bottom navigation trên thiết bị di động */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#141414] border-t border-gray-800 flex justify-around items-center p-2 z-50">
+        {menuItems.slice(0, 4).map((item, index) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+
+          if (item.requireAuth && !user) return null;
+
+          return (
+            <Link
+              key={index}
+              href={item.href}
+              className="p-2 flex flex-col items-center"
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  closeMobileMenu();
+                }
+              }}
+            >
+              <div
+                className={`p-1.5 rounded-md ${
+                  active ? "bg-[#ff4d4f]/10" : "bg-transparent"
+                }`}
+              >
+                <Icon
+                  className={`h-5 w-5 ${
+                    active ? "text-[#ff4d4f]" : "text-gray-400"
+                  }`}
+                />
+              </div>
+              <span
+                className={`text-[10px] mt-1 ${
+                  active ? "text-[#ff4d4f]" : "text-gray-400"
+                }`}
+              >
+                {item.title}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

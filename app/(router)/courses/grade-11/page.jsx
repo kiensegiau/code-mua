@@ -16,7 +16,7 @@ function Grade11Courses() {
         </div>
 
         {/* Main content */}
-        <main className="flex-1 md:ml-64 px-4 md:px-6 py-4 md:py-6 pb-20 md:pb-6">
+        <main className="flex-1 px-4 md:px-6 py-4 md:py-6 pb-20 md:pb-6">
           <div className="max-w-[1920px] mx-auto">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-white mb-2">

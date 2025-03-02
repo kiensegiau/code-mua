@@ -31,52 +31,68 @@ function HomePage() {
     console.log("Particles container loaded", container);
   };
 
-  const particlesConfig = {
-    background: {
-      color: {
-        value: "transparent",
-      },
-    },
-    particles: {
-      color: {
-        value: "#ff4d4f",
-      },
-      links: {
-        color: "#ff4d4f",
-        distance: 150,
-        enable: true,
-        opacity: 0.2,
-        width: 1,
-      },
-      move: {
-        direction: "none",
-        enable: true,
-        outModes: {
-          default: "bounce",
+  const getParticlesConfig = () => {
+    const isMobile = window.innerWidth < 768;
+    const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+
+    return {
+      background: {
+        color: {
+          value: "transparent",
         },
-        random: false,
-        speed: 1,
-        straight: false,
       },
-      number: {
-        density: {
+      particles: {
+        color: {
+          value: "#ff4d4f",
+        },
+        links: {
+          color: "#ff4d4f",
+          distance: 150,
           enable: true,
-          area: 800,
+          opacity: 0.2,
+          width: 1,
         },
-        value: 50,
+        move: {
+          direction: "none",
+          enable: true,
+          outModes: {
+            default: "bounce",
+          },
+          random: false,
+          speed: isMobile ? 0.5 : 1,
+          straight: false,
+        },
+        number: {
+          density: {
+            enable: true,
+            area: 800,
+          },
+          value: isMobile ? 20 : isTablet ? 30 : 50,
+        },
+        opacity: {
+          value: 0.3,
+        },
+        shape: {
+          type: "circle",
+        },
+        size: {
+          value: { min: 1, max: 3 },
+        },
       },
-      opacity: {
-        value: 0.3,
-      },
-      shape: {
-        type: "circle",
-      },
-      size: {
-        value: { min: 1, max: 3 },
-      },
-    },
-    detectRetina: true,
+      detectRetina: true,
+    };
   };
+
+  const particlesConfig =
+    typeof window !== "undefined"
+      ? getParticlesConfig()
+      : {
+          background: { color: { value: "transparent" } },
+          particles: {
+            number: { value: 0 },
+            move: { enable: false },
+          },
+        };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -206,22 +222,29 @@ function HomePage() {
         style={{ scaleX }}
       />
 
-      {/* Particles Background */}
-      <div className="absolute inset-0 z-0">
-        <Particles
-          id="tsparticles"
-          init={particlesInit}
-          loaded={particlesLoaded}
-          options={particlesConfig}
-        />
+      {/* Particles Background - Tối ưu cho thiết bị di động */}
+      <div className="absolute inset-0 z-0 pointer-events-none md:left-64">
+        {typeof window !== "undefined" && (
+          <Particles
+            id="tsparticles"
+            init={particlesInit}
+            loaded={particlesLoaded}
+            options={particlesConfig}
+            className="hidden sm:block"
+          />
+        )}
       </div>
 
-      {/* Floating elements in the background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(3)].map((_, i) => (
+      {/* Floating elements in the background - Giới hạn phạm vi và tối ưu cho di động */}
+      <div className="fixed inset-0 pointer-events-none md:left-64">
+        {[
+          ...Array(
+            typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 3
+          ),
+        ].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-64 h-64 bg-[#ff4d4f]/5 rounded-full"
+            className="absolute w-64 h-64 bg-[#ff4d4f]/5 rounded-full hidden sm:block"
             animate={{
               x: [0, 100, 0],
               y: [0, 50, 0],
@@ -243,10 +266,10 @@ function HomePage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10">
-        {/* Hero Section */}
+      <div className="relative z-10 w-full max-w-full overflow-x-hidden">
+        {/* Hero Section - Cải thiện responsive */}
         <motion.div
-          className="relative h-[300px] md:h-[400px] bg-gradient-to-r from-[#ff4d4f]/20 to-[#141414] flex items-center overflow-hidden mb-12"
+          className="relative h-[250px] xs:h-[300px] md:h-[400px] bg-gradient-to-r from-[#ff4d4f]/20 to-[#141414] flex items-center overflow-hidden mb-8 sm:mb-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
@@ -263,9 +286,9 @@ function HomePage() {
               repeatType: "reverse",
             }}
           />
-          <div className="relative px-4 md:px-8">
+          <div className="relative px-3 sm:px-4 md:px-8">
             <motion.h1
-              className="text-4xl md:text-6xl font-bold mb-6"
+              className="text-3xl xs:text-4xl md:text-6xl font-bold mb-4 sm:mb-6"
               variants={fadeInUp}
               initial="initial"
               animate="animate"
@@ -282,7 +305,7 @@ function HomePage() {
               </span>
             </motion.h1>
             <motion.p
-              className="text-gray-400 text-lg md:text-xl max-w-2xl mb-8"
+              className="text-gray-400 text-sm xs:text-base md:text-xl max-w-2xl mb-6 sm:mb-8"
               variants={fadeInUp}
               initial="initial"
               animate="animate"
@@ -299,18 +322,18 @@ function HomePage() {
             >
               <Link
                 href="/courses"
-                className="bg-[#ff4d4f] hover:bg-[#f5222d] text-white px-8 py-3 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
+                className="bg-[#ff4d4f] hover:bg-[#f5222d] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
               >
                 Khám phá khóa học
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </motion.div>
           </div>
         </motion.div>
 
-        {/* Stats Section */}
+        {/* Stats Section - Cải thiện grid cho mobile */}
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
+          className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-8 sm:mb-12 px-2 sm:px-0"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -319,55 +342,59 @@ function HomePage() {
           {stats.map((stat, index) => (
             <motion.div
               key={index}
-              className="bg-gray-800/50 rounded-xl p-6 text-center relative group"
+              className="bg-gray-800/50 rounded-xl p-3 sm:p-6 text-center relative group"
               variants={itemVariants}
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <motion.div
-                className="text-3xl font-bold text-[#ff4d4f] mb-2"
+                className="text-xl sm:text-2xl md:text-3xl font-bold text-[#ff4d4f] mb-1 sm:mb-2"
                 whileHover={{ scale: 1.1 }}
               >
                 {stat.value}
               </motion.div>
-              <div className="text-gray-400">{stat.label}</div>
+              <div className="text-xs sm:text-sm text-gray-400">
+                {stat.label}
+              </div>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {/* Features Grid - Cải thiện cho mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 px-2 sm:px-0">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <motion.div
                 key={index}
-                className="bg-gray-800/50 rounded-xl p-6 hover:bg-gray-800/70 transition-colors"
+                className="bg-gray-800/50 rounded-xl p-4 sm:p-6 hover:bg-gray-800/70 transition-colors"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <motion.div
-                    className="p-3 rounded-lg bg-[#ff4d4f]/10"
+                    className="p-2 sm:p-3 rounded-lg bg-[#ff4d4f]/10"
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Icon className="h-6 w-6 text-[#ff4d4f]" />
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-[#ff4d4f]" />
                   </motion.div>
-                  <h3 className="text-xl font-semibold text-white">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white">
                     {feature.title}
                   </h3>
                 </div>
-                <p className="text-gray-400 mb-4">{feature.description}</p>
-                <ul className="space-y-2">
+                <p className="text-gray-400 text-sm sm:text-base mb-3 sm:mb-4">
+                  {feature.description}
+                </p>
+                <ul className="space-y-1.5 sm:space-y-2">
                   {feature.list.map((item, i) => (
                     <li
                       key={i}
-                      className="flex items-center text-sm text-gray-400"
+                      className="flex items-center text-xs sm:text-sm text-gray-400"
                     >
-                      <CheckCircle2 className="w-4 h-4 text-[#ff4d4f] mr-2 flex-shrink-0" />
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ff4d4f] mr-2 flex-shrink-0" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -377,8 +404,8 @@ function HomePage() {
           })}
         </div>
 
-        {/* Highlights Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {/* Highlights Section - Cải thiện cho mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 px-2 sm:px-0">
           {highlights.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -391,24 +418,26 @@ function HomePage() {
               >
                 <Link
                   href={item.href}
-                  className="group bg-gray-800/30 hover:bg-gray-800/50 rounded-xl p-8 transition-colors block"
+                  className="group bg-gray-800/30 hover:bg-gray-800/50 rounded-xl p-4 sm:p-8 transition-colors block"
                 >
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
                     <motion.div
-                      className={`p-3 rounded-lg ${item.color}`}
+                      className={`p-2 sm:p-3 rounded-lg ${item.color}`}
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <Icon className="h-6 w-6 text-white" />
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </motion.div>
-                    <h3 className="text-2xl font-semibold text-white">
+                    <h3 className="text-xl sm:text-2xl font-semibold text-white">
                       {item.title}
                     </h3>
                   </div>
-                  <p className="text-gray-400 mb-4">{item.description}</p>
-                  <div className="flex items-center text-white font-medium group-hover:gap-2 transition-all">
+                  <p className="text-gray-400 text-sm sm:text-base mb-3 sm:mb-4">
+                    {item.description}
+                  </p>
+                  <div className="flex items-center text-white font-medium text-sm sm:text-base group-hover:gap-2 transition-all">
                     {item.cta}
-                    <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-all" />
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 opacity-0 group-hover:opacity-100 transition-all" />
                   </div>
                 </Link>
               </motion.div>
@@ -416,28 +445,31 @@ function HomePage() {
           })}
         </div>
 
-        {/* CTA Section */}
+        {/* CTA Section - Cải thiện cho mobile */}
         <motion.div
-          className="bg-gradient-to-r from-[#ff4d4f]/10 to-[#f5222d]/10 rounded-2xl p-8 text-center"
+          className="bg-gradient-to-r from-[#ff4d4f]/10 to-[#f5222d]/10 rounded-xl sm:rounded-2xl p-5 sm:p-8 text-center mx-2 sm:mx-0"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
             Sẵn sàng nâng cao điểm số?
           </h2>
-          <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+          <p className="text-gray-400 text-sm sm:text-base mb-5 sm:mb-6 max-w-2xl mx-auto">
             Tham gia ngay hôm nay để trải nghiệm các khóa học chất lượng và cải
             thiện kết quả học tập của bạn
           </p>
           <Link
             href="/courses"
-            className="bg-[#ff4d4f] hover:bg-[#f5222d] text-white px-8 py-3 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
+            className="bg-[#ff4d4f] hover:bg-[#f5222d] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
           >
             Bắt đầu học ngay
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </Link>
         </motion.div>
+
+        {/* Thêm padding dưới cùng để có khoảng cách với bottom navigation trên mobile */}
+        <div className="h-6 sm:h-0"></div>
       </div>
     </>
   );

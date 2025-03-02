@@ -19,15 +19,17 @@ import { auth, db } from "@/app/_utils/firebase";
 import { useRouter } from "next/navigation";
 import SideNav from "./SideNav";
 import { doc, onSnapshot } from "firebase/firestore";
+import { useMobileMenu } from "@/app/_context/MobileMenuContext";
 
 function Header() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-console.log(profile);
+  const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu } =
+    useMobileMenu();
+  console.log(profile);
 
   const handleSignOut = () => {
     auth.signOut();
@@ -35,7 +37,7 @@ console.log(profile);
     localStorage.removeItem("refreshToken");
     router.push("/sign-in");
   };
-console.log(profile);
+  console.log(profile);
 
   return (
     <>
@@ -43,7 +45,7 @@ console.log(profile);
         <div className="flex items-center gap-2">
           {/* Mobile Menu Button */}
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={toggleMobileMenu}
             className="hover:bg-gray-800 p-1.5 rounded-lg transition-colors"
           >
             {isMobileMenuOpen ? (
@@ -207,7 +209,7 @@ console.log(profile);
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => {
-            setIsMobileMenuOpen(false);
+            closeMobileMenu();
             setIsUserMenuOpen(false);
           }}
         />

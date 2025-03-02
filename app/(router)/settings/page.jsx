@@ -1,23 +1,38 @@
 "use client";
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
-  User, Lock, Bell, Globe, Palette, CreditCard, 
-  Shield, Mail, Phone, Camera, Moon, Sun,
-  Facebook, Github, Google, Twitter,
-  ChevronRight, CheckCircle2, AlertCircle
-} from 'lucide-react';
+  User,
+  Lock,
+  Bell,
+  Globe,
+  Palette,
+  CreditCard,
+  Shield,
+  Mail,
+  Phone,
+  Camera,
+  Moon,
+  Sun,
+  Facebook,
+  Github,
+  Google,
+  Twitter,
+  ChevronRight,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState("profile");
   const [darkMode, setDarkMode] = useState(true);
 
   const tabs = [
-    { id: 'profile', label: 'Thông tin cá nhân', icon: User },
-    { id: 'security', label: 'Bảo mật', icon: Lock },
-    { id: 'notifications', label: 'Thông báo', icon: Bell },
-    { id: 'appearance', label: 'Giao diện', icon: Palette },
-    { id: 'billing', label: 'Thanh toán', icon: CreditCard },
+    { id: "profile", label: "Thông tin cá nhân", icon: User },
+    { id: "security", label: "Bảo mật", icon: Lock },
+    { id: "notifications", label: "Thông báo", icon: Bell },
+    { id: "appearance", label: "Giao diện", icon: Palette },
+    { id: "billing", label: "Thanh toán", icon: CreditCard },
   ];
 
   const containerVariants = {
@@ -25,9 +40,9 @@ export default function SettingsPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -36,32 +51,34 @@ export default function SettingsPage() {
       opacity: 1,
       x: 0,
       transition: {
-        duration: 0.3
-      }
-    }
+        duration: 0.3,
+      },
+    },
   };
 
   const getTabClassName = (tabId) => {
     return `w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-      activeTab === tabId ? 'bg-[#ff4d4f] text-white' : 'hover:bg-white/5'
+      activeTab === tabId ? "bg-[#ff4d4f] text-white" : "hover:bg-white/5"
     }`;
   };
 
   const getConnectedButtonClassName = (isConnected) => {
     return `px-4 py-2 rounded-lg transition-colors ${
-      isConnected 
-        ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-        : 'bg-[#ff4d4f]/10 text-[#ff4d4f] hover:bg-[#ff4d4f]/20'
+      isConnected
+        ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
+        : "bg-[#ff4d4f]/10 text-[#ff4d4f] hover:bg-[#ff4d4f]/20"
     }`;
   };
 
   const getToggleClassName = (enabled) => {
-    return `w-12 h-6 rounded-full transition-colors ${enabled ? 'bg-[#ff4d4f]' : 'bg-gray-700'} relative`;
+    return `w-12 h-6 rounded-full transition-colors ${
+      enabled ? "bg-[#ff4d4f]" : "bg-gray-700"
+    } relative`;
   };
 
   const getToggleKnobClassName = (enabled) => {
     return `absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-      enabled ? 'translate-x-6' : 'translate-x-0'
+      enabled ? "translate-x-6" : "translate-x-0"
     }`;
   };
 
@@ -74,7 +91,9 @@ export default function SettingsPage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold mb-2">Cài đặt tài khoản</h1>
-          <p className="text-gray-400">Quản lý thông tin và tùy chỉnh tài khoản của bạn</p>
+          <p className="text-gray-400">
+            Quản lý thông tin và tùy chỉnh tài khoản của bạn
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
@@ -100,7 +119,7 @@ export default function SettingsPage() {
 
           {/* Main Content */}
           <div className="bg-[#1f1f1f] rounded-2xl p-6">
-            {activeTab === 'profile' && (
+            {activeTab === "profile" && (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -128,7 +147,9 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">Họ và tên</label>
+                    <label className="block text-sm font-medium text-gray-400">
+                      Họ và tên
+                    </label>
                     <input
                       type="text"
                       className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
@@ -137,7 +158,9 @@ export default function SettingsPage() {
                   </motion.div>
 
                   <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">Email</label>
+                    <label className="block text-sm font-medium text-gray-400">
+                      Email
+                    </label>
                     <input
                       type="email"
                       className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
@@ -146,7 +169,9 @@ export default function SettingsPage() {
                   </motion.div>
 
                   <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">Số điện thoại</label>
+                    <label className="block text-sm font-medium text-gray-400">
+                      Số điện thoại
+                    </label>
                     <input
                       type="tel"
                       className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
@@ -155,7 +180,9 @@ export default function SettingsPage() {
                   </motion.div>
 
                   <motion.div variants={itemVariants} className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-400">Trường học</label>
+                    <label className="block text-sm font-medium text-gray-400">
+                      Trường học
+                    </label>
                     <input
                       type="text"
                       className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
@@ -172,7 +199,7 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {activeTab === 'security' && (
+            {activeTab === "security" && (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -183,21 +210,27 @@ export default function SettingsPage() {
                   <h3 className="text-xl font-semibold">Đổi mật khẩu</h3>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-400">Mật khẩu hiện tại</label>
+                      <label className="block text-sm font-medium text-gray-400">
+                        Mật khẩu hiện tại
+                      </label>
                       <input
                         type="password"
                         className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-400">Mật khẩu mới</label>
+                      <label className="block text-sm font-medium text-gray-400">
+                        Mật khẩu mới
+                      </label>
                       <input
                         type="password"
                         className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-400">Xác nhận mật khẩu mới</label>
+                      <label className="block text-sm font-medium text-gray-400">
+                        Xác nhận mật khẩu mới
+                      </label>
                       <input
                         type="password"
                         className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors"
@@ -216,7 +249,9 @@ export default function SettingsPage() {
                       <Shield className="w-6 h-6 text-[#ff4d4f]" />
                       <div>
                         <p className="font-medium">Bảo mật 2 lớp qua SMS</p>
-                        <p className="text-sm text-gray-400">Bảo vệ tài khoản bằng mã xác thực gửi qua tin nhắn</p>
+                        <p className="text-sm text-gray-400">
+                          Bảo vệ tài khoản bằng mã xác thực gửi qua tin nhắn
+                        </p>
                       </div>
                     </div>
                     <button className="px-4 py-2 border border-[#ff4d4f] text-[#ff4d4f] rounded-lg hover:bg-[#ff4d4f] hover:text-white transition-colors">
@@ -229,19 +264,24 @@ export default function SettingsPage() {
                   <h3 className="text-xl font-semibold">Tài khoản liên kết</h3>
                   <div className="space-y-4">
                     {[
-                      { icon: Google, name: 'Google', connected: true },
-                      { icon: Facebook, name: 'Facebook', connected: false },
-                      { icon: Github, name: 'Github', connected: false },
+                      { icon: Google, name: "Google", connected: true },
+                      { icon: Facebook, name: "Facebook", connected: false },
+                      { icon: Github, name: "Github", connected: false },
                     ].map((account) => (
-                      <div key={account.name} className="flex items-center justify-between p-4 bg-[#141414] rounded-lg">
+                      <div
+                        key={account.name}
+                        className="flex items-center justify-between p-4 bg-[#141414] rounded-lg"
+                      >
                         <div className="flex items-center space-x-3">
                           <account.icon className="w-6 h-6" />
                           <span>{account.name}</span>
                         </div>
                         <button
-                          className={getConnectedButtonClassName(account.connected)}
+                          className={getConnectedButtonClassName(
+                            account.connected
+                          )}
                         >
-                          {account.connected ? 'Đã kết nối' : 'Kết nối'}
+                          {account.connected ? "Đã kết nối" : "Kết nối"}
                         </button>
                       </div>
                     ))}
@@ -250,7 +290,7 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {activeTab === 'notifications' && (
+            {activeTab === "notifications" && (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -262,33 +302,45 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     {[
                       {
-                        title: 'Thông báo khóa học',
-                        description: 'Nhận thông báo về bài học mới và cập nhật khóa học',
-                        enabled: true
+                        title: "Thông báo khóa học",
+                        description:
+                          "Nhận thông báo về bài học mới và cập nhật khóa học",
+                        enabled: true,
                       },
                       {
-                        title: 'Thông báo bài tập',
-                        description: 'Nhận thông báo về bài tập và deadline',
-                        enabled: true
+                        title: "Thông báo bài tập",
+                        description: "Nhận thông báo về bài tập và deadline",
+                        enabled: true,
                       },
                       {
-                        title: 'Thông báo tin tức',
-                        description: 'Nhận thông báo về tin tức và sự kiện mới',
-                        enabled: false
+                        title: "Thông báo tin tức",
+                        description: "Nhận thông báo về tin tức và sự kiện mới",
+                        enabled: false,
                       },
                       {
-                        title: 'Email marketing',
-                        description: 'Nhận email về khuyến mãi và ưu đãi',
-                        enabled: false
-                      }
+                        title: "Email marketing",
+                        description: "Nhận email về khuyến mãi và ưu đãi",
+                        enabled: false,
+                      },
                     ].map((notification, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-[#141414] rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-[#141414] rounded-lg"
+                      >
                         <div>
                           <p className="font-medium">{notification.title}</p>
-                          <p className="text-sm text-gray-400">{notification.description}</p>
+                          <p className="text-sm text-gray-400">
+                            {notification.description}
+                          </p>
                         </div>
-                        <button className={getToggleClassName(notification.enabled)}>
-                          <span className={getToggleKnobClassName(notification.enabled)} />
+                        <button
+                          className={getToggleClassName(notification.enabled)}
+                        >
+                          <span
+                            className={getToggleKnobClassName(
+                              notification.enabled
+                            )}
+                          />
                         </button>
                       </div>
                     ))}
@@ -297,7 +349,7 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {activeTab === 'appearance' && (
+            {activeTab === "appearance" && (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -309,10 +361,16 @@ export default function SettingsPage() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-[#141414] rounded-lg">
                       <div className="flex items-center space-x-3">
-                        {darkMode ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+                        {darkMode ? (
+                          <Moon className="w-6 h-6" />
+                        ) : (
+                          <Sun className="w-6 h-6" />
+                        )}
                         <div>
                           <p className="font-medium">Chế độ tối</p>
-                          <p className="text-sm text-gray-400">Điều chỉnh giao diện sáng/tối</p>
+                          <p className="text-sm text-gray-400">
+                            Điều chỉnh giao diện sáng/tối
+                          </p>
                         </div>
                       </div>
                       <button
@@ -324,7 +382,9 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-400">Ngôn ngữ</label>
+                      <label className="block text-sm font-medium text-gray-400">
+                        Ngôn ngữ
+                      </label>
                       <select className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors">
                         <option value="vi">Tiếng Việt</option>
                         <option value="en">English</option>
@@ -332,7 +392,9 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-400">Font chữ</label>
+                      <label className="block text-sm font-medium text-gray-400">
+                        Font chữ
+                      </label>
                       <select className="w-full px-4 py-2.5 bg-[#141414] border border-gray-800 rounded-lg focus:outline-none focus:border-[#ff4d4f] transition-colors">
                         <option value="system">Mặc định hệ thống</option>
                         <option value="serif">Serif</option>
@@ -344,7 +406,7 @@ export default function SettingsPage() {
               </motion.div>
             )}
 
-            {activeTab === 'billing' && (
+            {activeTab === "billing" && (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -352,7 +414,9 @@ export default function SettingsPage() {
                 className="space-y-8"
               >
                 <motion.div variants={itemVariants} className="space-y-6">
-                  <h3 className="text-xl font-semibold">Thông tin thanh toán</h3>
+                  <h3 className="text-xl font-semibold">
+                    Thông tin thanh toán
+                  </h3>
                   <div className="p-4 bg-[#141414] rounded-lg border border-green-500/30">
                     <div className="flex items-center space-x-3 text-green-500">
                       <CheckCircle2 className="w-5 h-5" />
@@ -362,7 +426,9 @@ export default function SettingsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-6 bg-[#141414] rounded-lg border border-gray-800">
-                      <h4 className="text-lg font-semibold mb-4">Phương thức thanh toán</h4>
+                      <h4 className="text-lg font-semibold mb-4">
+                        Phương thức thanh toán
+                      </h4>
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
                           <img src="/visa.png" alt="Visa" className="h-4" />
@@ -375,7 +441,9 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="p-6 bg-[#141414] rounded-lg border border-gray-800">
-                      <h4 className="text-lg font-semibold mb-4">Lịch sử thanh toán</h4>
+                      <h4 className="text-lg font-semibold mb-4">
+                        Lịch sử thanh toán
+                      </h4>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -401,4 +469,4 @@ export default function SettingsPage() {
       </div>
     </div>
   );
-} 
+}
