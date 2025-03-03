@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, memo } from "react";
-import {
-  BookOpen,
-  Clock,
-  Users,
-  Award,
-  TrendingUp,
-  CheckCircle,
-} from "lucide-react";
-import * as Tooltip from "@radix-ui/react-tooltip";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useRouter } from "next/navigation";
 import {
@@ -22,10 +14,63 @@ import {
 } from "firebase/firestore";
 import { db } from "@/app/_utils/firebase";
 import { toast } from "sonner";
-import ConfirmEnrollModal from "./ConfirmEnrollModal";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { motion } from "framer-motion";
 import Image from "next/image";
+
+// Lazy load các icon để giảm kích thước bundle ban đầu
+const BookOpen = dynamic(
+  () => import("lucide-react").then((mod) => mod.BookOpen),
+  { ssr: false }
+);
+const Clock = dynamic(() => import("lucide-react").then((mod) => mod.Clock), {
+  ssr: false,
+});
+const Users = dynamic(() => import("lucide-react").then((mod) => mod.Users), {
+  ssr: false,
+});
+const CheckCircle = dynamic(
+  () => import("lucide-react").then((mod) => mod.CheckCircle),
+  { ssr: false }
+);
+const Star = dynamic(() => import("lucide-react").then((mod) => mod.Star), {
+  ssr: false,
+});
+const TrendingUp = dynamic(
+  () => import("lucide-react").then((mod) => mod.TrendingUp),
+  { ssr: false }
+);
+
+// Dynamic import cho Modal để giảm kích thước bundle ban đầu
+const ConfirmEnrollModal = dynamic(() => import("./ConfirmEnrollModal"), {
+  ssr: false,
+  loading: () => <div className="hidden">Loading...</div>,
+});
+
+// Lazy load Tooltip component
+const TooltipProvider = dynamic(
+  () => import("@radix-ui/react-tooltip").then((mod) => mod.Provider),
+  { ssr: false }
+);
+const TooltipRoot = dynamic(
+  () => import("@radix-ui/react-tooltip").then((mod) => mod.Root),
+  { ssr: false }
+);
+const TooltipTrigger = dynamic(
+  () => import("@radix-ui/react-tooltip").then((mod) => mod.Trigger),
+  { ssr: false }
+);
+const TooltipContent = dynamic(
+  () => import("@radix-ui/react-tooltip").then((mod) => mod.Content),
+  { ssr: false }
+);
+const TooltipArrow = dynamic(
+  () => import("@radix-ui/react-tooltip").then((mod) => mod.Arrow),
+  { ssr: false }
+);
+const TooltipPortal = dynamic(
+  () => import("@radix-ui/react-tooltip").then((mod) => mod.Portal),
+  { ssr: false }
+);
 
 // Tối ưu hóa component với React.memo
 const CourseItem = memo(function CourseItem({ course }) {
@@ -233,45 +278,16 @@ const CourseItem = memo(function CourseItem({ course }) {
     }
   }, [course, coursePrice, profile, user, router, verifyEnrollment]);
 
-  // Giảm độ phức tạp của animation
-  const cardVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
-    hover: {
-      y: -5,
-      transition: { duration: 0.2 },
-    },
-  };
-
-  // Tối ưu hóa placeholder animation
-  const placeholderVariants = {
-    animate: {
-      scale: [1, 1.05, 1],
-      opacity: [0.5, 0.7, 0.5],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        repeatType: "reverse",
-      },
-    },
+  // Sử dụng CSS thuần thay vì Framer Motion
+  const placeholderStyles = {
+    animation: "pulse 3s infinite ease-in-out",
   };
 
   return (
     <>
-      <Tooltip.Provider>
+      <TooltipProvider>
         <div onClick={handleCourseClick} className="cursor-pointer">
-          <motion.div
-            className="h-full bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            whileHover="hover"
-            layout="position"
-          >
+          <div className="h-full bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 hover-translate-up">
             {/* Thumbnail section */}
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
               {/* Placeholder với gradient */}
@@ -279,15 +295,11 @@ const CourseItem = memo(function CourseItem({ course }) {
                 {!course.thumbnailUrl && (
                   <div className="text-center relative">
                     {/* Hiệu ứng glow phía sau - tối ưu hóa */}
-                    <motion.div
-                      className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl"
-                      variants={placeholderVariants}
-                      animate="animate"
-                    ></motion.div>
+                    <div className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl animate-pulse-custom"></div>
 
                     {/* Tạo hình trang trí ở các góc - static để giảm tải */}
-                    <div className="absolute -top-24 -right-24 w-40 h-40 bg-[#ff4d4f]/5 rounded-full blur-2xl"></div>
-                    <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-[#ff4d4f]/5 rounded-full blur-2xl"></div>
+                    <div className="absolute -top-24 -right-24 w-40 h-40 bg-[#ff4d4f]/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-[#ff4d4f]/5 rounded-full blur-2xl pointer-events-none"></div>
 
                     <div className="relative">
                       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/5 flex items-center justify-center mx-auto mb-3 border border-[#ff4d4f]/20">
@@ -344,7 +356,7 @@ const CourseItem = memo(function CourseItem({ course }) {
               {/* Show enrolled badge if enrolled - tối ưu hóa animation */}
               {isEnrolled && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <div className="bg-[#ff4d4f] rounded-full p-2">
+                  <div className="bg-[#ff4d4f] rounded-full p-2 animate-fadeInScale">
                     <CheckCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
@@ -366,39 +378,39 @@ const CourseItem = memo(function CourseItem({ course }) {
 
             {/* Content section with consistent spacing */}
             <div className="flex-1 p-3 flex flex-col">
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
+              <TooltipRoot>
+                <TooltipTrigger asChild>
                   <h2 className="font-semibold text-gray-200 text-base mb-1 line-clamp-2 group-hover:text-[#ff4d4f] transition-colors">
                     {course.title}
                   </h2>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
+                </TooltipTrigger>
+                <TooltipPortal>
+                  <TooltipContent
                     className="bg-gray-900 text-white p-2 rounded-md text-sm shadow-lg max-w-[300px]"
                     sideOffset={5}
                   >
                     {course.title}
-                    <Tooltip.Arrow className="fill-gray-900" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
+                    <TooltipArrow className="fill-gray-900" />
+                  </TooltipContent>
+                </TooltipPortal>
+              </TooltipRoot>
 
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
+              <TooltipRoot>
+                <TooltipTrigger asChild>
                   <p className="text-xs text-gray-400 mb-2 line-clamp-1">
                     {course.subname || "Khóa học online"}
                   </p>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
+                </TooltipTrigger>
+                <TooltipPortal>
+                  <TooltipContent
                     className="bg-gray-900 text-white p-2 rounded-md text-sm shadow-lg max-w-[300px]"
                     sideOffset={5}
                   >
                     {course.subname || "Khóa học online"}
-                    <Tooltip.Arrow className="fill-gray-900" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
+                    <TooltipArrow className="fill-gray-900" />
+                  </TooltipContent>
+                </TooltipPortal>
+              </TooltipRoot>
 
               {/* Teacher info */}
               <div className="flex items-center gap-2 mb-2">
@@ -434,7 +446,7 @@ const CourseItem = memo(function CourseItem({ course }) {
                 <button
                   onClick={handleEnrollClick}
                   disabled={enrolling || verifying || !canEnroll}
-                  className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
+                  className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 hover-scale
                     ${
                       enrolling || verifying
                         ? "bg-gray-700 text-gray-400 cursor-not-allowed"
@@ -458,18 +470,20 @@ const CourseItem = memo(function CourseItem({ course }) {
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
-      </Tooltip.Provider>
+      </TooltipProvider>
 
-      <ConfirmEnrollModal
-        isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleConfirmEnroll}
-        course={course}
-        userBalance={userBalance}
-        loading={enrolling || verifying}
-      />
+      {showConfirmModal && (
+        <ConfirmEnrollModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleConfirmEnroll}
+          course={course}
+          userBalance={userBalance}
+          loading={enrolling || verifying}
+        />
+      )}
     </>
   );
 });

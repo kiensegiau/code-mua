@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Image, Hash, X } from "lucide-react";
-import { PaperClip } from "lucide-react/dist/esm/icons/paperclip";
+import { Image, Hash, X, Paperclip } from "lucide-react";
 
 const CreatePostForm = ({ onClose, onSubmit }) => {
   const [title, setTitle] = useState("");
@@ -188,7 +187,7 @@ const CreatePostForm = ({ onClose, onSubmit }) => {
                 key={index}
                 className="flex items-center bg-[#2a2a2a] text-gray-200 px-3 py-2 rounded"
               >
-                <PaperClip className="w-4 h-4 mr-2" />
+                <Paperclip className="w-4 h-4 mr-2" />
                 <span className="truncate max-w-[150px]">{file.name}</span>
                 <button
                   type="button"
@@ -205,7 +204,7 @@ const CreatePostForm = ({ onClose, onSubmit }) => {
               htmlFor="file-upload"
               className="cursor-pointer bg-[#2a2a2a] border border-gray-700 text-gray-200 px-4 py-2 rounded-lg hover:bg-[#333] transition-colors flex items-center"
             >
-              <PaperClip className="w-5 h-5 mr-2" />
+              <Paperclip className="w-5 h-5 mr-2" />
               <span>Đính kèm tệp</span>
               <input
                 id="file-upload"

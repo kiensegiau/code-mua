@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { memo } from "react";
 import SideNav from "../_components/SideNav";
 import Header from "../_components/Header";
 import { MobileMenuProvider } from "@/app/_context/MobileMenuContext";
@@ -15,12 +15,12 @@ function CoursePreviewLayout({ children }) {
           {" "}
           {/* pt-16 để tránh nội dung bị che bởi header cố định */}
           {/* Sidebar - cố định bên trái, ẩn trên mobile */}
-          <div className="hidden md:block w-64 fixed h-[calc(100vh-4rem)] top-16">
+          <div className="hidden md:block w-64 fixed h-[calc(100vh-4rem)] top-16 overflow-auto">
             <SideNav />
           </div>
           {/* Main content - đặc biệt cho trang xem trước khóa học */}
           <div className="w-full md:pl-64">
-            <main className="px-0 md:px-0 py-0 md:py-0">{children}</main>
+            <main>{children}</main>
           </div>
         </div>
       </div>
@@ -28,4 +28,4 @@ function CoursePreviewLayout({ children }) {
   );
 }
 
-export default CoursePreviewLayout;
+export default memo(CoursePreviewLayout);

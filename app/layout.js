@@ -6,6 +6,7 @@ import Toast from "./(router)/_components/Toast";
 import PageTransition from "./(router)/_components/PageTransition";
 import dynamic from "next/dynamic";
 import { ThemeProvider } from "./_context/ThemeContext";
+import QueryProvider from "./_providers/QueryProvider";
 
 // Tối ưu font loading với display swap
 const outfit = Outfit({
@@ -49,13 +50,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="vi">
       <body className={`${outfit.className} theme-bg theme-text`}>
-        <AuthProvider>
-          <ThemeProvider>
-            <AuthWrapper>
-              <PageTransition>{children}</PageTransition>
-            </AuthWrapper>
-          </ThemeProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <AuthWrapper>
+                <PageTransition>{children}</PageTransition>
+              </AuthWrapper>
+            </ThemeProvider>
+          </AuthProvider>
+        </QueryProvider>
         <Toast />
       </body>
     </html>

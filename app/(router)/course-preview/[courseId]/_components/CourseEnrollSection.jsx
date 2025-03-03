@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { doc, updateDoc, arrayUnion, getDoc, runTransaction, collection } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  arrayUnion,
+  getDoc,
+  runTransaction,
+  collection,
+} from "firebase/firestore";
 import { db } from "@/app/_utils/firebase";
 import ConfirmEnrollModal from "../../../courses/_components/ConfirmEnrollModal";
 
@@ -30,7 +37,9 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       // Kiểm tra cả hai trường hợp:
       // 1. c là string (courseId)
       // 2. c là object (có courseId)
-      return typeof c === "string" ? c === courseInfo.id : c.courseId === courseInfo.id;
+      return typeof c === "string"
+        ? c === courseInfo.id
+        : c.courseId === courseInfo.id;
     });
   }, [profile?.enrolledCourses, courseInfo?.id]);
 
@@ -78,7 +87,9 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       // Kiểm tra lại trạng thái đăng ký
       const isAlreadyEnrolled = profile.enrolledCourses?.some((c) => {
         const isEnrolled =
-          typeof c === "string" ? c === courseInfo.id : c.courseId === courseInfo.id;
+          typeof c === "string"
+            ? c === courseInfo.id
+            : c.courseId === courseInfo.id;
         return isEnrolled;
       });
 
@@ -257,7 +268,8 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
 
         <Button
           className={`w-full text-white mb-4
-            ${enrolling || verifying
+            ${
+              enrolling || verifying
                 ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
                 : !canEnroll && !isEnrolled
                 ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed"

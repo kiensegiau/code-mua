@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import ForumTopicList from "./ForumTopicList";
 import TopicDetail from "./TopicDetail";
 import CreatePostForm from "./CreatePostForm";
 
 const ForumContainer = ({ initialTopics = [] }) => {
-  console.log(
-    "ForumContainer được render với initialTopics:",
-    initialTopics.length
-  );
-
   const [topics, setTopics] = useState(initialTopics);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
@@ -48,334 +43,107 @@ const ForumContainer = ({ initialTopics = [] }) => {
     );
   }, []);
 
-  const handleSelectTopic = (topic) => {
-    console.log("ForumContainer: handleSelectTopic được gọi với topic:", topic);
-
-    // Kiểm tra xem topic có hợp lệ không
-    if (!topic || !topic.id) {
-      console.error("Topic không hợp lệ:", topic);
-      // Xóa alert
-      return;
-    }
-
-    if (topic) {
-      console.log("Topic được chọn có id:", topic.id, "và title:", topic.title);
-
-      // Tạo một bản sao hoàn toàn mới của topic để đảm bảo state cập nhật đúng
-      const newSelectedTopic = JSON.parse(JSON.stringify(topic));
-      console.log(
-        "Đang cập nhật selectedTopic với topic mới:",
-        newSelectedTopic.id
-      );
-
-      // Log thông tin để debug
-      setDebugInfo((prev) => ({
-        ...prev,
-        lastAction: "select_topic",
-        lastTopicId: topic.id,
-      }));
-
-      // Cập nhật state
-      setSelectedTopic(newSelectedTopic);
-      setRenderKey(Date.now());
-
-      console.log(
-        "Đã cập nhật selectedTopic, giá trị mới là:",
-        newSelectedTopic.id
-      );
-      console.log("Đã cập nhật renderKey:", renderKey);
-    } else {
-      console.log("CẢNH BÁO: topic được truyền vào là null hoặc undefined");
-      // Xóa alert
-    }
-  };
-
-  const handleCloseDetail = () => {
-    console.log("Đóng chi tiết bài viết");
-
-    // Log thông tin để debug
-    setDebugInfo((prev) => ({
-      ...prev,
-      lastAction: "close_detail",
-      lastTopicId: selectedTopic ? selectedTopic.id : null,
-    }));
-
-    // Log thêm thông tin để debug
-    console.log(
-      "handleCloseDetail được gọi - chuẩn bị đặt selectedTopic về null"
+  // Sử dụng useCallback để tránh tạo lại hàm mỗi lần render
+  const handleSelectTopic = useCallback((topic) => {
+    setSelectedTopic(topic);
+    // Đánh dấu là đã đọc
+    setTopics((prevTopics) =>
+      prevTopics.map((t) => {
+        if (t.id === topic.id) {
+          return { ...t, isRead: true };
+        }
+        return t;
+      })
     );
-    console.log(
-      "selectedTopic trước khi đặt null:",
-      selectedTopic ? selectedTopic.id : "không có"
-    );
+  }, []);
 
-    // Đặt selectedTopic về null và cập nhật renderKey
+  const handleCloseDetail = useCallback(() => {
     setSelectedTopic(null);
-    setRenderKey(Date.now());
+  }, []);
 
-    // Log sau khi đã cập nhật
-    console.log(
-      "Đã đặt selectedTopic về null và cập nhật renderKey:",
-      Date.now()
-    );
-  };
-
-  const handleCreatePost = () => {
+  const handleCreatePost = useCallback(() => {
     setIsCreatingPost(true);
-    setRenderKey(Date.now());
+  }, []);
 
-    // Log thông tin để debug
-    setDebugInfo((prev) => ({
-      ...prev,
-      lastAction: "create_post",
-    }));
-  };
-
-  const handleCloseCreatePost = () => {
+  const handleCloseCreatePost = useCallback(() => {
     setIsCreatingPost(false);
-    setRenderKey(Date.now());
+  }, []);
 
-    // Log thông tin để debug
-    setDebugInfo((prev) => ({
-      ...prev,
-      lastAction: "close_create_post",
-    }));
-  };
+  const handleSubmitPost = useCallback((postData) => {
+    // Tạo ID mới cho bài đăng
+    const newPostId = `post-${Date.now()}`;
 
-  const handleSubmitPost = (postData) => {
-    const newTopic = {
-      id: Date.now().toString(),
-      title: postData.title,
-      author: "Người dùng hiện tại",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      time: "Vừa xong",
-      category: postData.category,
-      replies: 0,
-      views: 0,
+    // Tạo bài đăng mới với dữ liệu từ form
+    const newPost = {
+      id: newPostId,
+      ...postData,
+      author: "Người dùng hiện tại", // Giả sử thông tin người dùng
+      avatar: "/avatars/student1.jpg", // Giả sử avatar người dùng
+      date: new Date().toISOString(),
       likes: 0,
-      tags: postData.tags,
-      attachments: postData.attachedFiles.length,
-      content: postData.content,
+      comments: 0,
+      isRead: true,
     };
 
-    setTopics([newTopic, ...topics]);
+    // Thêm bài đăng mới vào danh sách
+    setTopics((prevTopics) => [newPost, ...prevTopics]);
+
+    // Đóng form tạo bài đăng
     setIsCreatingPost(false);
-    setRenderKey(Date.now());
 
-    // Log thông tin để debug
-    setDebugInfo((prev) => ({
-      ...prev,
-      lastAction: "submit_post",
-      lastTopicId: newTopic.id,
-    }));
-  };
+    // Tùy chọn: Chọn bài đăng vừa tạo để xem chi tiết
+    setSelectedTopic(newPost);
+  }, []);
 
-  const handleSearch = (query) => {
+  const handleSearch = useCallback((query) => {
     setSearchQuery(query);
+  }, []);
 
-    // Log thông tin để debug
-    setDebugInfo((prev) => ({
-      ...prev,
-      lastAction: "search",
-      searchQuery: query,
-    }));
-  };
+  // Lọc danh sách topic dựa trên search query
+  const filteredTopics = topics.filter((topic) => {
+    if (!searchQuery) return true;
 
-  const handleLike = () => {
-    if (selectedTopic) {
-      const updatedTopics = topics.map((topic) => {
-        if (topic.id === selectedTopic.id) {
-          return { ...topic, likes: topic.likes + 1 };
-        }
-        return topic;
-      });
-      setTopics(updatedTopics);
-      setSelectedTopic({ ...selectedTopic, likes: selectedTopic.likes + 1 });
-      setRenderKey(Date.now());
+    return (
+      topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      topic.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
-      // Log thông tin để debug
-      setDebugInfo((prev) => ({
-        ...prev,
-        lastAction: "like",
-        lastTopicId: selectedTopic.id,
-      }));
-    }
-  };
-
-  const filteredTopics = searchQuery
-    ? topics.filter(
-        (topic) =>
-          topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          topic.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (topic.tags &&
-            topic.tags.some((tag) =>
-              tag.toLowerCase().includes(searchQuery.toLowerCase())
-            ))
-      )
-    : topics;
-
-  console.log(
-    "ForumContainer sẽ render, selectedTopic:",
-    selectedTopic ? selectedTopic.id : "null"
+  return (
+    <div className="flex-1">
+      {selectedTopic ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-[#1f1f1f] rounded-xl p-4 md:p-6"
+        >
+          <TopicDetail topic={selectedTopic} onClose={handleCloseDetail} />
+        </motion.div>
+      ) : isCreatingPost ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-[#1f1f1f] rounded-xl p-4 md:p-6"
+        >
+          <CreatePostForm
+            onSubmit={handleSubmitPost}
+            onCancel={handleCloseCreatePost}
+          />
+        </motion.div>
+      ) : (
+        <ForumTopicList
+          topics={filteredTopics}
+          onSelectTopic={handleSelectTopic}
+          onCreatePost={handleCreatePost}
+          onSearch={handleSearch}
+          searchQuery={searchQuery}
+        />
+      )}
+    </div>
   );
-  console.log("ForumContainer sẽ render, topics length:", topics.length);
-  console.log("ForumContainer renderKey:", renderKey);
-  console.log("ForumContainer debug info:", debugInfo);
-
-  // Quyết định component nào sẽ được render
-  if (selectedTopic) {
-    console.log("Hiển thị chi tiết cho topic id:", selectedTopic.id);
-
-    // Kiểm tra và xác thực handleCloseDetail
-    console.log(
-      "handleCloseDetail là function:",
-      typeof handleCloseDetail === "function"
-    );
-
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div
-          key={renderKey}
-          className="forum-container bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
-        >
-          <motion.div
-            key={`detail-${selectedTopic.id}-${renderKey}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <TopicDetail
-              topic={selectedTopic}
-              onCloseDetail={handleCloseDetail}
-              onLike={handleLike}
-              onSavePost={() => {
-                console.log("Lưu bài viết:", selectedTopic.id);
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "save_post",
-                  lastTopicId: selectedTopic.id,
-                }));
-              }}
-              onReportPost={() => {
-                console.log("Báo cáo bài viết:", selectedTopic.id);
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "report_post",
-                  lastTopicId: selectedTopic.id,
-                }));
-              }}
-              onShare={() => {
-                console.log("Chia sẻ bài viết:", selectedTopic.id);
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "share_post",
-                  lastTopicId: selectedTopic.id,
-                }));
-              }}
-              onDownloadResource={() => {
-                console.log(
-                  "Tải xuống tài nguyên từ bài viết:",
-                  selectedTopic.id
-                );
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "download_resource",
-                  lastTopicId: selectedTopic.id,
-                }));
-              }}
-              onSubmitComment={(comment) => {
-                console.log(
-                  "Gửi bình luận cho bài viết:",
-                  selectedTopic.id,
-                  comment
-                );
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "submit_comment",
-                  lastTopicId: selectedTopic.id,
-                }));
-              }}
-              onMessage={() => {
-                console.log("Gửi tin nhắn về bài viết:", selectedTopic.id);
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "message",
-                  lastTopicId: selectedTopic.id,
-                }));
-              }}
-            />
-          </motion.div>
-        </div>
-      </div>
-    );
-  } else if (isCreatingPost) {
-    console.log("Hiển thị form tạo bài viết");
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div
-          key={renderKey}
-          className="forum-container bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
-        >
-          <motion.div
-            key={`create-${renderKey}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <CreatePostForm
-              onClose={handleCloseCreatePost}
-              onSubmit={handleSubmitPost}
-            />
-          </motion.div>
-        </div>
-      </div>
-    );
-  } else {
-    console.log("Hiển thị danh sách topic");
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div
-          key={renderKey}
-          className="forum-container bg-[#111111] rounded-2xl shadow-xl overflow-hidden"
-        >
-          <motion.div
-            key={`list-${renderKey}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <ForumTopicList
-              topics={filteredTopics}
-              onSelectTopic={handleSelectTopic}
-              onCreatePost={handleCreatePost}
-              onSearch={handleSearch}
-              onViewMorePosts={() => {
-                console.log("Xem thêm bài viết");
-
-                // Log thông tin để debug
-                setDebugInfo((prev) => ({
-                  ...prev,
-                  lastAction: "view_more_posts",
-                }));
-              }}
-            />
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
 };
 
-export default ForumContainer;
+// Sử dụng memo để tránh re-render không cần thiết
+export default memo(ForumContainer);

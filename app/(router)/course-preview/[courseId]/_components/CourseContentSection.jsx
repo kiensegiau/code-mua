@@ -1,144 +1,207 @@
-import React, { useState, useEffect } from 'react'
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/app/_utils/firebase';
+import React, { useState, useEffect, useCallback, memo } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/app/_utils/firebase";
 
-function CourseContentSection({ courseInfo, isUserAlreadyEnrolled, watchMode, setActiveLesson }) {
+function CourseContentSection({
+  courseInfo,
+  isUserAlreadyEnrolled,
+  watchMode,
+  setActiveLesson,
+}) {
   const [activeChapterIndex, setActiveChapterIndex] = useState(null);
   const [activeLessonId, setActiveLessonId] = useState(null);
 
+  // Thiết lập ban đầu khi courseInfo thay đổi
   useEffect(() => {
     if (courseInfo && courseInfo.chapters && courseInfo.chapters.length > 0) {
       setActiveChapterIndex(0);
-      if (courseInfo.chapters[0].lessons && courseInfo.chapters[0].lessons.length > 0) {
+      if (
+        courseInfo.chapters[0].lessons &&
+        courseInfo.chapters[0].lessons.length > 0
+      ) {
         handleLessonClick(0, courseInfo.chapters[0].lessons[0]);
       }
     }
   }, [courseInfo]);
 
-  const handleLessonClick = async (chapterIndex, lesson) => {
-    console.log('Lesson clicked:', JSON.stringify(lesson, null, 2));
-    setActiveChapterIndex(chapterIndex);
-    setActiveLessonId(lesson.id);
-
-    const fullLessonData = await getLessonData(courseInfo.id, courseInfo.chapters[chapterIndex].id, lesson.id);
-    
-    if (fullLessonData && fullLessonData.files && fullLessonData.files.length > 0) {
-      const videoFile = fullLessonData.files.find(file => file.type.startsWith('video/'));
-      if (videoFile) {
-        setActiveLesson({...lesson, videoUrl: videoFile.firebaseUrl || videoFile.driveUrl});
-      } else {
-        setActiveLesson(lesson);
-      }
-    } else {
-      setActiveLesson(lesson);
-    }
-  };
-
-  const getLessonData = async (courseId, chapterId, lessonId) => {
+  // Sử dụng useCallback để tối ưu hóa hàm
+  const getLessonData = useCallback(async (courseId, chapterId, lessonId) => {
     try {
-      const lessonRef = doc(db, 'courses', courseId, 'chapters', chapterId, 'lessons', lessonId);
+      const lessonRef = doc(
+        db,
+        "courses",
+        courseId,
+        "chapters",
+        chapterId,
+        "lessons",
+        lessonId
+      );
       const lessonSnap = await getDoc(lessonRef);
       if (lessonSnap.exists()) {
         return lessonSnap.data();
       } else {
-        console.error('Không tìm thấy dữ liệu bài học');
         return null;
       }
     } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu bài học:', error);
+      console.error("Lỗi khi lấy dữ liệu bài học:", error);
       return null;
     }
-  };
+  }, []);
+
+  // Xử lý khi click vào bài học
+  const handleLessonClick = useCallback(
+    async (chapterIndex, lesson) => {
+      setActiveChapterIndex(chapterIndex);
+      setActiveLessonId(lesson.id);
+
+      const fullLessonData = await getLessonData(
+        courseInfo.id,
+        courseInfo.chapters[chapterIndex].id,
+        lesson.id
+      );
+
+      if (
+        fullLessonData &&
+        fullLessonData.files &&
+        fullLessonData.files.length > 0
+      ) {
+        const videoFile = fullLessonData.files.find((file) =>
+          file.type.startsWith("video/")
+        );
+        if (videoFile) {
+          setActiveLesson({
+            ...lesson,
+            videoUrl: videoFile.firebaseUrl || videoFile.driveUrl,
+          });
+        } else {
+          setActiveLesson(lesson);
+        }
+      } else {
+        setActiveLesson(lesson);
+      }
+    },
+    [courseInfo, getLessonData, setActiveLesson]
+  );
+
+  // Kiểm tra xem lesson có bị khóa không
+  const isLessonLocked = useCallback(
+    (lesson) => {
+      return !isUserAlreadyEnrolled && !lesson?.isFree;
+    },
+    [isUserAlreadyEnrolled]
+  );
+
+  // Đếm tổng số bài học
+  const totalLessons = React.useMemo(() => {
+    if (!courseInfo?.chapters) return 0;
+    return courseInfo.chapters.reduce((total, chapter) => {
+      return total + (chapter.lessons?.length || 0);
+    }, 0);
+  }, [courseInfo?.chapters]);
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
-
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">
-        Nội dung khóa học <f9 />
-      </h2>
-      {courseInfo &&
-      courseInfo.chapters &&
-      Array.isArray(courseInfo.chapters) ? (
-        <div className="space-y-2">
-          {courseInfo.chapters.map((chapter, chapterIndex) => (
-            <div
-              key={chapter.id}
-              className="border border-gray-200 rounded-md overflow-hidden"
-            >
-              <div
-                className="py-2 px-3 bg-gray-50 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-all"
-                onClick={() =>
-                  setActiveChapterIndex(
-                    activeChapterIndex === chapterIndex ? null : chapterIndex
-                  )
-                }
-              >
-                <span className="flex items-center space-x-2">
-                  <span className="h-6 w-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-semibold">
-                    {chapterIndex + 1}
-                  </span>
-                  <span className="font-medium text-gray-700">
-                    {chapter.title}
-                  </span>
-                </span>
-                <span className="text-sm text-gray-500">
-                  {chapter.lessons.length} bài học
-                </span>
-                {activeChapterIndex === chapterIndex ? "▼" : "▶"}
-              </div>
-              {activeChapterIndex === chapterIndex && (
-                <div className="p-3 bg-white">
-                  {chapter.lessons &&
-                    Array.isArray(chapter.lessons) &&
-                    chapter.lessons.map((lesson, lessonIndex) => (
-                      <div
-                        key={lesson.id}
-                        className={`flex items-center space-x-3 py-2 px-3 rounded-md cursor-pointer transition-all ${
-                          activeLessonId === lesson.id
-                            ? "bg-blue-50"
-                            : "hover:bg-gray-50"
-                        } ${
-                          lesson.isLocked && !isUserAlreadyEnrolled
-                            ? "opacity-50"
-                            : ""
-                        }`}
-                        onClick={() => handleLessonClick(chapterIndex, lesson)}
-                      >
-                        <span className="h-5 w-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-semibold">
-                          {lesson.isLocked && !isUserAlreadyEnrolled
-                            ? "🔒"
-                            : "✓"}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {lesson.title}
-                        </span>
-                        <span className="text-xs text-gray-400 ml-auto">
-                          {lesson.duration} phút
-                        </span>
-                        {watchMode && (
-                          <>
-                            <span className="text-xs text-gray-400">
-                              ↓ {lesson.downloads}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              👁 {lesson.views}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          ))}
+    <div className="bg-[#1a1a1a] rounded-xl p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold">Nội dung khóa học</h3>
+        <div className="text-sm text-gray-400">
+          {courseInfo?.chapters?.length || 0} chương • {totalLessons} bài học
         </div>
-      ) : (
-        <p className="text-gray-500 italic">
-          Không có nội dung cho khóa học này.
-        </p>
-      )}
+      </div>
+
+      <div className="space-y-4">
+        {courseInfo?.chapters?.map((chapter, chapterIndex) => (
+          <div
+            key={chapter.id}
+            className="border border-gray-700 rounded-lg overflow-hidden"
+          >
+            <div className="bg-[#222] p-4">
+              <h4 className="font-medium">
+                {chapter.order}. {chapter.title}
+              </h4>
+              <div className="text-sm text-gray-400 mt-1">
+                {chapter.lessons?.length || 0} bài học
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-700">
+              {chapter.lessons?.map((lesson) => (
+                <div
+                  key={lesson.id}
+                  onClick={() =>
+                    !isLessonLocked(lesson) &&
+                    handleLessonClick(chapterIndex, lesson)
+                  }
+                  className={`p-4 flex justify-between items-center ${
+                    activeLessonId === lesson.id
+                      ? "bg-blue-900/30"
+                      : "hover:bg-[#222]"
+                  } ${
+                    isLessonLocked(lesson)
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      {isLessonLocked(lesson) ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect
+                            x="3"
+                            y="11"
+                            width="18"
+                            height="11"
+                            rx="2"
+                            ry="2"
+                          ></rect>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                      ) : lesson.isCompleted ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                      ) : (
+                        <span className="text-sm">{lesson.order}</span>
+                      )}
+                    </div>
+                    <span className="ml-3">{lesson.title}</span>
+                    {lesson.isFree && (
+                      <span className="ml-2 text-xs bg-green-900/30 text-green-400 px-2 py-0.5 rounded">
+                        Miễn phí
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {lesson.duration || ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-export default CourseContentSection
+export default memo(CourseContentSection);

@@ -299,7 +299,7 @@ export default function CommunityPage() {
   };
 
   const particlesLoaded = async (container) => {
-    console.log("Particles container loaded", container);
+    // Particles loaded
   };
 
   const particlesConfig = {
