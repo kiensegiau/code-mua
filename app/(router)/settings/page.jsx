@@ -46,6 +46,8 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [isViewPackagesModalOpen, setIsViewPackagesModalOpen] = useState(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
 
   // State cho các tùy chọn thông báo
   const [notificationSettings, setNotificationSettings] = useState([
@@ -850,7 +852,10 @@ export default function SettingsPage() {
                           </p>
                         </div>
                       </div>
-                      <button className="bg-[#ff4d4f] text-white px-3 py-1.5 rounded-full hover:bg-[#ff4d4f]/90 transition-colors shadow-sm">
+                      <button
+                        className="bg-[#ff4d4f] text-white px-3 py-1.5 rounded-full hover:bg-[#ff4d4f]/90 transition-colors shadow-sm"
+                        onClick={() => setIsViewPackagesModalOpen(true)}
+                      >
                         Xem các gói
                       </button>
                     </div>
@@ -893,7 +898,10 @@ export default function SettingsPage() {
                         <p className="text-sm text-gray-400 mb-6">
                           Thêm thẻ hoặc ví điện tử để thanh toán
                         </p>
-                        <button className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors">
+                        <button
+                          className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed opacity-60"
+                          disabled
+                        >
                           Thêm phương thức
                         </button>
                       </div>
@@ -934,22 +942,26 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex items-center gap-4 pt-6">
-                    <button className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors shadow-sm flex items-center gap-2">
-                      <span>Mua gói Premium</span>
+                    <button
+                      className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors shadow-sm flex items-center gap-2"
+                      onClick={() => setIsViewPackagesModalOpen(true)}
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="lucide"
                       >
-                        <polyline points="9 18 15 12 9 6"></polyline>
+                        <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path>
+                        <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+                        <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path>
                       </svg>
+                      Mua gói Premium
                     </button>
                   </div>
                 </div>
@@ -958,6 +970,443 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Xem Các Gói */}
+      {isViewPackagesModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Các Gói Dịch Vụ</h3>
+              <button
+                onClick={() => setIsViewPackagesModalOpen(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Gói Cơ Bản */}
+              <div className="border rounded-lg p-4 dark:border-gray-700">
+                <h4 className="font-semibold text-lg mb-2">Gói Cơ Bản</h4>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">
+                  Truy cập cơ bản đến nền tảng học tập
+                </p>
+                <div className="text-2xl font-bold mb-3">Miễn phí</div>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Truy cập nội dung miễn phí</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Tham gia diễn đàn cộng đồng</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>Truy cập khóa học cao cấp</span>
+                  </li>
+                </ul>
+                <div className="text-center">
+                  <button className="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded-lg font-medium">
+                    Gói hiện tại
+                  </button>
+                </div>
+              </div>
+
+              {/* Gói Premium Tháng */}
+              <div className="border-2 border-[#ff4d4f] rounded-lg p-4 relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#ff4d4f] text-white px-3 py-1 rounded-full text-sm">
+                  Phổ biến
+                </div>
+                <h4 className="font-semibold text-lg mb-2 mt-2">
+                  Gói Premium Tháng
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">
+                  Truy cập đầy đủ tất cả khóa học
+                </p>
+                <div className="text-2xl font-bold mb-3">
+                  199.000đ <span className="text-sm font-normal">/tháng</span>
+                </div>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Tất cả tính năng của gói Cơ bản</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Truy cập không giới hạn tất cả khóa học</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Tải xuống tài liệu học tập</span>
+                  </li>
+                </ul>
+                <div className="text-center">
+                  <button
+                    onClick={() => {
+                      setIsViewPackagesModalOpen(false);
+                      setIsPremiumModalOpen(true);
+                    }}
+                    className="w-full py-2 bg-[#ff4d4f] text-white rounded-lg font-medium hover:bg-[#ff4d4f]/90 transition-colors"
+                  >
+                    Nâng cấp ngay
+                  </button>
+                </div>
+              </div>
+
+              {/* Gói Premium Năm */}
+              <div className="border-2 border-[#ff4d4f] rounded-lg p-4 relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#1e9e3e] text-white px-3 py-1 rounded-full text-sm">
+                  Tiết kiệm
+                </div>
+                <h4 className="font-semibold text-lg mb-2 mt-2">
+                  Gói Premium Năm
+                </h4>
+                <p className="text-gray-600 dark:text-gray-300 mb-3">
+                  Tiết kiệm 42% so với gói tháng
+                </p>
+                <div className="text-2xl font-bold mb-3">
+                  699.000đ <span className="text-sm font-normal">/năm</span>
+                </div>
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Tất cả tính năng của gói Cơ bản</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Truy cập không giới hạn tất cả khóa học</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Ưu tiên hỗ trợ kỹ thuật</span>
+                  </li>
+                </ul>
+                <div className="text-center">
+                  <button
+                    onClick={() => {
+                      setIsViewPackagesModalOpen(false);
+                      setIsPremiumModalOpen(true);
+                    }}
+                    className="w-full py-2 bg-[#ff4d4f] text-white rounded-lg font-medium hover:bg-[#ff4d4f]/90 transition-colors"
+                  >
+                    Nâng cấp ngay
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Mua Gói Premium */}
+      {isPremiumModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Nâng Cấp Lên Premium</h3>
+              <button
+                onClick={() => setIsPremiumModalOpen(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="bg-[#ff4d4f]/10 p-4 rounded-lg mb-4">
+                <div className="font-semibold text-lg text-center mb-2">
+                  Chọn Gói Premium
+                </div>
+                <p className="text-center text-gray-600 dark:text-gray-300 mb-4">
+                  Chọn gói phù hợp với nhu cầu của bạn
+                </p>
+
+                <div className="space-y-3 mb-2">
+                  <div className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-700">
+                    <input
+                      type="radio"
+                      name="plan-type"
+                      id="monthly"
+                      className="accent-[#ff4d4f]"
+                      defaultChecked
+                    />
+                    <label
+                      htmlFor="monthly"
+                      className="flex items-center justify-between cursor-pointer w-full"
+                    >
+                      <div>
+                        <span className="font-medium">Gói Tháng</span>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Thanh toán hàng tháng
+                        </p>
+                      </div>
+                      <span className="font-semibold">199.000đ</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 border-2 border-[#1e9e3e] rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 relative">
+                    <div className="absolute -top-3 right-3 bg-[#1e9e3e] text-white px-2 py-0.5 rounded text-xs">
+                      Tiết kiệm 42%
+                    </div>
+                    <input
+                      type="radio"
+                      name="plan-type"
+                      id="yearly"
+                      className="accent-[#1e9e3e]"
+                    />
+                    <label
+                      htmlFor="yearly"
+                      className="flex items-center justify-between cursor-pointer w-full"
+                    >
+                      <div>
+                        <span className="font-medium">Gói Năm</span>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Thanh toán một lần
+                        </p>
+                      </div>
+                      <span className="font-semibold">699.000đ</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Chọn phương thức thanh toán
+                </label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-700">
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      id="momo"
+                      className="accent-[#ff4d4f]"
+                      defaultChecked
+                    />
+                    <label
+                      htmlFor="momo"
+                      className="flex items-center gap-2 cursor-pointer w-full"
+                    >
+                      <img
+                        src="/images/momo-logo.png"
+                        alt="MoMo"
+                        className="w-6 h-6"
+                      />
+                      <span>MoMo</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-700">
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      id="zalopay"
+                      className="accent-[#ff4d4f]"
+                    />
+                    <label
+                      htmlFor="zalopay"
+                      className="flex items-center gap-2 cursor-pointer w-full"
+                    >
+                      <img
+                        src="/images/zalopay-logo.png"
+                        alt="ZaloPay"
+                        className="w-6 h-6"
+                      />
+                      <span>ZaloPay</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-700">
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      id="bank-transfer"
+                      className="accent-[#ff4d4f]"
+                    />
+                    <label
+                      htmlFor="bank-transfer"
+                      className="flex items-center gap-2 cursor-pointer w-full"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                      </svg>
+                      <span>Chuyển khoản ngân hàng</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsPremiumModalOpen(false)}
+                className="mr-2 px-4 py-2 border border-gray-300 rounded-lg dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Hủy
+              </button>
+              <button className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors">
+                Thanh toán ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

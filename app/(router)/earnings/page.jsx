@@ -102,6 +102,16 @@ function EarningsPage() {
       answer:
         "Cookie theo dõi của chúng tôi có hiệu lực trong 30 ngày. Điều này có nghĩa là nếu người dùng nhấp vào liên kết của bạn và hoàn tất việc mua hàng trong vòng 30 ngày, bạn vẫn sẽ nhận được hoa hồng.",
     },
+    {
+      question: "Code MUA có đảm bảo tính minh bạch không?",
+      answer:
+        "Tuyệt đối! Chúng tôi cam kết 100% minh bạch trong toàn bộ quá trình tính hoa hồng. Bạn có thể theo dõi mọi giao dịch, lịch sử thanh toán và doanh số theo thời gian thực thông qua bảng điều khiển đối tác. Ngoài ra, chúng tôi cung cấp báo cáo chi tiết hàng tháng về hiệu suất giới thiệu của bạn.",
+    },
+    {
+      question: "Có cam kết pháp lý nào bảo vệ tôi khi làm đối tác không?",
+      answer:
+        "Có, khi tham gia làm đối tác, bạn sẽ được ký hợp đồng hợp tác chính thức với Code MUA. Hợp đồng này đảm bảo quyền lợi của bạn, quy định rõ mức hoa hồng 50%, chu kỳ thanh toán, và các điều khoản bảo vệ. Chúng tôi tuân thủ nghiêm ngặt tất cả quy định về bảo mật thông tin và quyền riêng tư theo pháp luật Việt Nam hiện hành.",
+    },
   ];
 
   const testimonials = [
@@ -184,7 +194,7 @@ function EarningsPage() {
       </div>
 
       {/* Main content - expands to full width on mobile, accounts for sidebar on desktop */}
-      <div className="w-full md:pl-64 flex-1 z-10">
+      <div className="w-full flex-1 z-10">
         <main className="w-full px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
           <div className="max-w-[1200px] mx-auto">
             {/* Hero Section */}
@@ -206,7 +216,7 @@ function EarningsPage() {
                   className="inline-block mb-4 sm:mb-6"
                 >
                   <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#ff4d4f]/10 text-[#ff4d4f] rounded-full text-xs sm:text-sm font-medium">
-                    Chương trình đối tác 2023
+                    Chương trình đối tác 2025
                   </span>
                 </motion.div>
                 <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-[#ff4d4f] to-[#f5222d] bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight px-2 sm:px-3">
@@ -291,6 +301,104 @@ function EarningsPage() {
                   <div className="text-xs sm:text-sm md:text-base text-gray-300 font-medium">
                     Đối tác tích cực
                   </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Cam kết chất lượng - Phần mới để tăng độ tin cậy */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              className="mb-12 sm:mb-16 md:mb-20 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 border border-white/5"
+            >
+              <div className="text-center mb-8 sm:mb-10">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                  Cam Kết Chất Lượng
+                </h2>
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                  Chúng tôi tự hào về tiêu chuẩn cao trong mọi khía cạnh hoạt
+                  động
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="bg-[#ff4d4f]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                    <Award className="w-6 h-6 text-[#ff4d4f]" />
+                  </div>
+                  <h3 className="text-white font-semibold text-lg mb-2">
+                    Chương Trình Được Công Nhận
+                  </h3>
+                  <p className="text-gray-300 text-sm">
+                    Chương trình đối tác của chúng tôi đã được hơn 10.000 người
+                    tham gia và công nhận về tính minh bạch và hiệu quả.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="bg-blue-500/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-6 h-6 text-blue-500"
+                    >
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  </div>
+                  <h3 className="text-white font-semibold text-lg mb-2">
+                    Thanh Toán Đảm Bảo
+                  </h3>
+                  <p className="text-gray-300 text-sm">
+                    Hệ thống thanh toán an toàn, tự động và đảm bảo bạn nhận
+                    được tiền hoa hồng đúng hạn vào ngày 15 hàng tháng.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="bg-green-500/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-6 h-6 text-green-500"
+                    >
+                      <path d="M20 7h-9"></path>
+                      <path d="M14 17H5"></path>
+                      <circle cx="17" cy="17" r="3"></circle>
+                      <circle cx="7" cy="7" r="3"></circle>
+                    </svg>
+                  </div>
+                  <h3 className="text-white font-semibold text-lg mb-2">
+                    Hỗ Trợ Riêng Biệt
+                  </h3>
+                  <p className="text-gray-300 text-sm">
+                    Đội ngũ hỗ trợ đối tác chuyên nghiệp 24/7, giúp bạn tối ưu
+                    hóa chiến lược tiếp thị và tăng doanh thu.
+                  </p>
                 </motion.div>
               </div>
             </motion.div>
@@ -492,6 +600,81 @@ function EarningsPage() {
               </div>
             </motion.div>
 
+            {/* Đối tác tin cậy - Thêm phần này để tăng độ tin cậy */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              className="mb-12 sm:mb-16 md:mb-20"
+            >
+              <div className="text-center mb-8 sm:mb-10">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                  Đối Tác Tin Cậy
+                </h2>
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
+                  Gia nhập cộng đồng đối tác uy tín từ các tổ chức giáo dục hàng
+                  đầu
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
+                >
+                  <div className="text-center">
+                    <div className="font-bold text-xl text-white mb-1">
+                      Đại học ABC
+                    </div>
+                    <div className="text-xs text-gray-400">Đối tác từ 2020</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
+                >
+                  <div className="text-center">
+                    <div className="font-bold text-xl text-white mb-1">
+                      Viện CNTT XYZ
+                    </div>
+                    <div className="text-xs text-gray-400">Đối tác từ 2021</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
+                >
+                  <div className="text-center">
+                    <div className="font-bold text-xl text-white mb-1">
+                      Trung tâm STEM
+                    </div>
+                    <div className="text-xs text-gray-400">Đối tác từ 2022</div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
+                >
+                  <div className="text-center">
+                    <div className="font-bold text-xl text-white mb-1">
+                      Tổ chức DEF
+                    </div>
+                    <div className="text-xs text-gray-400">Đối tác từ 2022</div>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="mt-10 text-center">
+                <span className="text-sm text-gray-400">
+                  Và hơn 500+ đối tác khác trên toàn quốc
+                </span>
+              </div>
+            </motion.div>
+
             {/* FAQ Accordion */}
             <motion.div
               variants={containerVariants}
@@ -540,6 +723,163 @@ function EarningsPage() {
                     )}
                   </motion.div>
                 ))}
+              </div>
+            </motion.div>
+
+            {/* Chứng nhận & Bảo đảm - Thêm phần này để tăng độ tin cậy */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              className="mb-12 sm:mb-16 md:mb-20 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-white/5"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3">
+                  Chứng Nhận & Bảo Đảm
+                </h2>
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                  Sự tin tưởng của đối tác là ưu tiên hàng đầu của chúng tôi
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="bg-purple-500/20 w-12 h-12 rounded-lg flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-6 h-6 text-purple-400"
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                      </svg>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">
+                      Đảm Bảo Hoàn Tiền
+                    </h3>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Chúng tôi cam kết hoàn tiền 100% cho đối tác trong trường
+                    hợp khóa học không đạt chất lượng. Học viên được bạn giới
+                    thiệu cũng được đảm bảo hoàn tiền trong 30 ngày đầu tiên nếu
+                    không hài lòng.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="bg-yellow-500/20 w-12 h-12 rounded-lg flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-6 h-6 text-yellow-400"
+                      >
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                        <line x1="4" y1="22" x2="4" y2="15"></line>
+                      </svg>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">
+                      Chứng Nhận Chính Thức
+                    </h3>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Code MUA đã được chứng nhận bởi Bộ Giáo dục & Đào tạo và các
+                    tổ chức giáo dục hàng đầu. Tất cả đối tác sẽ nhận được chứng
+                    chỉ đối tác chính thức có thể sử dụng trên các nền tảng của
+                    mình.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="bg-green-500/20 w-12 h-12 rounded-lg flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-6 h-6 text-green-400"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">
+                      Hỗ Trợ Đối Tác VIP
+                    </h3>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Đối tác Code MUA được hưởng dịch vụ hỗ trợ VIP 24/7, bao gồm
+                    quản lý tài khoản riêng và tư vấn chiến lược marketing cho
+                    từng đối tác. Chúng tôi hỗ trợ bạn trong mọi bước của quá
+                    trình.
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="bg-[#ff4d4f]/20 w-12 h-12 rounded-lg flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-6 h-6 text-[#ff4d4f]"
+                      >
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                      </svg>
+                    </div>
+                    <h3 className="text-white font-semibold text-lg">
+                      Hợp Đồng Pháp Lý Chặt Chẽ
+                    </h3>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Mỗi đối tác đều được ký kết hợp đồng pháp lý đầy đủ, bảo vệ
+                    quyền lợi và đảm bảo mức hoa hồng 50%. Hợp đồng của chúng
+                    tôi đã được kiểm duyệt bởi các luật sư chuyên ngành để đảm
+                    bảo tính pháp lý.
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Image, PaperClip, Hash, X } from "lucide-react";
+import { Image, Hash, X } from "lucide-react";
+import { PaperClip } from "lucide-react/dist/esm/icons/paperclip";
 
 const CreatePostForm = ({ onClose, onSubmit }) => {
   const [title, setTitle] = useState("");
