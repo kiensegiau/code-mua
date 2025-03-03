@@ -451,6 +451,20 @@ body {
   color: #555 !important;
 }
 
+/* Thêm style hover cho sidebar trong light theme */
+[data-theme="light"] .hover\:bg-\[var\(--hover-color\)\]:hover {
+  background-color: #e9ecef !important;
+  opacity: 1 !important;
+}
+
+[data-theme="light"] .hover\:text-\[\#ff4d4f\]:hover {
+  color: #ff4d4f !important;
+}
+
+[data-theme="light"] .bg-\[\#ff4d4f\]\/10 {
+  background-color: rgba(255, 77, 79, 0.1) !important;
+}
+
 /* Improve contrast in light theme */
 [data-theme="light"] .bg-[#1f1f1f],
 [data-theme="light"] .bg-[#141414],

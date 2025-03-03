@@ -820,48 +820,136 @@ export default function SettingsPage() {
                   <h3 className="text-xl font-semibold">
                     Thông tin thanh toán
                   </h3>
-                  <div className="p-4 bg-[var(--card-background)] rounded-lg border border-green-500/30">
-                    <div className="flex items-center space-x-3 text-green-500">
-                      <CheckCircle2 className="w-5 h-5" />
-                      <p className="font-medium">Gói Premium - Còn 280 ngày</p>
+                  <div className="p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/30 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-blue-500/20 rounded-full">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-blue-500"
+                          >
+                            <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-lg">
+                            Chưa có gói Premium
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            Nâng cấp để sử dụng đầy đủ tính năng
+                          </p>
+                        </div>
+                      </div>
+                      <button className="bg-[#ff4d4f] text-white px-3 py-1.5 rounded-full hover:bg-[#ff4d4f]/90 transition-colors shadow-sm">
+                        Xem các gói
+                      </button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
-                      <h4 className="text-lg font-semibold mb-4">
-                        Phương thức thanh toán
-                      </h4>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
-                          <img src="/visa.png" alt="Visa" className="h-4" />
+                    <div className="p-6 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)] shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold">
+                          Phương thức thanh toán
+                        </h4>
+                      </div>
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <div className="w-16 h-16 bg-[var(--hover-color)] rounded-full flex items-center justify-center mb-4">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-400"
+                          >
+                            <rect
+                              width="20"
+                              height="14"
+                              x="2"
+                              y="5"
+                              rx="2"
+                            ></rect>
+                            <line x1="2" x2="22" y1="10" y2="10"></line>
+                          </svg>
                         </div>
-                        <div>
-                          <p className="font-medium">Visa ****4242</p>
-                          <p className="text-sm text-gray-400">Hết hạn 12/24</p>
-                        </div>
+                        <p className="text-base text-gray-400 mb-2">
+                          Chưa có phương thức thanh toán
+                        </p>
+                        <p className="text-sm text-gray-400 mb-6">
+                          Thêm thẻ hoặc ví điện tử để thanh toán
+                        </p>
+                        <button className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors">
+                          Thêm phương thức
+                        </button>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)]">
-                      <h4 className="text-lg font-semibold mb-4">
-                        Lịch sử thanh toán
-                      </h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">Gói Premium - 1 năm</p>
-                            <p className="text-sm text-gray-400">20/03/2024</p>
-                          </div>
-                          <p className="font-medium">1,990,000đ</p>
+                    <div className="p-6 bg-[var(--card-background)] rounded-lg border border-[var(--border-color)] shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold">
+                          Lịch sử thanh toán
+                        </h4>
+                      </div>
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <div className="w-16 h-16 bg-[var(--hover-color)] rounded-full flex items-center justify-center mb-4">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-400"
+                          >
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                          </svg>
                         </div>
+                        <p className="text-base text-gray-400 mb-2">
+                          Chưa có lịch sử thanh toán
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          Lịch sử thanh toán sẽ hiển thị ở đây
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4">
-                    <button className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors">
-                      Nâng cấp gói
+                  <div className="flex items-center gap-4 pt-6">
+                    <button className="px-6 py-2.5 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff4d4f]/90 transition-colors shadow-sm flex items-center gap-2">
+                      <span>Mua gói Premium</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide"
+                      >
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
                     </button>
                   </div>
                 </div>

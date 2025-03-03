@@ -91,21 +91,37 @@ function Header() {
           </button>
 
           {/* Nút chuyển chế độ sáng/tối */}
-          <button
-            onClick={toggleTheme}
-            className="hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors"
-            aria-label={
-              theme === "dark"
-                ? "Chuyển sang chế độ sáng"
-                : "Chuyển sang chế độ tối"
-            }
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5 text-gray-400" />
-            ) : (
-              <Moon className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
+          <div className="relative flex items-center">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center focus:outline-none"
+              aria-label={
+                theme === "dark"
+                  ? "Chuyển sang chế độ sáng"
+                  : "Chuyển sang chế độ tối"
+              }
+            >
+              <div
+                className={`w-12 h-6 rounded-full p-1 flex items-center ${
+                  theme === "dark" ? "bg-slate-700" : "bg-blue-100"
+                } transition-colors shadow-md`}
+              >
+                <div
+                  className={`flex items-center justify-center w-4 h-4 rounded-full transform transition-transform shadow-sm ${
+                    theme === "dark"
+                      ? "translate-x-6 bg-indigo-400"
+                      : "translate-x-0 bg-yellow-400"
+                  }`}
+                >
+                  {theme === "dark" ? (
+                    <Moon className="h-3 w-3 text-white" />
+                  ) : (
+                    <Sun className="h-3 w-3 text-amber-700" />
+                  )}
+                </div>
+              </div>
+            </button>
+          </div>
 
           {/* Số dư - Desktop */}
           {user && (
@@ -160,31 +176,37 @@ function Header() {
                   </div>
 
                   <Link
-                    href="/profile"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
+                    href="/settings"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-color)] hover:bg-[var(--hover-color)]"
+                    onClick={() => setIsUserMenuOpen(false)}
                   >
-                    <User className="h-4 w-4" />
+                    <User className="h-5 w-5 text-gray-400" />
                     <span>Hồ sơ</span>
                   </Link>
                   <Link
                     href="/my-courses"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-color)] hover:bg-[var(--hover-color)]"
+                    onClick={() => setIsUserMenuOpen(false)}
                   >
-                    <Book className="h-4 w-4" />
+                    <Book className="h-5 w-5 text-gray-400" />
                     <span>Khóa học của tôi</span>
                   </Link>
                   <Link
                     href="/settings"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-color)] hover:bg-[var(--hover-color)]"
+                    onClick={() => setIsUserMenuOpen(false)}
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-5 w-5 text-gray-400" />
                     <span>Cài đặt</span>
                   </Link>
                   <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#ff4d4f] hover:bg-[#ff4d4f]/10"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#ff4d4f] hover:bg-[var(--hover-color)]"
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-5 w-5 text-[#ff4d4f]" />
                     <span>Đăng xuất</span>
                   </button>
                 </div>

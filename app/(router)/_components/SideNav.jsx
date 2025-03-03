@@ -120,7 +120,7 @@ function SideNav() {
           ${
             active
               ? "bg-[#ff4d4f]/10 text-[#ff4d4f] font-medium"
-              : "text-gray-400 hover:bg-[#ff4d4f]/5 hover:text-[#ff4d4f]"
+              : "text-gray-400 hover:bg-[var(--hover-color)] hover:text-[#ff4d4f]"
           }
         `}
         onClick={handleItemClick}
