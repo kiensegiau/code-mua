@@ -4,6 +4,15 @@ dotenv.config();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  swcMinify: true,
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? {
+            exclude: ["error", "warn"],
+          }
+        : false,
+  },
   images: {
     domains: [
       "media.graphassets.com",
@@ -19,7 +28,15 @@ const nextConfig = {
         pathname: "/v0/b/hocmai-1d38d.appspot.com/**",
       },
     ],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ["image/webp"],
   },
+  experimental: {
+    optimizeCss: true,
+    scrollRestoration: true,
+  },
+  compress: true,
   env: {
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:
