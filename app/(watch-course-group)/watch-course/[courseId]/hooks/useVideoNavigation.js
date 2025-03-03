@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useEffect, useRef } from "react";
+import { toast } from "react-hot-toast";
 import { sortByName, sortByTitle } from "../utils/sorting";
 
 export const useVideoNavigation = ({
@@ -9,7 +9,8 @@ export const useVideoNavigation = ({
   courseInfo,
   setExpandedLessonId,
   setExpandedChapterIndex,
-  handleLessonClick: originalHandleLessonClick,
+  handleLessonClick,
+  setActiveVideo,
 }) => {
   // Ref để tránh gọi restoreVideoState khi component mount lần đầu nếu đã có active video
   const isFirstMount = useRef(true);
@@ -28,227 +29,262 @@ export const useVideoNavigation = ({
     [getNumberFromTitle]
   );
 
-  const findPreviousVideo = useCallback(() => {
-    if (!activeLesson?.files || !activeVideo) return null;
-
-    const sortedVideos = activeLesson.files
+  const findVideoById = useCallback((lessonFiles, videoId) => {
+    return lessonFiles
       .filter((f) => f.type?.includes("video"))
-      .sort(sortByName);
+      .find((file) => file.id === videoId);
+  }, []);
 
-    const currentIndex = sortedVideos.findIndex((v) => v.id === activeVideo.id);
+  // Lọc và sắp xếp video trong bài học hiện tại
+  const currentLessonVideos = useMemo(() => {
+    if (!activeLesson?.files) return [];
+    return activeLesson.files
+      .filter((f) => f.type?.includes("video"))
+      .sort((a, b) => sortItems(a, b, "name"));
+  }, [activeLesson?.files, sortItems]);
 
-    return sortedVideos[currentIndex - 1];
-  }, [activeLesson, activeVideo]);
+  // Lấy danh sách bài học đã sắp xếp trong chương hiện tại
+  const sortedLessonsInCurrentChapter = useMemo(() => {
+    if (!activeChapter?.lessons) return [];
+    return [...activeChapter.lessons].sort(sortItems);
+  }, [activeChapter?.lessons, sortItems]);
 
-  const findPreviousLesson = useCallback(
-    (lesson = activeLesson) => {
-      if (!activeChapter?.lessons || !lesson) return null;
+  // Lấy danh sách chương đã sắp xếp trong khóa học
+  const sortedChapters = useMemo(() => {
+    if (!courseInfo?.chapters) return [];
+    return [...courseInfo.chapters].sort(sortItems);
+  }, [courseInfo?.chapters, sortItems]);
 
-      const sortedLessons = [...activeChapter.lessons].sort(sortByTitle);
-      const currentIndex = sortedLessons.findIndex((l) => l.id === lesson.id);
-
-      return sortedLessons[currentIndex - 1];
-    },
-    [activeChapter, sortByTitle]
-  );
-
-  const findPreviousChapter = useCallback(() => {
-    if (!courseInfo?.chapters || !activeChapter) return null;
-
-    const sortedChapters = [...courseInfo.chapters].sort(sortByTitle);
-    const currentIndex = sortedChapters.findIndex(
-      (c) => c.id === activeChapter.id
-    );
-
-    return sortedChapters[currentIndex - 1];
-  }, [courseInfo, activeChapter]);
-
+  // Tìm video tiếp theo trong bài học hiện tại
   const findNextVideo = useCallback(() => {
-    if (!activeLesson?.files || !activeVideo) return null;
+    if (!activeVideo || !currentLessonVideos.length) return null;
 
-    const sortedVideos = activeLesson.files
-      .filter((f) => f.type?.includes("video"))
-      .sort(sortByName);
-
-    const currentIndex = sortedVideos.findIndex((v) => v.id === activeVideo.id);
-
-    return sortedVideos[currentIndex + 1] || null;
-  }, [activeLesson, activeVideo]);
-
-  const findNextLesson = useCallback(
-    (lesson = activeLesson) => {
-      if (!activeChapter?.lessons || !lesson) return null;
-
-      const sortedLessons = [...activeChapter.lessons].sort(sortByTitle);
-      const currentIndex = sortedLessons.findIndex((l) => l.id === lesson.id);
-
-      return sortedLessons[currentIndex + 1];
-    },
-    [activeChapter, sortByTitle]
-  );
-
-  const findNextChapter = useCallback(() => {
-    if (!courseInfo?.chapters || !activeChapter) return null;
-
-    const sortedChapters = [...courseInfo.chapters].sort(sortByTitle);
-    const currentIndex = sortedChapters.findIndex(
-      (c) => c.id === activeChapter.id
+    const currentIndex = currentLessonVideos.findIndex(
+      (v) => v.id === activeVideo.id
     );
 
-    return sortedChapters[currentIndex + 1];
-  }, [courseInfo, activeChapter]);
+    if (currentIndex < currentLessonVideos.length - 1) {
+      return currentLessonVideos[currentIndex + 1];
+    }
 
+    return null;
+  }, [activeVideo, currentLessonVideos]);
+
+  // Tìm video trước đó trong bài học hiện tại
+  const findPreviousVideo = useCallback(() => {
+    if (!activeVideo || !currentLessonVideos.length) return null;
+
+    const currentIndex = currentLessonVideos.findIndex(
+      (v) => v.id === activeVideo.id
+    );
+
+    if (currentIndex > 0) {
+      return currentLessonVideos[currentIndex - 1];
+    }
+
+    return null;
+  }, [activeVideo, currentLessonVideos]);
+
+  // Tìm bài học tiếp theo trong chương hiện tại
+  const findNextLesson = useCallback(
+    (lesson) => {
+      if (!lesson || !sortedLessonsInCurrentChapter.length) return null;
+
+      const currentIndex = sortedLessonsInCurrentChapter.findIndex(
+        (l) => l.id === lesson.id
+      );
+
+      if (currentIndex < sortedLessonsInCurrentChapter.length - 1) {
+        return sortedLessonsInCurrentChapter[currentIndex + 1];
+      }
+
+      return null;
+    },
+    [sortedLessonsInCurrentChapter]
+  );
+
+  // Tìm bài học trước đó trong chương hiện tại
+  const findPreviousLesson = useCallback(
+    (lesson) => {
+      if (!lesson || !sortedLessonsInCurrentChapter.length) return null;
+
+      const currentIndex = sortedLessonsInCurrentChapter.findIndex(
+        (l) => l.id === lesson.id
+      );
+
+      if (currentIndex > 0) {
+        return sortedLessonsInCurrentChapter[currentIndex - 1];
+      }
+
+      return null;
+    },
+    [sortedLessonsInCurrentChapter]
+  );
+
+  // Tìm chương tiếp theo trong khóa học
+  const findNextChapter = useCallback(
+    (chapter) => {
+      if (!chapter || !sortedChapters.length) return null;
+
+      const currentIndex = sortedChapters.findIndex((c) => c.id === chapter.id);
+
+      if (currentIndex < sortedChapters.length - 1) {
+        return sortedChapters[currentIndex + 1];
+      }
+
+      return null;
+    },
+    [sortedChapters]
+  );
+
+  // Tìm chương trước đó trong khóa học
+  const findPreviousChapter = useCallback(
+    (chapter) => {
+      if (!chapter || !sortedChapters.length) return null;
+
+      const currentIndex = sortedChapters.findIndex((c) => c.id === chapter.id);
+
+      if (currentIndex > 0) {
+        return sortedChapters[currentIndex - 1];
+      }
+
+      return null;
+    },
+    [sortedChapters]
+  );
+
+  // Lưu trạng thái xem video vào localStorage
+  const saveLastWatchedState = useCallback(
+    (lesson, chapter, video) => {
+      if (!courseInfo || !video || !lesson || !chapter) return;
+
+      const lastWatchedState = {
+        courseId: courseInfo.id,
+        courseSlug: courseInfo.slug,
+        videoId: video.id,
+        lessonId: lesson.id,
+        chapterId: chapter.id,
+        timestamp: new Date().toISOString(),
+      };
+
+      try {
+        localStorage.setItem(
+          `last_watched_${courseInfo.id}`,
+          JSON.stringify(lastWatchedState)
+        );
+      } catch (error) {
+        console.error("Error saving last watched state:", error);
+      }
+    },
+    [courseInfo]
+  );
+
+  // Xử lý khi click vào bài học
   const handleLessonClickWrapper = useCallback(
     (lesson, chapter, video) => {
-      if (!lesson || !chapter || !video) {
-        console.error("Missing required parameters:", {
-          lesson,
-          chapter,
-          video,
-        });
-        return;
-      }
+      if (!video || !lesson || !chapter) return;
 
-      try {
-        // Save current video state to localStorage
-        localStorage.setItem(
-          "activeVideo",
-          JSON.stringify({
-            videoId: video.id,
-            lessonId: lesson.id,
-            chapterId: chapter.id,
-            timestamp: Date.now(), // Thêm timestamp để biết thời điểm lưu
-          })
-        );
-
-        // Call the original handleLessonClick function
-        originalHandleLessonClick(lesson, chapter, video);
-      } catch (error) {
-        console.error("Error in handleLessonClickWrapper:", error);
-        toast.error("Có lỗi xảy ra khi chuyển video");
+      console.log("Setting active video:", video);
+      if (handleLessonClick) {
+        handleLessonClick(lesson, chapter, video);
+      } else {
+        setActiveVideo(video);
       }
+      saveLastWatchedState(lesson, chapter, video);
     },
-    [originalHandleLessonClick]
+    [handleLessonClick, setActiveVideo, saveLastWatchedState]
   );
 
-  useEffect(() => {
-    const restoreVideoState = () => {
-      try {
-        // Check if there's active video info in localStorage
-        const activeVideoInfo = localStorage.getItem("activeVideo");
-        if (!activeVideoInfo) return;
+  // Khôi phục trạng thái xem video từ localStorage
+  const restoreLastWatchedState = useCallback(() => {
+    if (!courseInfo || !courseInfo.id) return false;
 
-        const videoState = JSON.parse(activeVideoInfo);
-        const { videoId, lessonId, chapterId, timestamp } = videoState;
+    try {
+      const savedStateJSON = localStorage.getItem(
+        `last_watched_${courseInfo.id}`
+      );
+      if (!savedStateJSON) return false;
 
-        // Validate required fields
-        if (!videoId || !lessonId || !chapterId) {
-          console.warn("Invalid video state in localStorage:", videoState);
-          return;
-        }
-
-        // Skip restore if we already have an active video
-        if (activeVideo && activeLesson && activeChapter) {
-          return;
-        }
-
-        // Find the corresponding chapter, lesson and video
-        const chapter = courseInfo.chapters.find((c) => c.id === chapterId);
-        if (!chapter) {
-          console.warn("Chapter not found:", chapterId);
-          return;
-        }
-
-        const lesson = chapter.lessons.find((l) => l.id === lessonId);
-        if (!lesson) {
-          console.warn("Lesson not found:", lessonId);
-          return;
-        }
-
-        const video = lesson.files.find((f) => f.id === videoId);
-        if (!video) {
-          console.warn("Video not found:", videoId);
-          return;
-        }
-
-        // Open the video and expand the lesson list
-        const chapterIndex = courseInfo.chapters.indexOf(chapter);
-        setExpandedChapterIndex(chapterIndex);
-        setExpandedLessonId(lessonId);
-        handleLessonClickWrapper(lesson, chapter, video);
-
-        console.log("Video state restored successfully:", {
-          video: video.name,
-          lesson: lesson.title,
-          chapter: chapter.title,
-          savedAt: new Date(timestamp).toLocaleString(),
-        });
-      } catch (error) {
-        console.error("Error restoring video state:", error);
+      const savedState = JSON.parse(savedStateJSON);
+      if (
+        !savedState ||
+        !savedState.videoId ||
+        !savedState.lessonId ||
+        !savedState.chapterId
+      ) {
+        return false;
       }
-    };
 
-    // Chỉ restore state khi:
-    // 1. Component mount lần đầu và chưa có active video
-    // 2. courseInfo thay đổi và chưa có active video
-    if (courseInfo?.chapters && (!activeVideo || isFirstMount.current)) {
-      restoreVideoState();
-      isFirstMount.current = false;
+      // Tìm chương
+      const chapter = courseInfo.chapters.find(
+        (c) => c.id === savedState.chapterId
+      );
+      if (!chapter) return false;
+
+      // Tìm bài học
+      const lesson = chapter.lessons.find((l) => l.id === savedState.lessonId);
+      if (!lesson) return false;
+
+      // Tìm video
+      const video = findVideoById(lesson.files, savedState.videoId);
+      if (!video) return false;
+
+      // Mở rộng chương và bài học
+      const chapterIndex = courseInfo.chapters.findIndex(
+        (c) => c.id === chapter.id
+      );
+      setExpandedChapterIndex(chapterIndex);
+      setExpandedLessonId(lesson.id);
+
+      // Đặt video hoạt động
+      handleLessonClickWrapper(lesson, chapter, video);
+      return true;
+    } catch (error) {
+      console.error("Error restoring last watched state:", error);
+      return false;
     }
   }, [
     courseInfo,
-    activeVideo,
-    activeLesson,
-    activeChapter,
-    handleLessonClickWrapper,
-    setExpandedLessonId,
     setExpandedChapterIndex,
+    setExpandedLessonId,
+    handleLessonClickWrapper,
+    findVideoById,
   ]);
 
+  // Chuyển đến video tiếp theo
   const handleNext = useCallback(() => {
     try {
-      // 1. Try next video in current lesson
+      // 1. Thử video tiếp theo trong bài học hiện tại
       const nextVideo = findNextVideo();
-      console.log("Next video:", nextVideo);
       if (nextVideo) {
         handleLessonClickWrapper(activeLesson, activeChapter, nextVideo);
         return;
       }
 
-      console.log("No more video in current lesson, finding next lesson...");
-
-      // 2. Try first video of next lesson in current chapter
+      // 2. Thử video đầu tiên của bài học tiếp theo trong chương hiện tại
       let currentLesson = activeLesson;
       let nextLesson = findNextLesson(currentLesson);
 
       while (nextLesson) {
-        console.log("Checking lesson:", nextLesson);
         const firstVideo = nextLesson.files
           .filter((f) => f.type?.includes("video"))
           .sort((a, b) => sortItems(a, b, "name"))[0];
 
         if (firstVideo) {
-          console.log("Found first video of lesson:", firstVideo);
           setExpandedLessonId(nextLesson.id);
           handleLessonClickWrapper(nextLesson, activeChapter, firstVideo);
           return;
         }
 
-        console.log("No video found, moving to next lesson...");
         currentLesson = nextLesson;
         nextLesson = findNextLesson(currentLesson);
       }
 
-      console.log(
-        "No more lesson with video in current chapter, moving to next chapter..."
-      );
-
-      // 3. Try first video of first lesson in next chapter
+      // 3. Thử video đầu tiên của bài học đầu tiên trong chương tiếp theo
       let currentChapter = activeChapter;
       let nextChapter = findNextChapter(currentChapter);
 
       while (nextChapter) {
-        console.log("Checking chapter:", nextChapter);
         const firstLessonWithVideo = nextChapter.lessons
           .sort(sortItems)
           .find((lesson) =>
@@ -260,7 +296,6 @@ export const useVideoNavigation = ({
             .filter((f) => f.type?.includes("video"))
             .sort((a, b) => sortItems(a, b, "name"))[0];
 
-          console.log("Found first video of chapter:", firstVideo);
           setExpandedChapterIndex((prevIndex) => prevIndex + 1);
           setExpandedLessonId(firstLessonWithVideo.id);
           handleLessonClickWrapper(
@@ -271,12 +306,10 @@ export const useVideoNavigation = ({
           return;
         }
 
-        console.log("No lesson with video found, moving to next chapter...");
         currentChapter = nextChapter;
         nextChapter = findNextChapter(currentChapter);
       }
 
-      console.log("Reached the end of the course");
       toast.success("Đã hoàn thành khóa học!");
     } catch (error) {
       console.error("Error navigating to next video:", error);
@@ -294,53 +327,41 @@ export const useVideoNavigation = ({
     sortItems,
   ]);
 
+  // Chuyển đến video trước đó
   const handlePrevious = useCallback(() => {
     try {
-      // 1. Try previous video in current lesson
+      // 1. Thử video trước đó trong bài học hiện tại
       const prevVideo = findPreviousVideo();
-      console.log("Previous video:", prevVideo);
       if (prevVideo) {
         handleLessonClickWrapper(activeLesson, activeChapter, prevVideo);
         return;
       }
 
-      console.log(
-        "No more video in current lesson, finding previous lesson..."
-      );
-
-      // 2. Try last video of previous lesson in current chapter
+      // 2. Thử video cuối cùng của bài học trước đó trong chương hiện tại
       let currentLesson = activeLesson;
       let prevLesson = findPreviousLesson(currentLesson);
 
       while (prevLesson) {
-        console.log("Checking lesson:", prevLesson);
         const lastVideo = prevLesson.files
           .filter((f) => f.type?.includes("video"))
           .sort((a, b) => sortItems(a, b, "name"))
           .pop();
 
         if (lastVideo) {
-          console.log("Found last video of lesson:", lastVideo);
           setExpandedLessonId(prevLesson.id);
           handleLessonClickWrapper(prevLesson, activeChapter, lastVideo);
           return;
         }
 
-        console.log("No video found, moving to previous lesson...");
         currentLesson = prevLesson;
         prevLesson = findPreviousLesson(currentLesson);
       }
 
-      console.log(
-        "No more lesson with video in current chapter, moving to previous chapter..."
-      );
-
-      // 3. Try last video of last lesson in previous chapter
+      // 3. Thử video cuối cùng của bài học cuối cùng trong chương trước đó
       let currentChapter = activeChapter;
       let prevChapter = findPreviousChapter(currentChapter);
 
       while (prevChapter) {
-        console.log("Checking chapter:", prevChapter);
         const lastLessonWithVideo = [...prevChapter.lessons]
           .sort(sortItems)
           .reverse()
@@ -354,21 +375,16 @@ export const useVideoNavigation = ({
             .sort((a, b) => sortItems(a, b, "name"))
             .pop();
 
-          console.log("Found last video of chapter:", lastVideo);
           setExpandedChapterIndex((prevIndex) => prevIndex - 1);
           setExpandedLessonId(lastLessonWithVideo.id);
           handleLessonClickWrapper(lastLessonWithVideo, prevChapter, lastVideo);
           return;
         }
 
-        console.log(
-          "No lesson with video found, moving to previous chapter..."
-        );
         currentChapter = prevChapter;
         prevChapter = findPreviousChapter(currentChapter);
       }
 
-      console.log("Reached the beginning of the course");
       toast("Đã về đầu khóa học!");
     } catch (error) {
       console.error("Error navigating to previous video:", error);
@@ -386,6 +402,13 @@ export const useVideoNavigation = ({
     sortItems,
   ]);
 
+  // Khôi phục trạng thái xem cuối cùng khi component được mount hoặc khi thông tin khóa học thay đổi
+  useEffect(() => {
+    if (courseInfo?.id) {
+      restoreLastWatchedState();
+    }
+  }, [courseInfo?.id, restoreLastWatchedState]);
+
   return {
     handleNext,
     handlePrevious,
@@ -395,6 +418,6 @@ export const useVideoNavigation = ({
     findPreviousLesson,
     findNextChapter,
     findPreviousChapter,
-    handleLessonClick: handleLessonClickWrapper, // Export wrapper instead of original
+    handleLessonClick: handleLessonClickWrapper,
   };
 };

@@ -1,7 +1,58 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo, memo } from "react";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 
-export default function VideoPlayer({
+// Component loading riêng biệt
+const LoadingOverlay = memo(function LoadingOverlay() {
+  return (
+    <div className="absolute inset-0 bg-black z-10 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-gray-300 border-t-[#ff4d4f] rounded-full animate-spin"></div>
+    </div>
+  );
+});
+
+// Component điều hướng riêng biệt
+const NavigationButtons = memo(function NavigationButtons({
+  onNext,
+  onPrevious,
+}) {
+  return (
+    <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-4 pointer-events-none">
+      <button
+        onClick={onPrevious}
+        className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
+        title="Bài trước"
+      >
+        <IoChevronBack className="w-6 h-6 text-white" />
+      </button>
+
+      <button
+        onClick={onNext}
+        className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
+        title="Bài tiếp theo"
+      >
+        <IoChevronForward className="w-6 h-6 text-white" />
+      </button>
+    </div>
+  );
+});
+
+// Component thanh tiến trình riêng biệt
+const ProgressBar = memo(function ProgressBar({ currentTime, videoDuration }) {
+  const progressWidth = useMemo(() => {
+    return `${(currentTime / (videoDuration || 1)) * 100}%`;
+  }, [currentTime, videoDuration]);
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
+      <div
+        className="h-full bg-[#ff4d4f] transition-all duration-300"
+        style={{ width: progressWidth }}
+      />
+    </div>
+  );
+});
+
+const VideoPlayer = memo(function VideoPlayer({
   file,
   onEnded,
   onTimeUpdate,
@@ -13,39 +64,43 @@ export default function VideoPlayer({
   const [isLoading, setIsLoading] = useState(true);
   const [videoKey, setVideoKey] = useState(() => {
     // Sử dụng timestamp + ID để đảm bảo luôn mới khi component mount
-    return `${file?.helvidUrl || 'initial'}-${Date.now()}`;
+    return `${file?.helvidUrl || "initial"}-${Date.now()}`;
   });
   const [currentTime, setCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
-  
+
   // Sử dụng ref để theo dõi file hiện tại để tránh vấn đề với useEffect cleanup
   const currentFileRef = useRef(file);
-  
+
   useEffect(() => {
     // Cập nhật ref khi file thay đổi
     currentFileRef.current = file;
   }, [file]);
-  
+
   useEffect(() => {
     console.log("Video file received in player:", {
       file,
       helvidUrl: file?.helvidUrl,
       proxyUrl: file?.proxyUrl,
       type: file?.type,
-      id: file?.id
+      id: file?.id,
     });
-    
+
     if (file?.helvidUrl) {
       setIsLoading(true);
       // Sử dụng timestamp để đảm bảo key là duy nhất mỗi khi file thay đổi
       setVideoKey(`${file.helvidUrl}-${Date.now()}`);
-      
+
       // Cố gắng khôi phục vị trí đã lưu cho video này
       try {
-        const savedPositions = JSON.parse(localStorage.getItem('videoPositions') || '{}');
+        const savedPositions = JSON.parse(
+          localStorage.getItem("videoPositions") || "{}"
+        );
         const savedPosition = savedPositions[file.id];
         if (savedPosition && savedPosition.position > 0) {
-          console.log(`Phục hồi vị trí cho video ${file.id}: ${savedPosition.position}s`);
+          console.log(
+            `Phục hồi vị trí cho video ${file.id}: ${savedPosition.position}s`
+          );
           setCurrentTime(savedPosition.position);
         } else {
           setCurrentTime(0);
@@ -61,54 +116,60 @@ export default function VideoPlayer({
   useEffect(() => {
     const handleMessage = (event) => {
       // Kiểm tra nguồn tin nhắn từ helvid.net
-      if (event.origin.includes('helvid.net')) {
+      if (event.origin.includes("helvid.net")) {
         try {
           const data = JSON.parse(event.data);
           const currentFile = currentFileRef.current;
-          
+
           // Kiểm tra nếu video đã kết thúc
-          if (data.event === 'ended' && onEnded) {
-            console.log("Video đã kết thúc, xóa tiến trình và chuyển bài tiếp theo");
+          if (data.event === "ended" && onEnded) {
+            console.log(
+              "Video đã kết thúc, xóa tiến trình và chuyển bài tiếp theo"
+            );
             // Xóa vị trí đã lưu khi video kết thúc
             if (currentFile?.id) {
               saveVideoPosition(currentFile.id, 0, data.duration);
             }
             onEnded();
           }
-          
+
           // Theo dõi tiến trình video
-          if (data.event === 'timeupdate' && data.currentTime) {
+          if (data.event === "timeupdate" && data.currentTime) {
             setCurrentTime(data.currentTime);
             if (data.duration) {
               setVideoDuration(data.duration);
             }
-            
+
             // Lưu vị trí vào localStorage (giới hạn mỗi 5 giây)
             if (Math.floor(data.currentTime) % 5 === 0 && currentFile?.id) {
               // Chỉ lưu khi thời gian thay đổi thực sự (tránh lưu quá nhiều)
-              saveVideoPosition(currentFile.id, data.currentTime, data.duration);
+              saveVideoPosition(
+                currentFile.id,
+                data.currentTime,
+                data.duration
+              );
             }
-            
+
             if (onTimeUpdate) {
               onTimeUpdate(data.currentTime, data.duration);
             }
           }
-          
+
           // Xử lý sự kiện người dùng tương tác với video
-          if (data.event === 'playing' && currentFile?.id) {
+          if (data.event === "playing" && currentFile?.id) {
             console.log(`Video đang phát: ${currentFile.id}`);
             // Lưu video đang phát hiện tại
-            localStorage.setItem('lastWatchedVideoId', currentFile.id);
-            
+            localStorage.setItem("lastWatchedVideoId", currentFile.id);
+
             // Lưu trạng thái khóa học hiện tại vào localStorage
             if (currentFile) {
-              const courseId = window.location.pathname.split('/').pop();
+              const courseId = window.location.pathname.split("/").pop();
               localStorage.setItem(
                 "currentVideoState",
                 JSON.stringify({
                   videoId: currentFile.id,
                   timestamp: Date.now(),
-                  courseId: courseId
+                  courseId: courseId,
                 })
               );
             }
@@ -119,40 +180,42 @@ export default function VideoPlayer({
       }
     };
 
-    window.addEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener("message", handleMessage);
     };
   }, [onEnded, onTimeUpdate]);
 
   // Lưu vị trí video vào localStorage
-  const saveVideoPosition = (videoId, position, duration) => {
+  const saveVideoPosition = useCallback((videoId, position, duration) => {
     if (!videoId || position === undefined) return;
-    
+
     try {
       // Lấy vị trí đã lưu
-      const savedPositions = JSON.parse(localStorage.getItem('videoPositions') || '{}');
-      
+      const savedPositions = JSON.parse(
+        localStorage.getItem("videoPositions") || "{}"
+      );
+
       // Cập nhật vị trí cho video này
       savedPositions[videoId] = {
         position: position,
         duration: duration || 0,
         timestamp: Date.now(),
       };
-      
+
       // Lưu trở lại vào localStorage
-      localStorage.setItem('videoPositions', JSON.stringify(savedPositions));
-      
+      localStorage.setItem("videoPositions", JSON.stringify(savedPositions));
+
       // Lưu ID video đã xem cuối cùng để khôi phục khi quay lại
       if (position > 0) {
-        localStorage.setItem('lastWatchedVideoId', videoId);
+        localStorage.setItem("lastWatchedVideoId", videoId);
       }
     } catch (error) {
       console.error("Lỗi khi lưu vị trí video:", error);
     }
-  };
+  }, []);
 
-  const handleNextVideo = () => {
+  const handleNextVideo = useCallback(() => {
     if (onNext) {
       // Lưu vị trí hiện tại trước khi chuyển bài
       if (file?.id) {
@@ -160,9 +223,9 @@ export default function VideoPlayer({
       }
       onNext();
     }
-  };
+  }, [onNext, file, currentTime, videoDuration, saveVideoPosition]);
 
-  const handlePreviousVideo = () => {
+  const handlePreviousVideo = useCallback(() => {
     if (onPrevious) {
       // Lưu vị trí hiện tại trước khi chuyển bài
       if (file?.id) {
@@ -170,8 +233,50 @@ export default function VideoPlayer({
       }
       onPrevious();
     }
-  };
+  }, [onPrevious, file, currentTime, videoDuration, saveVideoPosition]);
 
+  const getVideoUrl = useCallback(() => {
+    if (!file?.helvidUrl) return "";
+
+    // Tạo URL với tham số thời gian nếu có vị trí đã lưu
+    let url = "";
+
+    // Nếu helvidUrl đã là URL đầy đủ
+    if (file.helvidUrl.startsWith("https://helvid.net/play/index/")) {
+      url = file.helvidUrl;
+    } else {
+      // Nếu helvidUrl chỉ là ID
+      url = `https://helvid.net/play/index/${file.helvidUrl}`;
+    }
+
+    // Thêm tham số thời gian bắt đầu nếu có vị trí đã lưu
+    if (currentTime > 0) {
+      // Thêm tham số start vào URL
+      const startTime = Math.floor(currentTime);
+      url += url.includes("?") ? "&" : "?";
+      url += `start=${startTime}`;
+
+      console.log(
+        `Đặt thời gian bắt đầu cho video ${file.id} tại: ${startTime}s`
+      );
+    }
+
+    // Thêm tham số autoplay
+    url += url.includes("?") ? "&" : "?";
+    url += `autoplay=1`;
+
+    return url;
+  }, [file, currentTime]);
+
+  // Memoize URL để tránh tính toán mỗi khi render
+  const videoUrl = useMemo(() => getVideoUrl(), [getVideoUrl]);
+
+  const handleIframeLoad = useCallback(() => {
+    setIsLoading(false);
+    console.log(`Video đã tải: ${file?.id}`);
+  }, [file]);
+
+  // Hiển thị message khi không có video
   if (!file) {
     return (
       <div className="relative w-full aspect-video bg-black flex items-center justify-center">
@@ -180,59 +285,17 @@ export default function VideoPlayer({
     );
   }
 
-  // Xử lý URL video dựa trên thông tin file
-  const getVideoUrl = () => {
-    if (!file.helvidUrl) return '';
-    
-    // Tạo URL với tham số thời gian nếu có vị trí đã lưu
-    let url = '';
-    
-    // Nếu helvidUrl đã là URL đầy đủ
-    if (file.helvidUrl.startsWith('https://helvid.net/play/index/')) {
-      url = file.helvidUrl;
-    } else {
-      // Nếu helvidUrl chỉ là ID
-      url = `https://helvid.net/play/index/${file.helvidUrl}`;
-    }
-    
-    // Thêm tham số thời gian bắt đầu nếu có vị trí đã lưu
-    if (currentTime > 0) {
-      // Thêm tham số start vào URL
-      const startTime = Math.floor(currentTime);
-      url += url.includes('?') ? '&' : '?';
-      url += `start=${startTime}`;
-      
-      console.log(`Đặt thời gian bắt đầu cho video ${file.id} tại: ${startTime}s`);
-    }
-    
-    // Thêm tham số autoplay
-    url += url.includes('?') ? '&' : '?';
-    url += `autoplay=1`;
-    
-    return url;
-  };
-
-  const videoUrl = getVideoUrl();
-  console.log("URL video cuối cùng:", videoUrl);
-
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    console.log(`Video đã tải: ${file.id}`);
-  };
-
   return (
     <div className="relative w-full aspect-video bg-black">
       <div className="relative w-full h-full">
         {/* Overlay loading */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-black z-10 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-[#ff4d4f] rounded-full animate-spin"></div>
-          </div>
-        )}
-        
+        {isLoading && <LoadingOverlay />}
+
         <iframe
           key={videoKey}
-          className={`w-full h-full transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full transition-opacity duration-300 ${
+            isLoading ? "opacity-0" : "opacity-100"
+          }`}
           src={videoUrl}
           frameBorder="0"
           allowFullScreen
@@ -241,34 +304,21 @@ export default function VideoPlayer({
         ></iframe>
 
         {/* Nút điều hướng */}
-        <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-4 pointer-events-none">
-          <button 
-            onClick={handlePreviousVideo}
-            className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
-            title="Bài trước"
-          >
-            <IoChevronBack className="w-6 h-6 text-white" />
-          </button>
-          
-          <button 
-            onClick={handleNextVideo}
-            className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
-            title="Bài tiếp theo"
-          >
-            <IoChevronForward className="w-6 h-6 text-white" />
-          </button>
-        </div>
-        
+        <NavigationButtons
+          onNext={handleNextVideo}
+          onPrevious={handlePreviousVideo}
+        />
+
         {/* Thanh tiến trình */}
         {!isLoading && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
-            <div 
-              className="h-full bg-[#ff4d4f] transition-all duration-300"
-              style={{ width: `${(currentTime / (videoDuration || 1)) * 100}%` }}
-            />
-          </div>
+          <ProgressBar
+            currentTime={currentTime}
+            videoDuration={videoDuration}
+          />
         )}
       </div>
     </div>
   );
-}
+});
+
+export default VideoPlayer;
