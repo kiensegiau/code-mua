@@ -303,7 +303,7 @@ const GlobalApi = {
       });
 
       const courses = await Promise.all(coursesPromises);
-      const validCourses = courses.filter(course => course !== null);
+      const validCourses = courses.filter((course) => course !== null);
 
       console.log("Đã lấy thông tin chi tiết khóa học:", validCourses);
       return validCourses;

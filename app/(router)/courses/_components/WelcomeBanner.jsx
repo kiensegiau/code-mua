@@ -1,5 +1,5 @@
 "use client";
-import React, { memo } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useTheme } from "@/app/_context/ThemeContext";
 import {
@@ -12,11 +12,14 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Wrap component bằng memo để tránh render không cần thiết
 const WelcomeBanner = memo(function WelcomeBanner() {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
   const isLightTheme = theme === "light";
 
   // Giảm độ phức tạp của animation để cải thiện hiệu suất
@@ -25,21 +28,37 @@ const WelcomeBanner = memo(function WelcomeBanner() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05, // Giảm stagger delay
+        duration: 0.3,
+        staggerChildren: 0.03, // Giảm stagger delay
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 10 }, // Giảm y offset để giảm bớt tải động hoạ
+    hidden: { opacity: 0, y: 5 }, // Giảm y offset để giảm bớt tải động hoạ
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.3, // Giảm thời gian animation
+        duration: 0.2, // Giảm thời gian animation
       },
     },
   };
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  const handleSearchSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        // Thực hiện tìm kiếm
+        router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      }
+    },
+    [searchQuery, router]
+  );
 
   return (
     <motion.div
@@ -54,7 +73,7 @@ const WelcomeBanner = memo(function WelcomeBanner() {
       animate="visible"
       layout="position" // Giúp tránh reflow
     >
-      {/* Grid background */}
+      {/* Grid background - static */}
       <div
         className={`absolute inset-0 ${
           isLightTheme ? "bg-grid-black/5" : "bg-grid-white/5"
@@ -97,9 +116,10 @@ const WelcomeBanner = memo(function WelcomeBanner() {
           </motion.p>
 
           {/* Search bar */}
-          <motion.div
+          <motion.form
             className="relative mb-6 max-w-md"
             variants={itemVariants}
+            onSubmit={handleSearchSubmit}
           >
             <div className="relative">
               <Search
@@ -116,14 +136,17 @@ const WelcomeBanner = memo(function WelcomeBanner() {
                       ? "bg-white border border-gray-300 text-gray-800"
                       : "bg-[#2c2c2c] border border-gray-700 text-gray-200"
                   }`}
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
             </div>
-          </motion.div>
+          </motion.form>
 
-          {/* Stats */}
+          {/* Stats - Sử dụng static elements thay vì animation */}
           <div className="grid grid-cols-3 gap-4 md:gap-6">
             {/* Static elements thay vì animation */}
-            <div
+            <motion.div
+              variants={itemVariants}
               className={`rounded-lg p-4 border transition-colors welcome-card
               ${
                 isLightTheme
@@ -148,9 +171,10 @@ const WelcomeBanner = memo(function WelcomeBanner() {
               >
                 Khóa học
               </p>
-            </div>
+            </motion.div>
 
-            <div
+            <motion.div
+              variants={itemVariants}
               className={`rounded-lg p-4 border transition-colors welcome-card
               ${
                 isLightTheme
@@ -175,9 +199,10 @@ const WelcomeBanner = memo(function WelcomeBanner() {
               >
                 Giảng viên
               </p>
-            </div>
+            </motion.div>
 
-            <div
+            <motion.div
+              variants={itemVariants}
               className={`rounded-lg p-4 border transition-colors welcome-card
               ${
                 isLightTheme
@@ -202,11 +227,11 @@ const WelcomeBanner = memo(function WelcomeBanner() {
               >
                 Học viên
               </p>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
-        {/* Featured course card */}
+        {/* Featured course card - Tối ưu hóa animation */}
         <motion.div
           className={`hidden md:block w-72 lg:w-80 rounded-lg overflow-hidden shadow-lg mt-6 md:mt-0 welcome-card
             ${
@@ -240,7 +265,7 @@ const WelcomeBanner = memo(function WelcomeBanner() {
               Chuẩn bị tốt nhất cho kỳ thi quan trọng
             </p>
             <Link href="/courses/grade-12">
-              <button className="w-full py-2 text-sm bg-[#ff4d4f] hover:bg-[#ff4d4f]/90 text-white rounded-md flex items-center justify-center gap-1">
+              <button className="w-full py-2 text-sm bg-[#ff4d4f] hover:bg-[#ff4d4f]/90 text-white rounded-md flex items-center justify-center gap-1 transition-colors">
                 Khám phá ngay <ChevronRight className="w-4 h-4" />
               </button>
             </Link>

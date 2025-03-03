@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, memo } from "react";
 import {
   BookOpen,
   Clock,
@@ -25,13 +25,16 @@ import { toast } from "sonner";
 import ConfirmEnrollModal from "./ConfirmEnrollModal";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
-function CourseItem({ course }) {
+// Tối ưu hóa component với React.memo
+const CourseItem = memo(function CourseItem({ course }) {
   const { user, profile } = useAuth();
   const router = useRouter();
   const [enrolling, setEnrolling] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const coursePrice = course?.price || 0;
   const userBalance = profile?.balance || 0;
@@ -39,41 +42,17 @@ function CourseItem({ course }) {
   // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
   const isEnrolled = useMemo(() => {
     if (!profile?.enrolledCourses || !course?.id) {
-      console.log("Không có enrolledCourses hoặc course.id", {
-        enrolledCourses: profile?.enrolledCourses,
-        courseId: course?.id,
-      });
       return false;
     }
 
-    console.log("Kiểm tra đăng ký cho khóa học:", {
-      courseId: course.id,
-      courseTitle: course.title,
-      enrolledCourses: profile.enrolledCourses,
-    });
-
     // Kiểm tra trong mảng enrolledCourses
-    const enrolled = profile.enrolledCourses.some((c) => {
-      // Log chi tiết từng khóa học đã đăng ký
-      console.log("Kiểm tra khóa học đã đăng ký:", {
-        enrolledCourse: c,
-        type: typeof c,
-        courseIdToCheck: course.id,
-        isMatch:
-          typeof c === "string" ? c === course.id : c.courseId === course.id,
-      });
-
+    return profile.enrolledCourses.some((c) => {
       // Kiểm tra cả hai trường hợp:
       // 1. c là string (courseId)
       // 2. c là object (có courseId)
       return typeof c === "string" ? c === course.id : c.courseId === course.id;
     });
-
-    console.log(
-      `Kết quả kiểm tra đăng ký: ${enrolled ? "Đã đăng ký" : "Chưa đăng ký"}`
-    );
-    return enrolled;
-  }, [profile?.enrolledCourses, course?.id, course?.title]);
+  }, [profile?.enrolledCourses, course?.id]);
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
@@ -91,17 +70,12 @@ function CourseItem({ course }) {
     }
   }, [course?.id, isEnrolled, router]);
 
-  const verifyEnrollment = async () => {
+  const verifyEnrollment = useCallback(async () => {
     try {
       setVerifying(true);
-      console.log("Bắt đầu xác minh đăng ký cho khóa học:", {
-        courseId: course?.id,
-        courseTitle: course?.title,
-      });
 
       // Kiểm tra lại user và profile
       if (!user || !profile) {
-        console.log("Không có user hoặc profile");
         toast.error("Vui lòng đăng nhập để đăng ký khóa học");
         router.push("/sign-in");
         return false;
@@ -109,48 +83,32 @@ function CourseItem({ course }) {
 
       // Kiểm tra khóa học tồn tại
       if (!course?.id) {
-        console.log("Không tìm thấy course.id");
         toast.error("Không tìm thấy thông tin khóa học");
         return false;
       }
 
       // Kiểm tra lại số dư
       const latestProfile = await GlobalApi.getUserProfile(user.uid);
-      console.log("Thông tin profile mới nhất:", {
-        profile: latestProfile,
-        enrolledCourses: latestProfile?.enrolledCourses,
-      });
 
       if (!latestProfile) {
-        console.log("Không lấy được thông tin profile mới nhất");
         toast.error("Không thể lấy thông tin người dùng");
         return false;
       }
 
       const latestBalance = latestProfile.balance || 0;
       if (coursePrice > latestBalance) {
-        console.log("Số dư không đủ", {
-          coursePrice,
-          latestBalance,
-        });
         toast.error("Số dư không đủ để mua khóa học này");
         return false;
       }
 
       // Kiểm tra lại trạng thái đăng ký
       const isAlreadyEnrolled = latestProfile.enrolledCourses?.some((c) => {
-        const isEnrolled =
-          typeof c === "string" ? c === course.id : c.courseId === course.id;
-        console.log("Kiểm tra khóa học trong profile mới:", {
-          enrolledCourse: c,
-          courseId: course.id,
-          isEnrolled,
-        });
-        return isEnrolled;
+        return typeof c === "string"
+          ? c === course.id
+          : c.courseId === course.id;
       });
 
       if (isAlreadyEnrolled) {
-        console.log("Đã tìm thấy khóa học trong danh sách đã đăng ký");
         toast.error("Bạn đã đăng ký khóa học này rồi");
         return false;
       }
@@ -163,35 +121,36 @@ function CourseItem({ course }) {
     } finally {
       setVerifying(false);
     }
-  };
+  }, [user, profile, course, coursePrice, router]);
 
-  const handleEnrollClick = async (e) => {
-    e.stopPropagation();
-    console.log("Click đăng ký khóa học", { coursePrice, userBalance });
+  const handleEnrollClick = useCallback(
+    (e) => {
+      e.stopPropagation();
 
-    if (!user) {
-      router.push("/sign-in");
-      return;
-    }
-
-    // Kiểm tra điều kiện cơ bản
-    if (!canEnroll) {
-      if (coursePrice > userBalance) {
-        toast.error("Số dư không đủ để mua khóa học này");
-      } else if (isEnrolled) {
-        toast.error("Bạn đã đăng ký khóa học này rồi");
-      } else {
-        toast.error("Không thể đăng ký khóa học lúc này");
+      if (!user) {
+        router.push("/sign-in");
+        return;
       }
-      return;
-    }
 
-    setShowConfirmModal(true);
-  };
+      // Kiểm tra điều kiện cơ bản
+      if (!canEnroll) {
+        if (coursePrice > userBalance) {
+          toast.error("Số dư không đủ để mua khóa học này");
+        } else if (isEnrolled) {
+          toast.error("Bạn đã đăng ký khóa học này rồi");
+        } else {
+          toast.error("Không thể đăng ký khóa học lúc này");
+        }
+        return;
+      }
 
-  const handleConfirmEnroll = async () => {
+      setShowConfirmModal(true);
+    },
+    [user, canEnroll, coursePrice, userBalance, isEnrolled, router]
+  );
+
+  const handleConfirmEnroll = useCallback(async () => {
     try {
-      console.log("Bắt đầu xử lý đăng ký khóa học");
       setEnrolling(true);
 
       // Xác minh lại toàn bộ điều kiện
@@ -200,8 +159,6 @@ function CourseItem({ course }) {
 
       // Lưu courseId thay vì object phức tạp
       const courseId = course.id;
-
-      console.log("Thông tin khóa học đăng ký:", { courseId });
 
       const userDocRef = doc(db, "users", profile.id);
       const courseRef = doc(db, "courses", course.id);
@@ -259,7 +216,6 @@ function CourseItem({ course }) {
         });
       });
 
-      console.log("Đã cập nhật thành công");
       toast.success("Đăng ký khóa học thành công!");
 
       // Đóng modal trước khi chuyển trang
@@ -275,6 +231,33 @@ function CourseItem({ course }) {
     } finally {
       setEnrolling(false);
     }
+  }, [course, coursePrice, profile, user, router, verifyEnrollment]);
+
+  // Giảm độ phức tạp của animation
+  const cardVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.3 },
+    },
+    hover: {
+      y: -5,
+      transition: { duration: 0.2 },
+    },
+  };
+
+  // Tối ưu hóa placeholder animation
+  const placeholderVariants = {
+    animate: {
+      scale: [1, 1.05, 1],
+      opacity: [0.5, 0.7, 0.5],
+      transition: {
+        duration: 3,
+        repeat: Infinity,
+        repeatType: "reverse",
+      },
+    },
   };
 
   return (
@@ -283,75 +266,33 @@ function CourseItem({ course }) {
         <div onClick={handleCourseClick} className="cursor-pointer">
           <motion.div
             className="h-full bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300"
-            whileHover={{
-              y: -5,
-              transition: { duration: 0.2 },
-            }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            whileHover="hover"
+            layout="position"
           >
             {/* Thumbnail section */}
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
-              {/* Placeholder đẹp hơn với gradient và hiệu ứng */}
+              {/* Placeholder với gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#1f1f1f] to-[#191919] flex items-center justify-center">
                 {!course.thumbnailUrl && (
                   <div className="text-center relative">
-                    {/* Hiệu ứng glow phía sau */}
+                    {/* Hiệu ứng glow phía sau - tối ưu hóa */}
                     <motion.div
                       className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl"
-                      animate={{
-                        scale: [1, 1.05, 1],
-                        opacity: [0.5, 0.7, 0.5],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                      }}
+                      variants={placeholderVariants}
+                      animate="animate"
                     ></motion.div>
 
-                    {/* Tạo hình trang trí ở các góc */}
+                    {/* Tạo hình trang trí ở các góc - static để giảm tải */}
                     <div className="absolute -top-24 -right-24 w-40 h-40 bg-[#ff4d4f]/5 rounded-full blur-2xl"></div>
                     <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-[#ff4d4f]/5 rounded-full blur-2xl"></div>
 
-                    {/* Bổ sung các chấm trang trí */}
-                    <motion.div
-                      className="absolute top-5 right-10 w-2 h-2 rounded-full bg-[#ff4d4f]/30"
-                      animate={{ opacity: [0.3, 0.7, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    ></motion.div>
-
-                    <motion.div
-                      className="absolute bottom-12 left-10 w-3 h-3 rounded-full bg-[#ff4d4f]/20"
-                      animate={{ opacity: [0.2, 0.5, 0.2] }}
-                      transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
-                    ></motion.div>
-
-                    <motion.div
-                      className="relative"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <motion.div
-                        className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/5 flex items-center justify-center mx-auto mb-3 border border-[#ff4d4f]/20"
-                        whileHover={{ scale: 1.05 }}
-                        animate={{
-                          boxShadow: [
-                            "0 0 0 rgba(255, 77, 79, 0.1)",
-                            "0 0 15px rgba(255, 77, 79, 0.2)",
-                            "0 0 0 rgba(255, 77, 79, 0.1)",
-                          ],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          repeatType: "reverse",
-                        }}
-                      >
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/5 flex items-center justify-center mx-auto mb-3 border border-[#ff4d4f]/20">
                         <BookOpen className="w-8 h-8 text-[#ff4d4f]/50" />
-                      </motion.div>
+                      </div>
                       <div className="space-y-1.5">
                         <p className="text-[#ff4d4f]/70 font-medium text-sm tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#ff4d4f]/90 to-[#ff7875]/90">
                           Hoc Mai
@@ -360,12 +301,12 @@ function CourseItem({ course }) {
                           Khóa học sẽ hiển thị tại đây
                         </p>
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Hiệu ứng dạng lưới */}
+              {/* Hiệu ứng dạng lưới - static */}
               {!course.thumbnailUrl && (
                 <div
                   className="absolute inset-0 opacity-20"
@@ -377,65 +318,50 @@ function CourseItem({ course }) {
                 ></div>
               )}
 
+              {/* Lazy loading cho hình ảnh */}
               {course.thumbnailUrl && (
-                <img
-                  src={course.thumbnailUrl}
-                  alt={course.title || "Khóa học"}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) => {
-                    // Khi lỗi, ẩn hình ảnh, hiển thị placeholder local
-                    e.target.style.display = "none";
-                    e.target.onerror = null;
-                  }}
-                />
-              )}
-
-              {/* Show enrolled badge if enrolled */}
-              {isEnrolled && (
-                <motion.div
-                  className="absolute inset-0 bg-black/50 flex items-center justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
+                <div
+                  className={`absolute inset-0 transition-opacity duration-300 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
                 >
-                  <motion.div
-                    className="bg-[#ff4d4f] rounded-full p-2"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 20,
-                      delay: 0.1,
+                  <Image
+                    src={course.thumbnailUrl}
+                    alt={course.title || "Khóa học"}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover"
+                    loading="lazy"
+                    onLoad={() => setImageLoaded(true)}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.onerror = null;
                     }}
-                  >
-                    <CheckCircle className="w-6 h-6 text-white" />
-                  </motion.div>
-                </motion.div>
+                  />
+                </div>
               )}
 
-              {/* Price tag */}
-              <motion.div
-                className="absolute top-3 right-3 bg-[#ff4d4f] text-white text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
+              {/* Show enrolled badge if enrolled - tối ưu hóa animation */}
+              {isEnrolled && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="bg-[#ff4d4f] rounded-full p-2">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              )}
+
+              {/* Price tag - static thay vì animation */}
+              <div className="absolute top-3 right-3 bg-[#ff4d4f] text-white text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm">
                 {course.price > 0
                   ? `${course.price.toLocaleString("vi-VN")} VND`
                   : "Miễn phí"}
-              </motion.div>
+              </div>
 
-              {/* Level badge */}
-              <motion.div
-                className="absolute top-3 left-3 bg-gray-800/90 text-gray-200 text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm flex items-center gap-1"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
+              {/* Level badge - static thay vì animation */}
+              <div className="absolute top-3 left-3 bg-gray-800/90 text-gray-200 text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
                 <span>{course.level}</span>
-              </motion.div>
+              </div>
             </div>
 
             {/* Content section with consistent spacing */}
@@ -503,12 +429,12 @@ function CourseItem({ course }) {
                 </div>
               </div>
 
-              {/* Enroll button */}
+              {/* Enroll button - tối ưu hóa animation */}
               {!isEnrolled && (
-                <motion.button
+                <button
                   onClick={handleEnrollClick}
                   disabled={enrolling || verifying || !canEnroll}
-                  className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-colors
+                  className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
                     ${
                       enrolling || verifying
                         ? "bg-gray-700 text-gray-400 cursor-not-allowed"
@@ -517,8 +443,6 @@ function CourseItem({ course }) {
                         : "bg-gray-700 text-gray-400 cursor-not-allowed"
                     }
                   `}
-                  whileHover={canEnroll ? { scale: 1.02 } : {}}
-                  whileTap={canEnroll ? { scale: 0.98 } : {}}
                 >
                   {enrolling
                     ? "Đang xử lý..."
@@ -531,7 +455,7 @@ function CourseItem({ course }) {
                       ? "Đã đăng ký"
                       : "Không thể đăng ký"
                     : "Đăng ký ngay"}
-                </motion.button>
+                </button>
               )}
             </div>
           </motion.div>
@@ -540,20 +464,14 @@ function CourseItem({ course }) {
 
       <ConfirmEnrollModal
         isOpen={showConfirmModal}
-        onClose={() => {
-          console.log("Đóng modal");
-          setShowConfirmModal(false);
-        }}
-        onConfirm={() => {
-          console.log("Xác nhận đăng ký", { coursePrice, userBalance });
-          handleConfirmEnroll();
-        }}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmEnroll}
         course={course}
         userBalance={userBalance}
         loading={enrolling || verifying}
       />
     </>
   );
-}
+});
 
 export default CourseItem;
