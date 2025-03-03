@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import {
   DollarSign,
   Users,
@@ -18,169 +18,313 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
+// Dữ liệu tĩnh nên được đặt bên ngoài component để tránh tạo lại khi render
+const FEATURES = [
+  {
+    icon: DollarSign,
+    title: "Chia sẻ 50% doanh thu",
+    description:
+      "Nhận ngay 50% giá trị khóa học cho mỗi học viên bạn giới thiệu thành công",
+  },
+  {
+    icon: Users,
+    title: "Không giới hạn số lượng",
+    description:
+      "Càng nhiều học viên, thu nhập càng cao. Không có giới hạn về số lượng giới thiệu",
+  },
+  {
+    icon: TrendingUp,
+    title: "Thu nhập thụ động",
+    description:
+      "Xây dựng nguồn thu nhập thụ động, nhận hoa hồng mỗi khi có người mua khóa học",
+  },
+  {
+    icon: Gift,
+    title: "Ưu đãi hấp dẫn",
+    description: "Nhận thêm nhiều ưu đãi đặc biệt khi đạt các mốc doanh số",
+  },
+];
+
+const CONTACTS = [
+  {
+    icon: Phone,
+    name: "Zalo",
+    value: "0123.456.789",
+    href: "https://zalo.me/0123456789",
+    color: "bg-blue-500",
+  },
+  {
+    icon: Facebook,
+    name: "Facebook",
+    value: "Code MUA",
+    href: "https://facebook.com/codemua",
+    color: "bg-[#1877f2]",
+  },
+  {
+    icon: MessageCircle,
+    name: "Telegram",
+    value: "@codemua",
+    href: "https://t.me/codemua",
+    color: "bg-[#0088cc]",
+  },
+];
+
+const FAQ = [
+  {
+    question: "Thời gian cookie theo dõi kéo dài bao lâu?",
+    answer:
+      "Cookie theo dõi của chúng tôi có hiệu lực trong 30 ngày. Điều này có nghĩa là nếu người dùng nhấp vào liên kết của bạn và hoàn tất việc mua hàng trong vòng 30 ngày, bạn vẫn sẽ nhận được hoa hồng.",
+  },
+  {
+    question: "Code MUA có đảm bảo tính minh bạch không?",
+    answer:
+      "Tuyệt đối! Chúng tôi cam kết 100% minh bạch trong toàn bộ quá trình tính hoa hồng. Bạn có thể theo dõi mọi giao dịch, lịch sử thanh toán và doanh số theo thời gian thực thông qua bảng điều khiển đối tác. Ngoài ra, chúng tôi cung cấp báo cáo chi tiết hàng tháng về hiệu suất giới thiệu của bạn.",
+  },
+  {
+    question: "Có cam kết pháp lý nào bảo vệ tôi khi làm đối tác không?",
+    answer:
+      "Có, khi tham gia làm đối tác, bạn sẽ được ký hợp đồng hợp tác chính thức với Code MUA. Hợp đồng này đảm bảo quyền lợi của bạn, quy định rõ mức hoa hồng 50%, chu kỳ thanh toán, và các điều khoản bảo vệ. Chúng tôi tuân thủ nghiêm ngặt tất cả quy định về bảo mật thông tin và quyền riêng tư theo pháp luật Việt Nam hiện hành.",
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Nguyễn Minh Tuấn",
+    role: "Sinh viên Đại học",
+    quote:
+      "Chương trình đối tác của Code MUA đã giúp tôi có thêm nguồn thu nhập ổn định mỗi tháng. Chỉ với việc chia sẻ các khóa học với bạn bè và mạng lưới của mình, tôi đã kiếm được hơn 5 triệu đồng mỗi tháng.",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    rating: 5,
+    earnings: "5.2 triệu/tháng",
+  },
+  {
+    name: "Lê Thị Hương",
+    role: "Giáo viên THPT",
+    quote:
+      "Tôi thường giới thiệu các khóa học chất lượng cho học sinh của mình. Với chương trình đối tác của Code MUA, tôi không chỉ giúp học sinh tiếp cận kiến thức mà còn tạo ra thu nhập thụ động cho bản thân.",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    rating: 5,
+    earnings: "7.8 triệu/tháng",
+  },
+  {
+    name: "Trần Văn Nam",
+    role: "Blogger Công nghệ",
+    quote:
+      "Từ khi tham gia chương trình đối tác của Code MUA, doanh thu từ blog của tôi đã tăng gấp đôi. Việc giới thiệu các khóa học phù hợp với nội dung blog rất dễ dàng và mang lại hiệu quả cao.",
+    avatar: "https://randomuser.me/api/portraits/men/86.jpg",
+    rating: 4,
+    earnings: "12.5 triệu/tháng",
+  },
+];
+
+const HOW_IT_WORKS = [
+  {
+    icon: <CheckCircle className="w-6 h-6 text-green-500" />,
+    title: "Đăng ký tài khoản đối tác",
+    description: "Điền thông tin cơ bản và xác thực tài khoản của bạn",
+  },
+  {
+    icon: <Zap className="w-6 h-6 text-yellow-500" />,
+    title: "Nhận liên kết giới thiệu độc quyền",
+    description: "Mỗi đối tác sẽ có mã giới thiệu riêng để theo dõi doanh số",
+  },
+  {
+    icon: <ArrowUpRight className="w-6 h-6 text-blue-500" />,
+    title: "Chia sẻ & Kiếm tiền",
+    description:
+      "Chia sẻ liên kết qua mạng xã hội, blog hoặc trực tiếp với mạng lưới của bạn",
+  },
+];
+
+// Các animation variants
+const CONTAINER_VARIANTS = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const ITEM_VARIANTS = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+};
+
+// Tách thành các component nhỏ để dễ quản lý
+const FeatureCard = memo(({ feature }) => {
+  const Icon = feature.icon;
+
+  return (
+    <motion.div
+      variants={ITEM_VARIANTS}
+      className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+    >
+      <div className="flex items-center mb-4">
+        <div className="bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/10 p-3 rounded-lg mr-4">
+          <Icon className="w-6 h-6 text-[#ff4d4f]" />
+        </div>
+        <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
+      </div>
+      <p className="text-gray-300 text-sm">{feature.description}</p>
+    </motion.div>
+  );
+});
+
+FeatureCard.displayName = "FeatureCard";
+
+const ContactItem = memo(({ contact }) => {
+  const Icon = contact.icon;
+
+  return (
+    <motion.a
+      variants={ITEM_VARIANTS}
+      href={contact.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
+    >
+      <div
+        className={`${contact.color} w-10 h-10 rounded-full flex items-center justify-center`}
+      >
+        <Icon className="w-5 h-5 text-white" />
+      </div>
+      <div>
+        <div className="text-gray-400 text-xs">{contact.name}</div>
+        <div className="text-white font-medium">{contact.value}</div>
+      </div>
+    </motion.a>
+  );
+});
+
+ContactItem.displayName = "ContactItem";
+
+const AccordionItem = memo(
+  ({ item, index, activeQuestion, setActiveQuestion }) => {
+    const handleClick = useCallback(() => {
+      setActiveQuestion(activeQuestion === index ? null : index);
+    }, [activeQuestion, index, setActiveQuestion]);
+
+    return (
+      <motion.div
+        variants={ITEM_VARIANTS}
+        className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-lg sm:rounded-xl border border-white/5 overflow-hidden"
+      >
+        <button
+          onClick={handleClick}
+          className="w-full px-4 sm:px-6 py-3 sm:py-4 text-left flex justify-between items-center"
+        >
+          <span className="font-medium text-white text-sm sm:text-base">
+            {item.question}
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform ${
+              activeQuestion === index ? "transform rotate-180" : ""
+            }`}
+          />
+        </button>
+        {activeQuestion === index && (
+          <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-sm sm:text-base text-gray-300">
+            {item.answer}
+          </div>
+        )}
+      </motion.div>
+    );
+  }
+);
+
+AccordionItem.displayName = "AccordionItem";
+
+const Testimonial = memo(({ testimonial }) => {
+  return (
+    <motion.div
+      variants={ITEM_VARIANTS}
+      className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+    >
+      <div className="flex items-start gap-4 mb-4">
+        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+          <img
+            src={testimonial.avatar}
+            alt={testimonial.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        </div>
+        <div>
+          <div className="font-semibold text-white">{testimonial.name}</div>
+          <div className="text-gray-400 text-sm">{testimonial.role}</div>
+          <div className="flex items-center gap-1 mt-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`w-3 h-3 ${
+                  i < testimonial.rating ? "text-yellow-400" : "text-gray-600"
+                }`}
+                fill={i < testimonial.rating ? "currentColor" : "none"}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="ml-auto bg-green-500/20 px-3 py-1 rounded-full">
+          <span className="text-xs font-medium text-green-400">
+            {testimonial.earnings}
+          </span>
+        </div>
+      </div>
+      <p className="text-gray-300 text-sm italic">{testimonial.quote}</p>
+    </motion.div>
+  );
+});
+
+Testimonial.displayName = "Testimonial";
+
+const HowItWorksItem = memo(({ item, index }) => {
+  return (
+    <motion.div variants={ITEM_VARIANTS} className="flex gap-4 sm:gap-6">
+      <div className="flex-shrink-0 relative">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center z-10 relative">
+          {item.icon}
+        </div>
+        {index < HOW_IT_WORKS.length - 1 && (
+          <div className="absolute top-12 sm:top-14 bottom-0 left-1/2 w-0.5 -ml-[1px] bg-gradient-to-b from-white/20 to-transparent h-full"></div>
+        )}
+      </div>
+      <div className="pt-1.5">
+        <h3 className="text-white font-medium mb-1">{item.title}</h3>
+        <p className="text-gray-400 text-sm">{item.description}</p>
+      </div>
+    </motion.div>
+  );
+});
+
+HowItWorksItem.displayName = "HowItWorksItem";
+
+// Component chính
 function EarningsPage() {
   const [activeQuestion, setActiveQuestion] = useState(null);
-  const [steps, setSteps] = useState([1, 2, 3]);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+      setCurrentTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const features = [
-    {
-      icon: DollarSign,
-      title: "Chia sẻ 50% doanh thu",
-      description:
-        "Nhận ngay 50% giá trị khóa học cho mỗi học viên bạn giới thiệu thành công",
-    },
-    {
-      icon: Users,
-      title: "Không giới hạn số lượng",
-      description:
-        "Càng nhiều học viên, thu nhập càng cao. Không có giới hạn về số lượng giới thiệu",
-    },
-    {
-      icon: TrendingUp,
-      title: "Thu nhập thụ động",
-      description:
-        "Xây dựng nguồn thu nhập thụ động, nhận hoa hồng mỗi khi có người mua khóa học",
-    },
-    {
-      icon: Gift,
-      title: "Ưu đãi hấp dẫn",
-      description: "Nhận thêm nhiều ưu đãi đặc biệt khi đạt các mốc doanh số",
-    },
-  ];
+  const handleRegisterPartner = useCallback(() => {
+    toast.success("Đã gửi yêu cầu đăng ký đối tác thành công!");
+  }, []);
 
-  const contacts = [
-    {
-      icon: Phone,
-      name: "Zalo",
-      value: "0123.456.789",
-      href: "https://zalo.me/0123456789",
-      color: "bg-blue-500",
-    },
-    {
-      icon: Facebook,
-      name: "Facebook",
-      value: "Code MUA",
-      href: "https://facebook.com/codemua",
-      color: "bg-[#1877f2]",
-    },
-    {
-      icon: MessageCircle,
-      name: "Telegram",
-      value: "@codemua",
-      href: "https://t.me/codemua",
-      color: "bg-[#0088cc]",
-    },
-  ];
-
-  const faq = [
-    {
-      question: "Tôi sẽ được trả tiền như thế nào?",
-      answer:
-        "Mọi khoản thanh toán sẽ được chuyển vào tài khoản ngân hàng hoặc ví điện tử của bạn vào ngày 15 hàng tháng. Số tiền tối thiểu để rút là 500.000 VNĐ.",
-    },
-    {
-      question: "Làm thế nào để theo dõi doanh thu của tôi?",
-      answer:
-        "Bạn có thể theo dõi doanh thu theo thời gian thực qua bảng điều khiển đối tác của chúng tôi. Hệ thống sẽ hiển thị chi tiết về số lượt truy cập, đăng ký và doanh thu.",
-    },
-    {
-      question: "Tôi có cần kiến thức về lập trình để tham gia không?",
-      answer:
-        "Không, bạn không cần bất kỳ kiến thức kỹ thuật nào. Chỉ cần chia sẻ liên kết giới thiệu của bạn qua mạng xã hội, blog hoặc email là đủ để bắt đầu kiếm tiền.",
-    },
-    {
-      question: "Thời gian cookie theo dõi kéo dài bao lâu?",
-      answer:
-        "Cookie theo dõi của chúng tôi có hiệu lực trong 30 ngày. Điều này có nghĩa là nếu người dùng nhấp vào liên kết của bạn và hoàn tất việc mua hàng trong vòng 30 ngày, bạn vẫn sẽ nhận được hoa hồng.",
-    },
-    {
-      question: "Code MUA có đảm bảo tính minh bạch không?",
-      answer:
-        "Tuyệt đối! Chúng tôi cam kết 100% minh bạch trong toàn bộ quá trình tính hoa hồng. Bạn có thể theo dõi mọi giao dịch, lịch sử thanh toán và doanh số theo thời gian thực thông qua bảng điều khiển đối tác. Ngoài ra, chúng tôi cung cấp báo cáo chi tiết hàng tháng về hiệu suất giới thiệu của bạn.",
-    },
-    {
-      question: "Có cam kết pháp lý nào bảo vệ tôi khi làm đối tác không?",
-      answer:
-        "Có, khi tham gia làm đối tác, bạn sẽ được ký hợp đồng hợp tác chính thức với Code MUA. Hợp đồng này đảm bảo quyền lợi của bạn, quy định rõ mức hoa hồng 50%, chu kỳ thanh toán, và các điều khoản bảo vệ. Chúng tôi tuân thủ nghiêm ngặt tất cả quy định về bảo mật thông tin và quyền riêng tư theo pháp luật Việt Nam hiện hành.",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Nguyễn Minh Tuấn",
-      role: "Sinh viên Đại học",
-      quote:
-        "Chương trình đối tác của Code MUA đã giúp tôi có thêm nguồn thu nhập ổn định mỗi tháng. Chỉ với việc chia sẻ các khóa học với bạn bè và mạng lưới của mình, tôi đã kiếm được hơn 5 triệu đồng mỗi tháng.",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      rating: 5,
-      earnings: "5.2 triệu/tháng",
-    },
-    {
-      name: "Lê Thị Hương",
-      role: "Giáo viên THPT",
-      quote:
-        "Tôi thường giới thiệu các khóa học chất lượng cho học sinh của mình. Với chương trình đối tác của Code MUA, tôi không chỉ giúp học sinh tiếp cận kiến thức mà còn tạo ra thu nhập thụ động cho bản thân.",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      rating: 5,
-      earnings: "7.8 triệu/tháng",
-    },
-    {
-      name: "Trần Văn Nam",
-      role: "Blogger Công nghệ",
-      quote:
-        "Từ khi tham gia chương trình đối tác của Code MUA, doanh thu từ blog của tôi đã tăng gấp đôi. Việc giới thiệu các khóa học phù hợp với nội dung blog rất dễ dàng và mang lại hiệu quả cao.",
-      avatar: "https://randomuser.me/api/portraits/men/86.jpg",
-      rating: 4,
-      earnings: "12.5 triệu/tháng",
-    },
-  ];
-
-  const howItWorks = [
-    {
-      icon: <CheckCircle className="w-6 h-6 text-green-500" />,
-      title: "Đăng ký tài khoản đối tác",
-      description: "Điền thông tin cơ bản và xác thực tài khoản của bạn",
-    },
-    {
-      icon: <Zap className="w-6 h-6 text-yellow-500" />,
-      title: "Nhận liên kết giới thiệu độc quyền",
-      description: "Mỗi đối tác sẽ có mã giới thiệu riêng để theo dõi doanh số",
-    },
-    {
-      icon: <ArrowUpRight className="w-6 h-6 text-blue-500" />,
-      title: "Chia sẻ & Kiếm tiền",
-      description:
-        "Chia sẻ liên kết qua mạng xã hội, blog hoặc trực tiếp với mạng lưới của bạn",
-    },
-  ];
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
+  const handleContactRequest = useCallback(() => {
+    toast.success("Đã gửi yêu cầu liên hệ thành công!");
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#141414] to-[#1a1a1a] relative">
@@ -193,219 +337,44 @@ function EarningsPage() {
         <div className="hidden sm:block absolute bottom-[10%] left-[10%] w-[25%] h-[25%] bg-blue-500/5 rounded-full filter blur-[80px]"></div>
       </div>
 
-      {/* Main content - expands to full width on mobile, accounts for sidebar on desktop */}
+      {/* Main content */}
       <div className="w-full flex-1 z-10">
         <main className="w-full px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
           <div className="max-w-[1200px] mx-auto">
             {/* Hero Section */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-10 sm:mb-16 relative overflow-hidden"
+              transition={{ duration: 0.5 }}
+              className="text-center mb-12 sm:mb-16 md:mb-20"
             >
-              {/* Background elements */}
-              <div className="absolute -top-10 sm:-top-20 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-[#ff4d4f]/10 rounded-full filter blur-2xl sm:blur-3xl opacity-30" />
-              <div className="absolute -bottom-10 sm:-bottom-20 right-0 w-56 sm:w-80 h-56 sm:h-80 bg-[#f5222d]/10 rounded-full filter blur-2xl sm:blur-3xl opacity-30" />
-
-              <div className="relative">
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="inline-block mb-4 sm:mb-6"
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
+                Trở thành đối tác & kiếm{" "}
+                <span className="text-[#ff4d4f]">50% doanh thu</span>
+              </h1>
+              <p className="text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto mb-8 sm:mb-10">
+                Chia sẻ kiến thức, tạo thu nhập thụ động cùng Code MUA trong
+                chương trình đối tác giới thiệu học viên
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={handleRegisterPartner}
+                  className="bg-gradient-to-r from-[#ff4d4f] to-[#f5222d] hover:from-[#ff7875] hover:to-[#ff4d4f] text-white font-medium px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
                 >
-                  <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#ff4d4f]/10 text-[#ff4d4f] rounded-full text-xs sm:text-sm font-medium">
-                    Chương trình đối tác 2025
-                  </span>
-                </motion.div>
-                <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-[#ff4d4f] to-[#f5222d] bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight px-2 sm:px-3">
-                  Kiếm Tiền Cùng Code MUA
-                </h1>
-                <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-6 sm:mb-8 px-2 sm:px-3">
-                  Trở thành đối tác của chúng tôi và nhận ngay{" "}
-                  <span className="text-[#ff4d4f] font-semibold">
-                    50% doanh thu
-                  </span>{" "}
-                  từ mỗi khóa học được bán ra thông qua bạn
-                </p>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                  className="flex flex-wrap justify-center gap-3 sm:gap-4"
+                  Đăng ký ngay
+                </button>
+                <button
+                  onClick={handleContactRequest}
+                  className="bg-transparent border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-lg transition-all"
                 >
-                  <button className="bg-gradient-to-r from-[#ff4d4f] to-[#f5222d] text-white px-5 sm:px-8 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-medium inline-flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/20 hover:-translate-y-1">
-                    Tham Gia Ngay
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-                  <button className="bg-white/10 backdrop-blur-sm text-white border border-white/20 px-5 sm:px-8 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-medium inline-flex items-center gap-2 transition-all hover:bg-white/20">
-                    Tìm hiểu thêm
-                  </button>
-                </motion.div>
+                  Tìm hiểu thêm
+                </button>
               </div>
             </motion.div>
 
-            {/* Stats Section */}
+            {/* Features */}
             <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              className="mb-12 sm:mb-16 md:mb-20"
-            >
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-8 sm:mb-12 text-white">
-                Những con số ấn tượng
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/5 hover:border-[#ff4d4f]/20 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/5"
-                >
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#ff4d4f] mb-1 sm:mb-2">
-                    50%
-                  </div>
-                  <div className="text-xs sm:text-sm md:text-base text-gray-300 font-medium">
-                    Tỷ lệ chia sẻ doanh thu
-                  </div>
-                </motion.div>
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/5 hover:border-[#ff4d4f]/20 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/5"
-                >
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#ff4d4f] mb-1 sm:mb-2">
-                    24/7
-                  </div>
-                  <div className="text-xs sm:text-sm md:text-base text-gray-300 font-medium">
-                    Hỗ trợ đối tác
-                  </div>
-                </motion.div>
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/5 hover:border-[#ff4d4f]/20 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/5"
-                >
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#ff4d4f] mb-1 sm:mb-2">
-                    1M+
-                  </div>
-                  <div className="text-xs sm:text-sm md:text-base text-gray-300 font-medium">
-                    Đã chi trả cho đối tác
-                  </div>
-                </motion.div>
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center border border-white/5 hover:border-[#ff4d4f]/20 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/5"
-                >
-                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#ff4d4f] mb-1 sm:mb-2">
-                    500+
-                  </div>
-                  <div className="text-xs sm:text-sm md:text-base text-gray-300 font-medium">
-                    Đối tác tích cực
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Cam kết chất lượng - Phần mới để tăng độ tin cậy */}
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              className="mb-12 sm:mb-16 md:mb-20 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 border border-white/5"
-            >
-              <div className="text-center mb-8 sm:mb-10">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
-                  Cam Kết Chất Lượng
-                </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
-                  Chúng tôi tự hào về tiêu chuẩn cao trong mọi khía cạnh hoạt
-                  động
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="bg-[#ff4d4f]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <Award className="w-6 h-6 text-[#ff4d4f]" />
-                  </div>
-                  <h3 className="text-white font-semibold text-lg mb-2">
-                    Chương Trình Được Công Nhận
-                  </h3>
-                  <p className="text-gray-300 text-sm">
-                    Chương trình đối tác của chúng tôi đã được hơn 10.000 người
-                    tham gia và công nhận về tính minh bạch và hiệu quả.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="bg-blue-500/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-6 h-6 text-blue-500"
-                    >
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    </svg>
-                  </div>
-                  <h3 className="text-white font-semibold text-lg mb-2">
-                    Thanh Toán Đảm Bảo
-                  </h3>
-                  <p className="text-gray-300 text-sm">
-                    Hệ thống thanh toán an toàn, tự động và đảm bảo bạn nhận
-                    được tiền hoa hồng đúng hạn vào ngày 15 hàng tháng.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="bg-green-500/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-6 h-6 text-green-500"
-                    >
-                      <path d="M20 7h-9"></path>
-                      <path d="M14 17H5"></path>
-                      <circle cx="17" cy="17" r="3"></circle>
-                      <circle cx="7" cy="7" r="3"></circle>
-                    </svg>
-                  </div>
-                  <h3 className="text-white font-semibold text-lg mb-2">
-                    Hỗ Trợ Riêng Biệt
-                  </h3>
-                  <p className="text-gray-300 text-sm">
-                    Đội ngũ hỗ trợ đối tác chuyên nghiệp 24/7, giúp bạn tối ưu
-                    hóa chiến lược tiếp thị và tăng doanh thu.
-                  </p>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Features Grid */}
-            <motion.div
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
@@ -415,90 +384,46 @@ function EarningsPage() {
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
                   Lợi ích khi trở thành đối tác
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
-                  Chương trình đối tác của chúng tôi được thiết kế để mang lại
-                  lợi ích tối đa cho bạn
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                  Chương trình đối tác giới thiệu học viên mang đến nhiều giá
+                  trị cho cả bạn và người học
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
-                {features.map((feature, index) => {
-                  const Icon = feature.icon;
-                  return (
-                    <motion.div
-                      variants={itemVariants}
-                      key={index}
-                      className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-8 border border-white/5 hover:border-[#ff4d4f]/30 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/5 group"
-                    >
-                      <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-                        <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl bg-[#ff4d4f]/10 group-hover:bg-[#ff4d4f]/20 transition-colors">
-                          <Icon className="h-5 w-5 sm:h-7 sm:w-7 text-[#ff4d4f]" />
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-semibold text-white">
-                          {feature.title}
-                        </h3>
-                      </div>
-                      <p className="text-sm sm:text-base text-gray-300 pl-12 sm:pl-16">
-                        {feature.description}
-                      </p>
-                    </motion.div>
-                  );
-                })}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                {FEATURES.map((feature, index) => (
+                  <FeatureCard key={index} feature={feature} />
+                ))}
               </div>
             </motion.div>
 
             {/* How it works */}
             <motion.div
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
-              className="mb-12 sm:mb-16 md:mb-20"
+              className="mb-12 sm:mb-16 md:mb-20 bg-gradient-to-br from-[#1f1f1f]/80 to-[#141414]/80 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/5"
             >
-              <div className="text-center mb-8 sm:mb-12">
+              <div className="text-center mb-8 sm:mb-10">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
                   Cách thức hoạt động
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
-                  Bắt đầu kiếm tiền chỉ với 3 bước đơn giản
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                  Chỉ 3 bước đơn giản để bắt đầu kiếm thu nhập
                 </p>
               </div>
 
-              <div className="relative">
-                {/* Connecting line */}
-                <div className="absolute top-24 left-1/2 h-[calc(100%-4rem)] w-0.5 bg-gradient-to-b from-[#ff4d4f] to-transparent hidden md:block transform -translate-x-1/2"></div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
-                  {howItWorks.map((step, index) => (
-                    <motion.div
-                      variants={itemVariants}
-                      key={index}
-                      className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-5 sm:p-8 border border-white/5 hover:border-[#ff4d4f]/20 transition-all hover:shadow-lg hover:shadow-[#ff4d4f]/5"
-                    >
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1f1f1f] border-4 border-[#ff4d4f]/20 flex items-center justify-center mb-4 sm:mb-6 mx-auto">
-                        <span className="text-lg sm:text-xl font-bold text-[#ff4d4f]">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div className="text-center">
-                        <div className="mb-3 sm:mb-4 flex justify-center">
-                          {step.icon}
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">
-                          {step.title}
-                        </h3>
-                        <p className="text-sm sm:text-base text-gray-300">
-                          {step.description}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+              <div className="space-y-8 sm:space-y-10">
+                {HOW_IT_WORKS.map((item, index) => (
+                  <HowItWorksItem key={index} item={item} index={index} />
+                ))}
               </div>
             </motion.div>
 
             {/* Testimonials */}
             <motion.div
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
@@ -506,178 +431,50 @@ function EarningsPage() {
             >
               <div className="text-center mb-8 sm:mb-12">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
-                  Câu chuyện thành công
+                  Đối tác nói gì về chúng tôi
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
-                  Nghe từ những đối tác đã thành công cùng chúng tôi
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                  Khám phá câu chuyện thành công từ các đối tác
                 </p>
               </div>
 
-              <div className="relative w-full">
-                <div className="overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-white/5 p-1 w-full">
-                  <div className="relative overflow-hidden rounded-lg sm:rounded-xl w-full">
-                    <div
-                      className="flex transition-transform duration-500 w-full"
-                      style={{
-                        transform: `translateX(-${currentTestimonial * 100}%)`,
-                      }}
-                    >
-                      {testimonials.map((testimonial, index) => (
-                        <div
-                          key={index}
-                          className="w-full flex-shrink-0 p-3 sm:p-4 md:p-8"
-                        >
-                          <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-[#ff4d4f]/20 flex-shrink-0">
-                              <img
-                                src={testimonial.avatar}
-                                alt={testimonial.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-
-                            <div>
-                              <div className="flex items-center justify-center md:justify-start mb-2">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                                      i < testimonial.rating
-                                        ? "text-yellow-500"
-                                        : "text-gray-600"
-                                    }`}
-                                    fill={
-                                      i < testimonial.rating
-                                        ? "#eab308"
-                                        : "none"
-                                    }
-                                  />
-                                ))}
-                              </div>
-                              <p className="text-sm sm:text-base text-gray-300 italic mb-3 sm:mb-4 text-center md:text-left">
-                                "{testimonial.quote}"
-                              </p>
-                              <div className="flex flex-col sm:flex-row items-center sm:justify-between">
-                                <div className="text-center md:text-left mb-2 sm:mb-0">
-                                  <h4 className="font-bold text-white">
-                                    {testimonial.name}
-                                  </h4>
-                                  <p className="text-gray-400 text-xs sm:text-sm">
-                                    {testimonial.role}
-                                  </p>
-                                </div>
-                                <div className="text-center sm:text-right">
-                                  <p className="text-xs sm:text-sm text-gray-400">
-                                    Thu nhập trung bình
-                                  </p>
-                                  <p className="text-[#ff4d4f] text-sm sm:text-base font-bold">
-                                    {testimonial.earnings}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dots */}
-                <div className="flex justify-center space-x-2 mt-4 sm:mt-6">
-                  {testimonials.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentTestimonial(index)}
-                      className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-colors ${
-                        currentTestimonial === index
-                          ? "bg-[#ff4d4f]"
-                          : "bg-gray-600"
-                      }`}
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {TESTIMONIALS.map((testimonial, index) => (
+                  <Testimonial key={index} testimonial={testimonial} />
+                ))}
               </div>
             </motion.div>
 
-            {/* Đối tác tin cậy - Thêm phần này để tăng độ tin cậy */}
+            {/* Contact & Support */}
             <motion.div
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
               className="mb-12 sm:mb-16 md:mb-20"
             >
-              <div className="text-center mb-8 sm:mb-10">
+              <div className="text-center mb-8 sm:mb-12">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
-                  Đối Tác Tin Cậy
+                  Liên hệ & Hỗ trợ
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
-                  Gia nhập cộng đồng đối tác uy tín từ các tổ chức giáo dục hàng
-                  đầu
+                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                  Đội ngũ hỗ trợ đối tác của chúng tôi luôn sẵn sàng hỗ trợ bạn
+                  24/7
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
-                >
-                  <div className="text-center">
-                    <div className="font-bold text-xl text-white mb-1">
-                      Đại học ABC
-                    </div>
-                    <div className="text-xs text-gray-400">Đối tác từ 2020</div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
-                >
-                  <div className="text-center">
-                    <div className="font-bold text-xl text-white mb-1">
-                      Viện CNTT XYZ
-                    </div>
-                    <div className="text-xs text-gray-400">Đối tác từ 2021</div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
-                >
-                  <div className="text-center">
-                    <div className="font-bold text-xl text-white mb-1">
-                      Trung tâm STEM
-                    </div>
-                    <div className="text-xs text-gray-400">Đối tác từ 2022</div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 rounded-lg p-5 flex items-center justify-center border border-white/10 hover:border-white/20 transition-colors h-24 sm:h-28"
-                >
-                  <div className="text-center">
-                    <div className="font-bold text-xl text-white mb-1">
-                      Tổ chức DEF
-                    </div>
-                    <div className="text-xs text-gray-400">Đối tác từ 2022</div>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className="mt-10 text-center">
-                <span className="text-sm text-gray-400">
-                  Và hơn 500+ đối tác khác trên toàn quốc
-                </span>
+              <div className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {CONTACTS.map((contact, index) => (
+                    <ContactItem key={index} contact={contact} />
+                  ))}
+                </div>
               </div>
             </motion.div>
 
             {/* FAQ Accordion */}
             <motion.div
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
@@ -693,268 +490,47 @@ function EarningsPage() {
               </div>
 
               <div className="space-y-3 sm:space-y-4 max-w-3xl mx-auto">
-                {faq.map((item, index) => (
-                  <motion.div
-                    variants={itemVariants}
+                {FAQ.map((item, index) => (
+                  <AccordionItem
                     key={index}
-                    className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-lg sm:rounded-xl border border-white/5 overflow-hidden"
-                  >
-                    <button
-                      onClick={() =>
-                        setActiveQuestion(
-                          activeQuestion === index ? null : index
-                        )
-                      }
-                      className="w-full px-4 sm:px-6 py-3 sm:py-4 text-left flex justify-between items-center"
-                    >
-                      <span className="font-medium text-white text-sm sm:text-base">
-                        {item.question}
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform ${
-                          activeQuestion === index ? "transform rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                    {activeQuestion === index && (
-                      <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-sm sm:text-base text-gray-300">
-                        {item.answer}
-                      </div>
-                    )}
-                  </motion.div>
+                    item={item}
+                    index={index}
+                    activeQuestion={activeQuestion}
+                    setActiveQuestion={setActiveQuestion}
+                  />
                 ))}
-              </div>
-            </motion.div>
-
-            {/* Chứng nhận & Bảo đảm - Thêm phần này để tăng độ tin cậy */}
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              className="mb-12 sm:mb-16 md:mb-20 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-white/5"
-            >
-              <div className="text-center mb-8">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3">
-                  Chứng Nhận & Bảo Đảm
-                </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
-                  Sự tin tưởng của đối tác là ưu tiên hàng đầu của chúng tôi
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-purple-500/20 w-12 h-12 rounded-lg flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-6 h-6 text-purple-400"
-                      >
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        <path d="m9 12 2 2 4-4"></path>
-                      </svg>
-                    </div>
-                    <h3 className="text-white font-semibold text-lg">
-                      Đảm Bảo Hoàn Tiền
-                    </h3>
-                  </div>
-                  <p className="text-gray-300 text-sm">
-                    Chúng tôi cam kết hoàn tiền 100% cho đối tác trong trường
-                    hợp khóa học không đạt chất lượng. Học viên được bạn giới
-                    thiệu cũng được đảm bảo hoàn tiền trong 30 ngày đầu tiên nếu
-                    không hài lòng.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-yellow-500/20 w-12 h-12 rounded-lg flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-6 h-6 text-yellow-400"
-                      >
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-                        <line x1="4" y1="22" x2="4" y2="15"></line>
-                      </svg>
-                    </div>
-                    <h3 className="text-white font-semibold text-lg">
-                      Chứng Nhận Chính Thức
-                    </h3>
-                  </div>
-                  <p className="text-gray-300 text-sm">
-                    Code MUA đã được chứng nhận bởi Bộ Giáo dục & Đào tạo và các
-                    tổ chức giáo dục hàng đầu. Tất cả đối tác sẽ nhận được chứng
-                    chỉ đối tác chính thức có thể sử dụng trên các nền tảng của
-                    mình.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-green-500/20 w-12 h-12 rounded-lg flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-6 h-6 text-green-400"
-                      >
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      </svg>
-                    </div>
-                    <h3 className="text-white font-semibold text-lg">
-                      Hỗ Trợ Đối Tác VIP
-                    </h3>
-                  </div>
-                  <p className="text-gray-300 text-sm">
-                    Đối tác Code MUA được hưởng dịch vụ hỗ trợ VIP 24/7, bao gồm
-                    quản lý tài khoản riêng và tư vấn chiến lược marketing cho
-                    từng đối tác. Chúng tôi hỗ trợ bạn trong mọi bước của quá
-                    trình.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 hover:border-white/20 transition-colors"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="bg-[#ff4d4f]/20 w-12 h-12 rounded-lg flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-6 h-6 text-[#ff4d4f]"
-                      >
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                      </svg>
-                    </div>
-                    <h3 className="text-white font-semibold text-lg">
-                      Hợp Đồng Pháp Lý Chặt Chẽ
-                    </h3>
-                  </div>
-                  <p className="text-gray-300 text-sm">
-                    Mỗi đối tác đều được ký kết hợp đồng pháp lý đầy đủ, bảo vệ
-                    quyền lợi và đảm bảo mức hoa hồng 50%. Hợp đồng của chúng
-                    tôi đã được kiểm duyệt bởi các luật sư chuyên ngành để đảm
-                    bảo tính pháp lý.
-                  </p>
-                </motion.div>
               </div>
             </motion.div>
 
             {/* CTA Section */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true, margin: "-100px" }}
-              className="bg-gradient-to-r from-[#ff4d4f]/20 to-[#f5222d]/20 rounded-xl sm:rounded-2xl md:rounded-3xl p-4 md:p-8 lg:p-10 text-center mb-12 sm:mb-16 md:mb-20 relative overflow-hidden"
-            >
-              {/* Decorative elements */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 rounded-full bg-[#ff4d4f]/30 filter blur-2xl sm:blur-3xl opacity-30"></div>
-                <div className="absolute bottom-0 left-0 w-32 sm:w-48 h-32 sm:h-48 rounded-full bg-[#ff4d4f]/30 filter blur-2xl sm:blur-3xl opacity-30"></div>
-              </div>
-
-              <div className="relative">
-                <span className="inline-block mb-3 sm:mb-4 px-3 sm:px-4 py-1 bg-white/10 backdrop-blur-sm rounded-full text-white text-xs sm:text-sm">
-                  Bắt đầu ngay hôm nay
-                </span>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6">
-                  Sẵn sàng tăng thu nhập của bạn?
-                </h2>
-                <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
-                  Chỉ cần chia sẻ link giới thiệu của bạn, chúng tôi sẽ lo phần
-                  còn lại. Hệ thống tự động theo dõi và ghi nhận tất cả các giao
-                  dịch.
-                </p>
-                <button className="bg-white text-[#ff4d4f] hover:bg-gray-100 px-5 sm:px-8 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-medium inline-flex items-center gap-2 transition-all hover:shadow-lg">
-                  Đăng ký làm đối tác
-                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Contact Section */}
-            <motion.div
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
-              className="mb-8 sm:mb-10 bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-8 border border-white/5"
+              className="mb-12 sm:mb-16 md:mb-20"
             >
-              <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-5 sm:mb-8">
-                Liên Hệ Với Chúng Tôi
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                {contacts.map((contact, index) => {
-                  const Icon = contact.icon;
-                  return (
-                    <motion.a
-                      variants={itemVariants}
-                      key={index}
-                      href={contact.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-5 rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/10 transition-colors group border border-white/5 hover:border-white/20"
-                    >
-                      <div
-                        className={`p-2 sm:p-3 rounded-md sm:rounded-lg ${contact.color}`}
-                      >
-                        <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-xs sm:text-sm text-gray-400 group-hover:text-gray-300">
-                          {contact.name}
-                        </div>
-                        <div className="text-sm sm:text-base text-white font-medium">
-                          {contact.value}
-                        </div>
-                      </div>
-                    </motion.a>
-                  );
-                })}
+              <div className="bg-gradient-to-r from-[#ff4d4f]/20 to-[#ff7875]/10 backdrop-blur-sm rounded-xl p-8 sm:p-10 border border-[#ff4d4f]/20 text-center">
+                <motion.h2
+                  variants={ITEM_VARIANTS}
+                  className="text-2xl sm:text-3xl font-bold text-white mb-4"
+                >
+                  Sẵn sàng tạo thu nhập thụ động?
+                </motion.h2>
+                <motion.p
+                  variants={ITEM_VARIANTS}
+                  className="text-gray-300 mb-6 max-w-2xl mx-auto"
+                >
+                  Gia nhập cộng đồng đối tác Code MUA ngay hôm nay và bắt đầu
+                  hành trình kiếm thu nhập thụ động
+                </motion.p>
+                <motion.button
+                  variants={ITEM_VARIANTS}
+                  onClick={handleRegisterPartner}
+                  className="bg-gradient-to-r from-[#ff4d4f] to-[#f5222d] hover:from-[#ff7875] hover:to-[#ff4d4f] text-white font-medium px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                >
+                  Đăng ký trở thành đối tác
+                </motion.button>
               </div>
             </motion.div>
           </div>
@@ -964,4 +540,4 @@ function EarningsPage() {
   );
 }
 
-export default EarningsPage;
+export default memo(EarningsPage);
