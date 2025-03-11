@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, memo } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useTheme } from "@/app/_context/ThemeContext";
 import {
@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/app/_utils/firebase";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Image from "next/image";
 import {
@@ -25,10 +25,55 @@ import {
   Camera,
 } from "lucide-react";
 
+// Component PasswordInput tách riêng để tối ưu hóa render
+const PasswordInput = memo(
+  ({ placeholder, showPassword, toggleVisibility, autoComplete, innerRef }) => {
+    const handleToggleVisibility = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleVisibility();
+      // Đặt lại focus sau khi toggle
+      setTimeout(() => innerRef.current?.focus(), 0);
+    };
+
+    return (
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
+          placeholder={placeholder}
+          defaultValue=""
+          ref={innerRef}
+          autoComplete={autoComplete}
+        />
+        <button
+          type="button"
+          tabIndex="-1"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          onClick={handleToggleVisibility}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          {showPassword ? "Ẩn" : "Hiện"}
+        </button>
+      </div>
+    );
+  }
+);
+
+PasswordInput.displayName = "PasswordInput";
+
 export default function SettingsPage() {
   const { user, profile, setProfile } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+
+  // Ref cho input passwords
+  const oldPasswordRef = useRef(null);
+  const newPasswordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
 
   // Tab state
   const [activeTab, setActiveTab] = useState("profile");
@@ -43,10 +88,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Password states
-  const [newPassword, setNewPassword] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  // Password states - chỉ giữ lại state cho việc hiển thị/ẩn và loading
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -139,12 +181,18 @@ export default function SettingsPage() {
   };
 
   const handleChangePassword = async () => {
-    if (newPassword !== confirmNewPassword) {
+    // Lấy giá trị từ refs
+    const oldPasswordValue = oldPasswordRef.current?.value || "";
+    const newPasswordValue = newPasswordRef.current?.value || "";
+    const confirmNewPasswordValue = confirmPasswordRef.current?.value || "";
+
+    // Kiểm tra form trước khi xử lý
+    if (newPasswordValue !== confirmNewPasswordValue) {
       toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp.");
       return;
     }
 
-    if (!oldPassword || !newPassword) {
+    if (!oldPasswordValue || !newPasswordValue) {
       toast.error("Vui lòng nhập đầy đủ thông tin mật khẩu.");
       return;
     }
@@ -153,21 +201,49 @@ export default function SettingsPage() {
       setIsChangingPassword(true);
       setError("");
 
-      const credential = EmailAuthProvider.credential(user.email, oldPassword);
+      // Hiển thị thông báo khi bắt đầu xử lý
+      toast.loading("Đang xử lý đổi mật khẩu...", { id: "password-change" });
+
+      // Tạo credential để xác thực lại người dùng
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        oldPasswordValue
+      );
+
+      // Xác thực lại người dùng trước khi đổi mật khẩu
       await reauthenticateWithCredential(user, credential);
-      await updatePassword(user, newPassword);
+
+      // Cập nhật mật khẩu
+      await updatePassword(user, newPasswordValue);
 
       // Reset password fields after successful change
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
-      toast.success("Mật khẩu đã được thay đổi thành công!");
+      if (oldPasswordRef.current) oldPasswordRef.current.value = "";
+      if (newPasswordRef.current) newPasswordRef.current.value = "";
+      if (confirmPasswordRef.current) confirmPasswordRef.current.value = "";
+
+      // Hiển thị thông báo thành công rõ ràng hơn
+      toast.success("Mật khẩu đã được thay đổi thành công!", {
+        id: "password-change",
+        duration: 5000,
+      });
+
+      // Thêm thông báo trực tiếp trên UI
+      setError("Đổi mật khẩu thành công!");
     } catch (error) {
       if (error.code === "auth/wrong-password") {
-        toast.error("Mật khẩu cũ không chính xác.");
+        toast.error("Mật khẩu cũ không chính xác.", {
+          id: "password-change",
+          duration: 5000,
+        });
+        setError("Mật khẩu cũ không chính xác.");
       } else {
-        setError(error.message || "Đã xảy ra lỗi khi thay đổi mật khẩu.");
-        toast.error("Đã xảy ra lỗi khi thay đổi mật khẩu. Vui lòng thử lại.");
+        const errorMessage =
+          error.message || "Đã xảy ra lỗi khi thay đổi mật khẩu.";
+        setError(errorMessage);
+        toast.error("Đã xảy ra lỗi khi thay đổi mật khẩu. Vui lòng thử lại.", {
+          id: "password-change",
+          duration: 5000,
+        });
       }
     } finally {
       setIsChangingPassword(false);
@@ -533,85 +609,83 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <h3 className="text-xl font-semibold">Đổi mật khẩu</h3>
         <div className="space-y-6 bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg p-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-400">
-              Mật khẩu hiện tại
-            </label>
-            <div className="relative">
-              <input
-                type={showOldPassword ? "text" : "password"}
-                className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
-                placeholder="Nhập mật khẩu hiện tại"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                onClick={() => setShowOldPassword(!showOldPassword)}
-              >
-                {showOldPassword ? "Ẩn" : "Hiện"}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-400">
-              Mật khẩu mới
-            </label>
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
-                placeholder="Nhập mật khẩu mới"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-              >
-                {showNewPassword ? "Ẩn" : "Hiện"}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-400">
-              Xác nhận mật khẩu mới
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                className="w-full px-4 py-2 border border-[var(--border-color)] rounded-lg bg-[var(--input-background)] text-[var(--text-color)]"
-                placeholder="Xác nhận mật khẩu mới"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? "Ẩn" : "Hiện"}
-              </button>
-            </div>
-          </div>
-
-          <button
-            className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff7875] transition-colors"
-            onClick={handleChangePassword}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleChangePassword();
+            }}
+            className="space-y-6"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
-            {isChangingPassword ? (
-              <span className="flex items-center justify-center">
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang cập nhật...
-              </span>
-            ) : (
-              "Đổi mật khẩu"
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-400">
+                Mật khẩu hiện tại
+              </label>
+              <PasswordInput
+                placeholder="Nhập mật khẩu hiện tại"
+                showPassword={showOldPassword}
+                toggleVisibility={() => setShowOldPassword(!showOldPassword)}
+                autoComplete="current-password"
+                innerRef={oldPasswordRef}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-400">
+                Mật khẩu mới
+              </label>
+              <PasswordInput
+                placeholder="Nhập mật khẩu mới"
+                showPassword={showNewPassword}
+                toggleVisibility={() => setShowNewPassword(!showNewPassword)}
+                autoComplete="new-password"
+                innerRef={newPasswordRef}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-400">
+                Xác nhận mật khẩu mới
+              </label>
+              <PasswordInput
+                placeholder="Xác nhận mật khẩu mới"
+                showPassword={showConfirmPassword}
+                toggleVisibility={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+                autoComplete="new-password"
+                innerRef={confirmPasswordRef}
+              />
+            </div>
+
+            {/* Hiển thị thông báo lỗi hoặc thành công */}
+            {error && (
+              <div
+                className={`p-3 rounded-lg ${
+                  error === "Đổi mật khẩu thành công!"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                    : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                }`}
+              >
+                {error}
+              </div>
             )}
-          </button>
+
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg hover:bg-[#ff7875] transition-colors"
+            >
+              {isChangingPassword ? (
+                <span className="flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang cập nhật...
+                </span>
+              ) : (
+                "Đổi mật khẩu"
+              )}
+            </button>
+          </form>
         </div>
       </div>
 
@@ -1165,7 +1239,7 @@ export default function SettingsPage() {
               </p>
 
               <div className="space-y-3 mb-2">
-                <div className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-700">
+                <div className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                   <input
                     type="radio"
                     name="plan-type"
