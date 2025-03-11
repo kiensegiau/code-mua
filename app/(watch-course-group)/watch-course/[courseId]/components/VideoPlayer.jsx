@@ -1,5 +1,8 @@
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from "react";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import Plyr from "plyr";
+import "plyr/dist/plyr.css";
+import "./plyr-custom.css"; // Import CSS tùy chỉnh cho Plyr
 
 // Hàm helper để lấy stream URL từ API
 const getStreamUrl = async (key) => {
@@ -56,22 +59,6 @@ const NavigationButtons = memo(function NavigationButtons({
   );
 });
 
-// Component thanh tiến trình riêng biệt
-const ProgressBar = memo(function ProgressBar({ currentTime, videoDuration }) {
-  const progressWidth = useMemo(() => {
-    return `${(currentTime / (videoDuration || 1)) * 100}%`;
-  }, [currentTime, videoDuration]);
-
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
-      <div
-        className="h-full bg-[#ff4d4f] transition-all duration-300"
-        style={{ width: progressWidth }}
-      />
-    </div>
-  );
-});
-
 const VideoPlayer = memo(function VideoPlayer({
   file,
   onEnded,
@@ -81,6 +68,7 @@ const VideoPlayer = memo(function VideoPlayer({
   autoPlay = true,
 }) {
   const videoRef = useRef(null);
+  const playerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [videoKey, setVideoKey] = useState(() => {
     return `${file?.id || "initial"}-${Date.now()}`;
@@ -120,8 +108,8 @@ const VideoPlayer = memo(function VideoPlayer({
             `Phục hồi vị trí cho video ${file.id}: ${savedPosition.position}s`
           );
           setCurrentTime(savedPosition.position);
-          if (videoRef.current) {
-            videoRef.current.currentTime = savedPosition.position;
+          if (playerRef.current) {
+            playerRef.current.currentTime = savedPosition.position;
           }
         } else {
           setCurrentTime(0);
@@ -155,25 +143,76 @@ const VideoPlayer = memo(function VideoPlayer({
     fetchStreamUrl();
   }, [file]);
 
-  // Xử lý các sự kiện video
-  const handleTimeUpdate = useCallback(() => {
-    if (!videoRef.current) return;
+  // Khởi tạo Plyr khi có streamUrl
+  useEffect(() => {
+    if (!streamUrl || !videoRef.current) return;
 
-    const time = videoRef.current.currentTime;
-    const duration = videoRef.current.duration;
-
-    setCurrentTime(time);
-    setVideoDuration(duration);
-
-    // Lưu vị trí vào localStorage (giới hạn mỗi 5 giây)
-    if (Math.floor(time) % 5 === 0 && file?.id) {
-      saveVideoPosition(file.id, time, duration);
+    // Hủy player cũ nếu có
+    if (playerRef.current) {
+      playerRef.current.destroy();
     }
 
-    if (onTimeUpdate) {
-      onTimeUpdate(time, duration);
-    }
-  }, [file, onTimeUpdate]);
+    // Khởi tạo Plyr
+    const player = new Plyr(videoRef.current, {
+      controls: [
+        "play-large",
+        "play",
+        "progress",
+        "current-time",
+        "mute",
+        "volume",
+        "captions",
+        "settings",
+        "fullscreen",
+      ],
+      autoplay: autoPlay,
+      keyboard: { focused: true, global: true },
+      tooltips: { controls: true, seek: true },
+      i18n: {
+        play: "Phát",
+        pause: "Tạm dừng",
+        mute: "Tắt tiếng",
+        unmute: "Bật tiếng",
+        enterFullscreen: "Toàn màn hình",
+        exitFullscreen: "Thoát toàn màn hình",
+        settings: "Cài đặt",
+        speed: "Tốc độ",
+        normal: "Bình thường",
+      },
+    });
+
+    // Cập nhật playerRef
+    playerRef.current = player;
+
+    // Đăng ký các sự kiện
+    player.on("timeupdate", () => {
+      const time = player.currentTime;
+      const duration = player.duration;
+
+      setCurrentTime(time);
+      setVideoDuration(duration);
+
+      // Lưu vị trí vào localStorage (giới hạn mỗi 5 giây)
+      if (Math.floor(time) % 5 === 0 && file?.id) {
+        saveVideoPosition(file.id, time, duration);
+      }
+
+      if (onTimeUpdate) {
+        onTimeUpdate(time, duration);
+      }
+    });
+
+    player.on("ended", handleVideoEnd);
+    player.on("play", handleVideoPlay);
+    player.on("ready", handleLoadedMetadata);
+
+    return () => {
+      // Dọn dẹp khi component unmount
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+    };
+  }, [streamUrl, autoPlay, file]);
 
   const handleVideoEnd = useCallback(() => {
     if (!file?.id) return;
@@ -280,12 +319,8 @@ const VideoPlayer = memo(function VideoPlayer({
             isLoading ? "opacity-0" : "opacity-100"
           }`}
           src={streamUrl}
-          controls
-          autoPlay={autoPlay}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleVideoEnd}
-          onPlay={handleVideoPlay}
-          onLoadedMetadata={handleLoadedMetadata}
+          autoPlay={false} // Plyr sẽ xử lý autoplay
+          playsInline
         />
 
         {/* Nút điều hướng */}
@@ -293,14 +328,6 @@ const VideoPlayer = memo(function VideoPlayer({
           onNext={handleNextVideo}
           onPrevious={handlePreviousVideo}
         />
-
-        {/* Thanh tiến trình */}
-        {!isLoading && (
-          <ProgressBar
-            currentTime={currentTime}
-            videoDuration={videoDuration}
-          />
-        )}
       </div>
     </div>
   );
