@@ -185,6 +185,22 @@ export const useVideoNavigation = ({
       if (!video || !lesson || !chapter) return;
 
       console.log("Setting active video:", video);
+
+      // Cập nhật chương đang mở
+      if (chapter && chapter.id !== activeChapter?.id) {
+        const chapterIndex = sortedChapters.findIndex(
+          (c) => c.id === chapter.id
+        );
+        if (chapterIndex !== -1) {
+          setExpandedChapterIndex(chapterIndex);
+        }
+      }
+
+      // Cập nhật bài học đang mở
+      if (lesson && lesson.id !== activeLesson?.id) {
+        setExpandedLessonId(lesson.id);
+      }
+
       if (handleLessonClick) {
         handleLessonClick(lesson, chapter, video);
       } else {
@@ -192,7 +208,16 @@ export const useVideoNavigation = ({
       }
       saveLastWatchedState(lesson, chapter, video);
     },
-    [handleLessonClick, setActiveVideo, saveLastWatchedState]
+    [
+      handleLessonClick,
+      setActiveVideo,
+      saveLastWatchedState,
+      activeChapter,
+      activeLesson,
+      sortedChapters,
+      setExpandedChapterIndex,
+      setExpandedLessonId,
+    ]
   );
 
   // Khôi phục trạng thái xem video từ localStorage
@@ -296,7 +321,16 @@ export const useVideoNavigation = ({
             .filter((f) => f.type?.includes("video"))
             .sort((a, b) => sortItems(a, b, "name"))[0];
 
-          setExpandedChapterIndex((prevIndex) => prevIndex + 1);
+          // Tìm chương index để cập nhật chính xác
+          const nextChapterIndex = sortedChapters.findIndex(
+            (c) => c.id === nextChapter.id
+          );
+          if (nextChapterIndex !== -1) {
+            setExpandedChapterIndex(nextChapterIndex);
+          } else {
+            setExpandedChapterIndex((prevIndex) => prevIndex + 1);
+          }
+
           setExpandedLessonId(firstLessonWithVideo.id);
           handleLessonClickWrapper(
             firstLessonWithVideo,
@@ -325,6 +359,7 @@ export const useVideoNavigation = ({
     setExpandedLessonId,
     setExpandedChapterIndex,
     sortItems,
+    sortedChapters,
   ]);
 
   // Chuyển đến video trước đó
@@ -375,7 +410,16 @@ export const useVideoNavigation = ({
             .sort((a, b) => sortItems(a, b, "name"))
             .pop();
 
-          setExpandedChapterIndex((prevIndex) => prevIndex - 1);
+          // Tìm chương index để cập nhật chính xác
+          const prevChapterIndex = sortedChapters.findIndex(
+            (c) => c.id === prevChapter.id
+          );
+          if (prevChapterIndex !== -1) {
+            setExpandedChapterIndex(prevChapterIndex);
+          } else {
+            setExpandedChapterIndex((prevIndex) => prevIndex - 1);
+          }
+
           setExpandedLessonId(lastLessonWithVideo.id);
           handleLessonClickWrapper(lastLessonWithVideo, prevChapter, lastVideo);
           return;
@@ -400,6 +444,7 @@ export const useVideoNavigation = ({
     setExpandedLessonId,
     setExpandedChapterIndex,
     sortItems,
+    sortedChapters,
   ]);
 
   // Khôi phục trạng thái xem cuối cùng khi component được mount hoặc khi thông tin khóa học thay đổi

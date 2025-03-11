@@ -252,6 +252,40 @@ const CourseContent = forwardRef(
       [getNumberFromTitle]
     );
 
+    // Thêm effect để tự động mở đúng chương và bài học khi video được chọn thay đổi
+    useEffect(() => {
+      if (activeVideo && activeLesson && activeChapter) {
+        // Tìm index của chapter hiện tại trong danh sách chapters đã sắp xếp
+        const sortedChapters = [...chapters].sort(sortByNumber);
+        const currentChapterIndex = sortedChapters.findIndex(
+          (c) => c.id === activeChapter.id
+        );
+
+        // Cập nhật expanded chapter nếu khác với giá trị hiện tại
+        if (
+          currentChapterIndex !== -1 &&
+          expandedChapterIndex !== currentChapterIndex
+        ) {
+          setExpandedChapterIndex(currentChapterIndex);
+        }
+
+        // Cập nhật expanded lesson nếu khác với giá trị hiện tại
+        if (expandedLessonId !== activeLesson.id) {
+          setExpandedLessonId(activeLesson.id);
+        }
+      }
+    }, [
+      activeVideo,
+      activeLesson,
+      activeChapter,
+      chapters,
+      expandedChapterIndex,
+      expandedLessonId,
+      setExpandedChapterIndex,
+      setExpandedLessonId,
+      sortByNumber,
+    ]);
+
     // Xử lý khi video kết thúc
     const handleVideoEnd = useCallback(() => {
       if (!activeLesson || !activeChapter || !activeVideo) {
