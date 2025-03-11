@@ -80,17 +80,12 @@ const Header = memo(({ courseInfo, videoProgress, handleLogout }) => (
           <div className="text-xs bg-gray-800/50 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-2">
             <div className="flex items-center gap-1">
               <span className="text-[#ff4d4f] font-medium">
-                {Object.values(videoProgress).filter((p) => p === 100).length}
+                
               </span>
-              <span className="text-gray-400">/</span>
-              <span className="text-gray-300">
-                {courseInfo?.chapters?.reduce(
-                  (total, chapter) => total + (chapter?.lessons?.length || 0),
-                  0
-                ) || 0}
-              </span>
+              
+              
             </div>
-            <span className="text-gray-400">bài học</span>
+           
           </div>
 
           <button

@@ -175,9 +175,7 @@ const ChapterItem = memo(function ChapterItem({
               {chapter.title}
             </h4>
             <p className="text-xs text-gray-500">
-              {`${chapter.completedLessons || 0}/${
-                chapter.lessons?.length || 0
-              } bài học`}
+              {`${chapter.lessons?.length || 0} bài học`}
             </p>
           </div>
         </div>
