@@ -286,8 +286,8 @@ const CourseItem = memo(function CourseItem({ course }) {
   return (
     <>
       <TooltipProvider>
-        <div onClick={handleCourseClick} className="cursor-pointer">
-          <div className="h-full bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 hover-translate-up">
+        <div onClick={handleCourseClick} className="cursor-pointer h-full">
+          <div className="h-full flex flex-col bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 shadow-md hover:shadow-xl transition-all duration-300 hover-translate-up">
             {/* Thumbnail section */}
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
               {/* Placeholder với gradient */}
@@ -377,7 +377,7 @@ const CourseItem = memo(function CourseItem({ course }) {
             </div>
 
             {/* Content section with consistent spacing */}
-            <div className="flex-1 p-3 flex flex-col">
+            <div className="flex-1 p-3 flex flex-col justify-between min-h-[180px]">
               <TooltipRoot>
                 <TooltipTrigger asChild>
                   <h2 className="font-semibold text-gray-200 text-base mb-1 line-clamp-2 group-hover:text-[#ff4d4f] transition-colors">
@@ -441,34 +441,43 @@ const CourseItem = memo(function CourseItem({ course }) {
                 </div>
               </div>
 
-              {/* Enroll button - tối ưu hóa animation */}
-              {!isEnrolled && (
-                <button
-                  onClick={handleEnrollClick}
-                  disabled={enrolling || verifying || !canEnroll}
-                  className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 hover-scale
-                    ${
-                      enrolling || verifying
-                        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                        : canEnroll
-                        ? "bg-[#ff4d4f] text-white hover:bg-[#ff4d4f]/90"
-                        : "bg-gray-700 text-gray-400 cursor-not-allowed"
-                    }
-                  `}
-                >
-                  {enrolling
-                    ? "Đang xử lý..."
-                    : verifying
-                    ? "Đang xác minh..."
-                    : !canEnroll
-                    ? coursePrice > userBalance
-                      ? "Số dư không đủ"
-                      : isEnrolled
-                      ? "Đã đăng ký"
-                      : "Không thể đăng ký"
-                    : "Đăng ký ngay"}
-                </button>
-              )}
+              {/* Enroll/Start Learning button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isEnrolled) {
+                    router.push(`/watch-course/${course.id}`);
+                  } else {
+                    handleEnrollClick(e);
+                  }
+                }}
+                disabled={!isEnrolled && (enrolling || verifying || !canEnroll)}
+                className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 hover-scale
+                  ${
+                    isEnrolled
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : enrolling || verifying
+                      ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                      : canEnroll
+                      ? "bg-[#ff4d4f] text-white hover:bg-[#ff4d4f]/90"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  }
+                `}
+              >
+                {isEnrolled
+                  ? "Vào học ngay"
+                  : enrolling
+                  ? "Đang xử lý..."
+                  : verifying
+                  ? "Đang xác minh..."
+                  : !canEnroll
+                  ? coursePrice > userBalance
+                    ? "Số dư không đủ"
+                    : isEnrolled
+                    ? "Đã đăng ký"
+                    : "Không thể đăng ký"
+                  : "Đăng ký ngay"}
+              </button>
             </div>
           </div>
         </div>

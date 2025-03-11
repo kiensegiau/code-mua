@@ -278,17 +278,56 @@ function MyCourses() {
                           <div className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 h-full flex flex-col">
                             <div className="relative">
                               <div className="relative aspect-video">
-                                <Image
-                                  src={
-                                    course.thumbnailUrl ||
-                                    "/placeholder-image.jpg"
-                                  }
-                                  alt={course.title}
-                                  layout="fill"
-                                  objectFit="cover"
-                                  className="transition-transform duration-300 group-hover:scale-105"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                {course.thumbnailUrl ? (
+                                  <>
+                                    <Image
+                                      src={course.thumbnailUrl}
+                                      alt={course.title}
+                                      layout="fill"
+                                      objectFit="cover"
+                                      className="transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* Placeholder với gradient */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#1f1f1f] to-[#191919] flex items-center justify-center">
+                                      <div className="text-center relative">
+                                        {/* Hiệu ứng glow phía sau */}
+                                        <div className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl animate-pulse-custom"></div>
+
+                                        {/* Tạo hình trang trí ở các góc */}
+                                        <div className="absolute -top-24 -right-24 w-40 h-40 bg-[#ff4d4f]/5 rounded-full blur-2xl pointer-events-none"></div>
+                                        <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-[#ff4d4f]/5 rounded-full blur-2xl pointer-events-none"></div>
+
+                                        <div className="relative">
+                                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/5 flex items-center justify-center mx-auto mb-3 border border-[#ff4d4f]/20">
+                                            <BookOpen className="w-8 h-8 text-[#ff4d4f]/50" />
+                                          </div>
+                                          <div className="space-y-1.5">
+                                            <p className="text-[#ff4d4f]/70 font-medium text-sm tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#ff4d4f]/90 to-[#ff7875]/90">
+                                              Hoc Mai
+                                            </p>
+                                            <p className="text-xs text-gray-500 px-4">
+                                              Khóa học sẽ hiển thị tại đây
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Hiệu ứng dạng lưới */}
+                                    <div
+                                      className="absolute inset-0 opacity-20"
+                                      style={{
+                                        backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px), 
+                                                       linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)`,
+                                        backgroundSize: "20px 20px",
+                                      }}
+                                    ></div>
+                                  </>
+                                )}
                               </div>
 
                               <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-800">

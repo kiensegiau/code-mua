@@ -353,7 +353,7 @@ function EarningsPage() {
                 <span className="text-[#ff4d4f]">50% doanh thu</span>
               </h1>
               <p className="text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto mb-8 sm:mb-10">
-                Chia sẻ kiến thức, tạo thu nhập thụ động cùng Code MUA trong
+                Chia sẻ kiến thức, tạo thu nhập thụ động cùng chúng tôi trong
                 chương trình đối tác giới thiệu học viên
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
