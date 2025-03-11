@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
   memo,
+  useRef,
 } from "react";
 import { IoChevronDown, IoChevronUp } from "react-icons/io5";
 import {
@@ -225,6 +226,9 @@ const CourseContent = forwardRef(
     ref
   ) => {
     const [activeFileId, setActiveFileId] = useState(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    // Thêm cờ để theo dõi hành động của người dùng
+    const userActionRef = useRef(false);
 
     // Hàm helper để lấy số từ title
     const getNumberFromTitle = useCallback((text = "") => {
@@ -253,8 +257,14 @@ const CourseContent = forwardRef(
     );
 
     // Thêm effect để tự động mở đúng chương và bài học khi video được chọn thay đổi
+    // CHỈ khi không phải do người dùng trực tiếp click
     useEffect(() => {
-      if (activeVideo && activeLesson && activeChapter) {
+      if (
+        activeVideo &&
+        activeLesson &&
+        activeChapter &&
+        !userActionRef.current
+      ) {
         // Tìm index của chapter hiện tại trong danh sách chapters đã sắp xếp
         const sortedChapters = [...chapters].sort(sortByNumber);
         const currentChapterIndex = sortedChapters.findIndex(
@@ -274,6 +284,9 @@ const CourseContent = forwardRef(
           setExpandedLessonId(activeLesson.id);
         }
       }
+
+      // Reset cờ hành động người dùng sau khi effect hoàn thành
+      userActionRef.current = false;
     }, [
       activeVideo,
       activeLesson,
@@ -281,6 +294,45 @@ const CourseContent = forwardRef(
       chapters,
       expandedChapterIndex,
       expandedLessonId,
+      setExpandedChapterIndex,
+      setExpandedLessonId,
+      sortByNumber,
+    ]);
+
+    // Thêm effect xử lý cho trường hợp mới tải trang
+    useEffect(() => {
+      // Chỉ thực hiện 1 lần khi component được mount và có dữ liệu cần thiết
+      if (
+        isInitialLoad &&
+        activeVideo &&
+        activeLesson &&
+        activeChapter &&
+        chapters.length > 0
+      ) {
+        console.log("Initial page load - synchronizing course content view");
+
+        // Tìm index của chapter hiện tại
+        const sortedChapters = [...chapters].sort(sortByNumber);
+        const currentChapterIndex = sortedChapters.findIndex(
+          (c) => c.id === activeChapter.id
+        );
+
+        if (currentChapterIndex !== -1) {
+          // Đặt timeout nhỏ để đảm bảo UI đã được render trước khi thay đổi trạng thái
+          setTimeout(() => {
+            setExpandedChapterIndex(currentChapterIndex);
+            setExpandedLessonId(activeLesson.id);
+          }, 100);
+        }
+
+        setIsInitialLoad(false);
+      }
+    }, [
+      isInitialLoad,
+      activeVideo,
+      activeLesson,
+      activeChapter,
+      chapters,
       setExpandedChapterIndex,
       setExpandedLessonId,
       sortByNumber,
@@ -370,6 +422,9 @@ const CourseContent = forwardRef(
 
     const handleChapterClick = useCallback(
       (index) => {
+        // Đánh dấu đây là hành động của người dùng
+        userActionRef.current = true;
+
         if (expandedChapterIndex === index) {
           setExpandedChapterIndex(-1);
         } else {
@@ -381,6 +436,9 @@ const CourseContent = forwardRef(
 
     const handleLessonClick = useCallback(
       (lesson, chapter) => {
+        // Đánh dấu đây là hành động của người dùng
+        userActionRef.current = true;
+
         if (onLessonClick) {
           onLessonClick(lesson, chapter);
         }
@@ -391,6 +449,9 @@ const CourseContent = forwardRef(
 
     const handleFileClick = useCallback(
       (file) => {
+        // Đánh dấu đây là hành động của người dùng
+        userActionRef.current = true;
+
         if (file.type?.includes("video")) {
           setActiveFileId(file.id || file._id);
         } else {

@@ -225,6 +225,12 @@ export const useVideoNavigation = ({
     if (!courseInfo || !courseInfo.id) return false;
 
     try {
+      // Kiểm tra nếu đã có video được chọn thì không cần khôi phục
+      if (activeVideo) {
+        console.log("Đã có video được chọn, bỏ qua việc khôi phục tự động");
+        return false;
+      }
+
       const savedStateJSON = localStorage.getItem(
         `last_watched_${courseInfo.id}`
       );
@@ -254,15 +260,29 @@ export const useVideoNavigation = ({
       const video = findVideoById(lesson.files, savedState.videoId);
       if (!video) return false;
 
-      // Mở rộng chương và bài học
-      const chapterIndex = courseInfo.chapters.findIndex(
+      // Tìm chỉ số chương chính xác
+      const sortedChaptersCopy = [...courseInfo.chapters].sort(sortItems);
+      const chapterIndex = sortedChaptersCopy.findIndex(
         (c) => c.id === chapter.id
       );
-      setExpandedChapterIndex(chapterIndex);
+
+      // Logs để debug
+      console.log("Khôi phục trạng thái xem:", {
+        chapterIndex,
+        chapterId: chapter.id,
+        lessonId: lesson.id,
+        videoId: video.id,
+      });
+
+      // Không sử dụng timeout ở đây để tránh xung đột
+      if (chapterIndex !== -1) {
+        setExpandedChapterIndex(chapterIndex);
+      }
       setExpandedLessonId(lesson.id);
 
       // Đặt video hoạt động
       handleLessonClickWrapper(lesson, chapter, video);
+
       return true;
     } catch (error) {
       console.error("Error restoring last watched state:", error);
@@ -270,10 +290,12 @@ export const useVideoNavigation = ({
     }
   }, [
     courseInfo,
+    activeVideo,
     setExpandedChapterIndex,
     setExpandedLessonId,
     handleLessonClickWrapper,
     findVideoById,
+    sortItems,
   ]);
 
   // Chuyển đến video tiếp theo

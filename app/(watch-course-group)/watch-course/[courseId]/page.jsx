@@ -205,14 +205,16 @@ export default function WatchCourse({ params }) {
 
   // Handler functions
   const handleLessonClick = useCallback((lesson, chapter, file) => {
-    setActiveLesson(lesson);
-    setActiveChapter(chapter);
+    // Đánh dấu rõ ràng việc cập nhật các trạng thái
+    console.log("Người dùng click vào bài học:", lesson?.title);
+
+    if (lesson) setActiveLesson(lesson);
+    if (chapter) setActiveChapter(chapter);
 
     if (file) {
-      console.log("File clicked:", {
-        file,
-        helvidUrl: file.helvidUrl,
-        proxyUrl: file.proxyUrl,
+      console.log("File được chọn:", {
+        name: file.name,
+        id: file.id,
         type: file.type,
       });
 
@@ -417,6 +419,59 @@ export default function WatchCourse({ params }) {
     },
     [params.courseId]
   );
+
+  // Khôi phục trạng thái xem video khi component mount
+  useEffect(() => {
+    if (courseInfo?.id) {
+      const restoreVideoState = () => {
+        try {
+          // Chỉ khôi phục nếu chưa có video hiện tại
+          if (activeVideo) {
+            return;
+          }
+
+          // Lấy trạng thái đã lưu
+          const savedStateJSON = localStorage.getItem(
+            `last_watched_${courseInfo.id}`
+          );
+          if (!savedStateJSON) return;
+
+          const savedState = JSON.parse(savedStateJSON);
+          if (!savedState || !savedState.videoId) return;
+
+          console.log("Phục hồi trạng thái video đang xem:", savedState);
+
+          // Đảm bảo các trạng thái UI được đồng bộ hóa
+          if (savedState.chapterId) {
+            const chapters = courseInfo.chapters || [];
+            const chapterIndex = chapters.findIndex(
+              (c) => c.id === savedState.chapterId
+            );
+            if (chapterIndex !== -1) {
+              console.log("Đặt expanded chapter index thành:", chapterIndex);
+              // Giảm thời gian của timeout
+              setTimeout(() => {
+                setExpandedChapterIndex(chapterIndex);
+              }, 100);
+            }
+          }
+
+          if (savedState.lessonId) {
+            console.log("Đặt expanded lesson ID thành:", savedState.lessonId);
+            // Giảm thời gian của timeout
+            setTimeout(() => {
+              setExpandedLessonId(savedState.lessonId);
+            }, 150);
+          }
+        } catch (error) {
+          console.error("Lỗi khi khôi phục trạng thái:", error);
+        }
+      };
+
+      // Gọi hàm sau khi component đã render, với thời gian ngắn hơn
+      setTimeout(restoreVideoState, 300);
+    }
+  }, [courseInfo, activeVideo]);
 
   // Effects
   useEffect(() => {
