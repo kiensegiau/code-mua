@@ -259,30 +259,35 @@ const CourseContent = forwardRef(
     // Thêm effect để tự động mở đúng chương và bài học khi video được chọn thay đổi
     // CHỈ khi không phải do người dùng trực tiếp click
     useEffect(() => {
+      // Nếu mới khởi tạo hoặc đang trong hành động người dùng, bỏ qua
       if (
-        activeVideo &&
-        activeLesson &&
-        activeChapter &&
-        !userActionRef.current
+        !activeVideo ||
+        !activeLesson ||
+        !activeChapter ||
+        userActionRef.current
       ) {
-        // Tìm index của chapter hiện tại trong danh sách chapters đã sắp xếp
-        const sortedChapters = [...chapters].sort(sortByNumber);
-        const currentChapterIndex = sortedChapters.findIndex(
-          (c) => c.id === activeChapter.id
-        );
+        return;
+      }
 
-        // Cập nhật expanded chapter nếu khác với giá trị hiện tại
-        if (
-          currentChapterIndex !== -1 &&
-          expandedChapterIndex !== currentChapterIndex
-        ) {
-          setExpandedChapterIndex(currentChapterIndex);
-        }
+      // Tìm index của chapter hiện tại trong danh sách chapters đã sắp xếp
+      const sortedChapters = [...chapters].sort(sortByNumber);
+      const currentChapterIndex = sortedChapters.findIndex(
+        (c) => c.id === activeChapter.id
+      );
 
-        // Cập nhật expanded lesson nếu khác với giá trị hiện tại
-        if (expandedLessonId !== activeLesson.id) {
-          setExpandedLessonId(activeLesson.id);
-        }
+      // Cập nhật expanded chapter nếu khác với giá trị hiện tại
+      if (
+        currentChapterIndex !== -1 &&
+        expandedChapterIndex !== currentChapterIndex
+      ) {
+        console.log("Auto-expanding chapter:", currentChapterIndex);
+        setExpandedChapterIndex(currentChapterIndex);
+      }
+
+      // Cập nhật expanded lesson nếu khác với giá trị hiện tại
+      if (expandedLessonId !== activeLesson.id) {
+        console.log("Auto-expanding lesson:", activeLesson.id);
+        setExpandedLessonId(activeLesson.id);
       }
 
       // Reset cờ hành động người dùng sau khi effect hoàn thành
