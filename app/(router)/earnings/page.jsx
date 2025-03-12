@@ -165,15 +165,17 @@ const FeatureCard = memo(({ feature }) => {
   return (
     <motion.div
       variants={ITEM_VARIANTS}
-      className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+      className="bg-[var(--card-background)] backdrop-blur-sm p-6 rounded-xl border border-[var(--border-color)] hover:border-[var(--border-color)] transition-colors"
     >
       <div className="flex items-center mb-4">
-        <div className="bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/10 p-3 rounded-lg mr-4">
+        <div className="bg-[#ff4d4f]/10 p-3 rounded-lg mr-4">
           <Icon className="w-6 h-6 text-[#ff4d4f]" />
         </div>
-        <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
+        <h3 className="text-lg font-semibold text-[var(--text-color)]">
+          {feature.title}
+        </h3>
       </div>
-      <p className="text-gray-300 text-sm">{feature.description}</p>
+      <p className="text-[var(--muted-text)] text-sm">{feature.description}</p>
     </motion.div>
   );
 });
@@ -189,7 +191,7 @@ const ContactItem = memo(({ contact }) => {
       href={contact.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
+      className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--hover-color)] transition-colors"
     >
       <div
         className={`${contact.color} w-10 h-10 rounded-full flex items-center justify-center`}
@@ -197,8 +199,10 @@ const ContactItem = memo(({ contact }) => {
         <Icon className="w-5 h-5 text-white" />
       </div>
       <div>
-        <div className="text-gray-400 text-xs">{contact.name}</div>
-        <div className="text-white font-medium">{contact.value}</div>
+        <div className="text-[var(--muted-text)] text-xs">{contact.name}</div>
+        <div className="text-[var(--text-color)] font-medium">
+          {contact.value}
+        </div>
       </div>
     </motion.a>
   );
@@ -215,23 +219,23 @@ const AccordionItem = memo(
     return (
       <motion.div
         variants={ITEM_VARIANTS}
-        className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-lg sm:rounded-xl border border-white/5 overflow-hidden"
+        className="bg-[var(--card-background)] backdrop-blur-sm rounded-lg sm:rounded-xl border border-[var(--border-color)] overflow-hidden"
       >
         <button
           onClick={handleClick}
           className="w-full px-4 sm:px-6 py-3 sm:py-4 text-left flex justify-between items-center"
         >
-          <span className="font-medium text-white text-sm sm:text-base">
+          <span className="font-medium text-[var(--text-color)] text-sm sm:text-base">
             {item.question}
           </span>
           <ChevronDown
-            className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform ${
+            className={`w-4 h-4 sm:w-5 sm:h-5 text-[var(--muted-text)] transition-transform ${
               activeQuestion === index ? "transform rotate-180" : ""
             }`}
           />
         </button>
         {activeQuestion === index && (
-          <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-sm sm:text-base text-gray-300">
+          <div className="px-4 sm:px-6 pb-3 sm:pb-4 text-sm sm:text-base text-[var(--muted-text)]">
             {item.answer}
           </div>
         )}
@@ -246,7 +250,7 @@ const Testimonial = memo(({ testimonial }) => {
   return (
     <motion.div
       variants={ITEM_VARIANTS}
-      className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10"
+      className="bg-[var(--card-background)] backdrop-blur-sm rounded-xl p-6 border border-[var(--border-color)]"
     >
       <div className="flex items-start gap-4 mb-4">
         <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
@@ -258,14 +262,20 @@ const Testimonial = memo(({ testimonial }) => {
           />
         </div>
         <div>
-          <div className="font-semibold text-white">{testimonial.name}</div>
-          <div className="text-gray-400 text-sm">{testimonial.role}</div>
+          <div className="font-semibold text-[var(--text-color)]">
+            {testimonial.name}
+          </div>
+          <div className="text-[var(--muted-text)] text-sm">
+            {testimonial.role}
+          </div>
           <div className="flex items-center gap-1 mt-1">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 className={`w-3 h-3 ${
-                  i < testimonial.rating ? "text-yellow-400" : "text-gray-600"
+                  i < testimonial.rating
+                    ? "text-yellow-400"
+                    : "text-[var(--muted-text)]"
                 }`}
                 fill={i < testimonial.rating ? "currentColor" : "none"}
               />
@@ -278,7 +288,9 @@ const Testimonial = memo(({ testimonial }) => {
           </span>
         </div>
       </div>
-      <p className="text-gray-300 text-sm italic">{testimonial.quote}</p>
+      <p className="text-[var(--muted-text)] text-sm italic">
+        {testimonial.quote}
+      </p>
     </motion.div>
   );
 });
@@ -289,16 +301,18 @@ const HowItWorksItem = memo(({ item, index }) => {
   return (
     <motion.div variants={ITEM_VARIANTS} className="flex gap-4 sm:gap-6">
       <div className="flex-shrink-0 relative">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center z-10 relative">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--hover-color)] flex items-center justify-center z-10 relative">
           {item.icon}
         </div>
         {index < HOW_IT_WORKS.length - 1 && (
-          <div className="absolute top-12 sm:top-14 bottom-0 left-1/2 w-0.5 -ml-[1px] bg-gradient-to-b from-white/20 to-transparent h-full"></div>
+          <div className="absolute top-12 sm:top-14 bottom-0 left-1/2 w-0.5 -ml-[1px] bg-gradient-to-b from-[var(--border-color)] to-transparent h-full"></div>
         )}
       </div>
       <div className="pt-1.5">
-        <h3 className="text-white font-medium mb-1">{item.title}</h3>
-        <p className="text-gray-400 text-sm">{item.description}</p>
+        <h3 className="text-[var(--text-color)] font-medium mb-1">
+          {item.title}
+        </h3>
+        <p className="text-[var(--muted-text)] text-sm">{item.description}</p>
       </div>
     </motion.div>
   );
@@ -327,7 +341,7 @@ function EarningsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#141414] to-[#1a1a1a] relative">
+    <div className="min-h-screen flex flex-col bg-[var(--background-color)] relative">
       {/* Background elements */}
       <div className="absolute top-0 inset-0 overflow-hidden z-0">
         <div className="absolute top-[-10%] left-[-20%] w-[80%] sm:w-[60%] h-[50%] sm:h-[60%] bg-[#ff4d4f]/5 rounded-full filter blur-[80px] sm:blur-[120px]"></div>
@@ -348,11 +362,11 @@ function EarningsPage() {
               transition={{ duration: 0.5 }}
               className="text-center mb-12 sm:mb-16 md:mb-20"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--text-color)] mb-4 sm:mb-6">
                 Trở thành đối tác & kiếm{" "}
                 <span className="text-[#ff4d4f]">50% doanh thu</span>
               </h1>
-              <p className="text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto mb-8 sm:mb-10">
+              <p className="text-[var(--muted-text)] text-lg sm:text-xl max-w-3xl mx-auto mb-8 sm:mb-10">
                 Chia sẻ kiến thức, tạo thu nhập thụ động cùng chúng tôi trong
                 chương trình đối tác giới thiệu học viên
               </p>
@@ -365,7 +379,7 @@ function EarningsPage() {
                 </button>
                 <button
                   onClick={handleContactRequest}
-                  className="bg-transparent border border-white/20 hover:border-white/40 text-white font-medium px-6 py-3 rounded-lg transition-all"
+                  className="bg-[var(--card-background)] border border-[var(--border-color)] hover:bg-[var(--hover-color)] text-[var(--text-color)] font-medium px-6 py-3 rounded-lg transition-all"
                 >
                   Tìm hiểu thêm
                 </button>
@@ -381,10 +395,10 @@ function EarningsPage() {
               className="mb-12 sm:mb-16 md:mb-20"
             >
               <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text-color)] mb-3 sm:mb-4">
                   Lợi ích khi trở thành đối tác
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                <p className="text-[var(--muted-text)] text-sm sm:text-base max-w-2xl mx-auto">
                   Chương trình đối tác giới thiệu học viên mang đến nhiều giá
                   trị cho cả bạn và người học
                 </p>
@@ -403,13 +417,13 @@ function EarningsPage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-100px" }}
-              className="mb-12 sm:mb-16 md:mb-20 bg-gradient-to-br from-[#1f1f1f]/80 to-[#141414]/80 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/5"
+              className="mb-12 sm:mb-16 md:mb-20 bg-[var(--card-background)] backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[var(--border-color)]"
             >
               <div className="text-center mb-8 sm:mb-10">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text-color)] mb-3 sm:mb-4">
                   Cách thức hoạt động
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                <p className="text-[var(--muted-text)] text-sm sm:text-base max-w-2xl mx-auto">
                   Chỉ 3 bước đơn giản để bắt đầu kiếm thu nhập
                 </p>
               </div>
@@ -430,10 +444,10 @@ function EarningsPage() {
               className="mb-12 sm:mb-16 md:mb-20"
             >
               <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text-color)] mb-3 sm:mb-4">
                   Đối tác nói gì về chúng tôi
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                <p className="text-[var(--muted-text)] text-sm sm:text-base max-w-2xl mx-auto">
                   Khám phá câu chuyện thành công từ các đối tác
                 </p>
               </div>
@@ -454,16 +468,16 @@ function EarningsPage() {
               className="mb-12 sm:mb-16 md:mb-20"
             >
               <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text-color)] mb-3 sm:mb-4">
                   Liên hệ & Hỗ trợ
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
+                <p className="text-[var(--muted-text)] text-sm sm:text-base max-w-2xl mx-auto">
                   Đội ngũ hỗ trợ đối tác của chúng tôi luôn sẵn sàng hỗ trợ bạn
                   24/7
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/5">
+              <div className="bg-[var(--card-background)] backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-[var(--border-color)]">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {CONTACTS.map((contact, index) => (
                     <ContactItem key={index} contact={contact} />
@@ -481,10 +495,10 @@ function EarningsPage() {
               className="mb-12 sm:mb-16 md:mb-20"
             >
               <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text-color)] mb-3 sm:mb-4">
                   Câu hỏi thường gặp
                 </h2>
-                <p className="text-gray-400 text-sm sm:text-base max-w-2xl mx-auto px-2">
+                <p className="text-[var(--muted-text)] text-sm sm:text-base max-w-2xl mx-auto px-2">
                   Những câu hỏi phổ biến về chương trình đối tác
                 </p>
               </div>
@@ -513,13 +527,13 @@ function EarningsPage() {
               <div className="bg-gradient-to-r from-[#ff4d4f]/20 to-[#ff7875]/10 backdrop-blur-sm rounded-xl p-8 sm:p-10 border border-[#ff4d4f]/20 text-center">
                 <motion.h2
                   variants={ITEM_VARIANTS}
-                  className="text-2xl sm:text-3xl font-bold text-white mb-4"
+                  className="text-2xl sm:text-3xl font-bold text-[var(--text-color)] mb-4"
                 >
                   Sẵn sàng tạo thu nhập thụ động?
                 </motion.h2>
                 <motion.p
                   variants={ITEM_VARIANTS}
-                  className="text-gray-300 mb-6 max-w-2xl mx-auto"
+                  className="text-[var(--muted-text)] mb-6 max-w-2xl mx-auto"
                 >
                   Gia nhập cộng đồng đối tác Code MUA ngay hôm nay và bắt đầu
                   hành trình kiếm thu nhập thụ động
