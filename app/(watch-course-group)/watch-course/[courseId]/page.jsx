@@ -112,7 +112,7 @@ const VideoSection = memo(
     <div className="flex-none md:flex md:flex-col md:h-[calc(100vh-52px)] overflow-hidden">
       {/* Video Info - Moved to top */}
       <div className="flex-none p-3 md:p-4 border-b border-gray-800 bg-[#1f1f1f]">
-        <h1 className="text-sm md:text-lg font-medium text-gray-200 line-clamp-2">
+        <h1 className="text-sm md:text-lg font-medium text-gray-200 truncate whitespace-nowrap overflow-hidden">
           {activeLesson ? (
             <>
               {activeLesson.title}
