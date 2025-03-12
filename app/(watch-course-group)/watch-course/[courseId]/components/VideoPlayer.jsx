@@ -165,7 +165,7 @@ const VideoPlayer = memo(function VideoPlayer({
         "settings",
         "fullscreen",
       ],
-      autoplay: autoPlay,
+      autoplay: true,
       keyboard: { focused: true, global: true },
       tooltips: { controls: true, seek: true },
       i18n: {
@@ -204,7 +204,14 @@ const VideoPlayer = memo(function VideoPlayer({
 
     player.on("ended", handleVideoEnd);
     player.on("play", handleVideoPlay);
-    player.on("ready", handleLoadedMetadata);
+    player.on("ready", () => {
+      handleLoadedMetadata();
+      if (autoPlay) {
+        player.play().catch(() => {
+          console.log("Autoplay bị chặn bởi trình duyệt");
+        });
+      }
+    });
 
     return () => {
       // Dọn dẹp khi component unmount
@@ -319,7 +326,7 @@ const VideoPlayer = memo(function VideoPlayer({
             isLoading ? "opacity-0" : "opacity-100"
           }`}
           src={streamUrl}
-          autoPlay={false} // Plyr sẽ xử lý autoplay
+          autoPlay={true}
           playsInline
         />
 
