@@ -55,12 +55,6 @@ function MyCourses() {
     });
   };
 
-  console.log("My-courses rendering state:", {
-    loading,
-    coursesCount: filteredAndSortedCourses?.length || 0,
-    currentCoursesCount: currentCourses?.length || 0,
-  });
-
   return (
     <div className="flex flex-col min-h-screen bg-[#141414]">
       <div className="flex flex-1">

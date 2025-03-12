@@ -79,13 +79,8 @@ const Header = memo(({ courseInfo, videoProgress, handleLogout }) => (
         <div className="flex items-center gap-4">
           <div className="text-xs bg-gray-800/50 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <span className="text-[#ff4d4f] font-medium">
-                
-              </span>
-              
-              
+              <span className="text-[#ff4d4f] font-medium"></span>
             </div>
-           
           </div>
 
           <button
@@ -200,19 +195,10 @@ export default function WatchCourse({ params }) {
 
   // Handler functions
   const handleLessonClick = useCallback((lesson, chapter, file) => {
-    // Đánh dấu rõ ràng việc cập nhật các trạng thái
-    console.log("Người dùng click vào bài học:", lesson?.title);
-
     if (lesson) setActiveLesson(lesson);
     if (chapter) setActiveChapter(chapter);
 
     if (file) {
-      console.log("File được chọn:", {
-        name: file.name,
-        id: file.id,
-        type: file.type,
-      });
-
       if (file.type.includes("video")) {
         setActiveVideo(file);
         setIsPlaying(true);
@@ -240,7 +226,6 @@ export default function WatchCourse({ params }) {
   });
 
   const handleVideoEnd = useCallback(() => {
-    console.log("Video ended, navigating to next video");
     handleNext();
   }, [handleNext]);
 
@@ -266,19 +251,14 @@ export default function WatchCourse({ params }) {
     (file) => {
       if (file.type?.includes("video")) {
         if (!activeLesson || !activeChapter) {
-          console.warn("Missing activeLesson or activeChapter");
           return;
         }
         handleLessonClick(activeLesson, activeChapter, file);
       } else {
-        // Xử lý file ngoài video (tài liệu, PDF, v.v.)
-        // Chỉ sử dụng driveFileId để mở trực tiếp từ Google Drive
         if (file.driveFileId) {
           const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/view`;
-          console.log("Mở file từ Google Drive:", driveViewUrl);
           window.open(driveViewUrl, "_blank");
         } else {
-          // Thông báo lỗi nếu không có driveFileId
           toast.error("Không thể mở file này. Vui lòng liên hệ quản trị viên.");
         }
       }
@@ -294,7 +274,6 @@ export default function WatchCourse({ params }) {
       setCourseInfo(course);
       return course;
     } catch (error) {
-      console.error("Lỗi khi lấy thông tin khóa học:", error);
       toast.error("Không thể tải thông tin khóa học");
       return null;
     } finally {
@@ -308,35 +287,27 @@ export default function WatchCourse({ params }) {
       if (!course || !course.chapters) return false;
 
       try {
-        // Đọc dữ liệu từ cả hai nguồn
         const lastWatchedVideoId = localStorage.getItem("lastWatchedVideoId");
         const courseStateStr = localStorage.getItem("courseState");
         let courseState = null;
 
-        // Ưu tiên sử dụng courseState vì nó chứa thông tin đầy đủ hơn
         if (courseStateStr) {
           try {
             courseState = JSON.parse(courseStateStr);
-            // Kiểm tra xem courseState có thuộc khóa học hiện tại không
             if (courseState.courseId !== params.courseId) {
               courseState = null;
             }
           } catch (e) {
-            console.error("Lỗi khi phân tích courseState:", e);
+            // Ignore parsing error
           }
         }
 
-        // Sử dụng ID video từ courseState hoặc lastWatchedVideoId
         const videoId = courseState?.videoId || lastWatchedVideoId;
 
         if (!videoId) {
-          console.log("Không tìm thấy ID video để khôi phục");
           return false;
         }
 
-        console.log("Đang cố gắng khôi phục video đã xem:", videoId);
-
-        // Tìm chương từ courseState nếu có
         let targetChapter = null;
         let targetLesson = null;
 
@@ -351,12 +322,10 @@ export default function WatchCourse({ params }) {
           }
         }
 
-        // Tìm video trong cấu trúc khóa học
         let foundVideo = null;
         let foundLesson = null;
         let foundChapter = null;
 
-        // Nếu đã có target chapter và lesson, tìm video trong đó trước
         if (targetChapter && targetLesson) {
           foundVideo = (targetLesson.files || []).find(
             (file) => file.id === videoId && file.type?.includes("video")
@@ -368,7 +337,6 @@ export default function WatchCourse({ params }) {
           }
         }
 
-        // Nếu không tìm thấy, tìm kiếm trong toàn bộ khóa học
         if (!foundVideo) {
           for (const chapter of course.chapters) {
             for (const lesson of chapter.lessons || []) {
@@ -388,26 +356,19 @@ export default function WatchCourse({ params }) {
         }
 
         if (foundVideo && foundLesson && foundChapter) {
-          console.log("Đã tìm thấy video đã xem:", foundVideo.name);
-
-          // Khôi phục trạng thái UI
           const chapterIndex = course.chapters.indexOf(foundChapter);
           setExpandedChapterIndex(chapterIndex);
           setExpandedLessonId(foundLesson.id);
 
-          // Khôi phục các mục đang hoạt động
           setActiveChapter(foundChapter);
           setActiveLesson(foundLesson);
           setActiveVideo(foundVideo);
-          setKey(Date.now()); // Sử dụng timestamp để đảm bảo key luôn mới
+          setKey(Date.now());
 
-          console.log("Đã khôi phục trạng thái video thành công");
           return true;
-        } else {
-          console.log("Không tìm thấy video với ID:", videoId);
         }
       } catch (error) {
-        console.error("Lỗi khi khôi phục video đã xem cuối cùng:", error);
+        // Ignore restore error
       }
 
       return false;
@@ -420,12 +381,10 @@ export default function WatchCourse({ params }) {
     if (courseInfo?.id) {
       const restoreVideoState = () => {
         try {
-          // Chỉ khôi phục nếu chưa có video hiện tại
           if (activeVideo) {
             return;
           }
 
-          // Lấy trạng thái đã lưu
           const savedStateJSON = localStorage.getItem(
             `last_watched_${courseInfo.id}`
           );
@@ -434,17 +393,12 @@ export default function WatchCourse({ params }) {
           const savedState = JSON.parse(savedStateJSON);
           if (!savedState || !savedState.videoId) return;
 
-          console.log("Phục hồi trạng thái video đang xem:", savedState);
-
-          // Đảm bảo các trạng thái UI được đồng bộ hóa
           if (savedState.chapterId) {
             const chapters = courseInfo.chapters || [];
             const chapterIndex = chapters.findIndex(
               (c) => c.id === savedState.chapterId
             );
             if (chapterIndex !== -1) {
-              console.log("Đặt expanded chapter index thành:", chapterIndex);
-              // Giảm thời gian của timeout
               setTimeout(() => {
                 setExpandedChapterIndex(chapterIndex);
               }, 100);
@@ -452,18 +406,15 @@ export default function WatchCourse({ params }) {
           }
 
           if (savedState.lessonId) {
-            console.log("Đặt expanded lesson ID thành:", savedState.lessonId);
-            // Giảm thời gian của timeout
             setTimeout(() => {
               setExpandedLessonId(savedState.lessonId);
             }, 150);
           }
         } catch (error) {
-          console.error("Lỗi khi khôi phục trạng thái:", error);
+          // Ignore restore error
         }
       };
 
-      // Gọi hàm sau khi component đã render, với thời gian ngắn hơn
       setTimeout(restoreVideoState, 300);
     }
   }, [courseInfo, activeVideo]);
@@ -471,16 +422,11 @@ export default function WatchCourse({ params }) {
   // Effects
   useEffect(() => {
     async function initialize() {
-      console.log("Đang khởi tạo trang khóa học...");
       const course = await fetchCourseInfo();
       if (course) {
-        console.log("Đã tải thông tin khóa học, đang khôi phục video...");
-        // Cố gắng khôi phục video đã xem cuối cùng
         const restored = restoreLastWatchedVideo(course);
 
-        // Nếu không khôi phục được, cố gắng tải video đầu tiên
         if (!restored && course.chapters && course.chapters.length > 0) {
-          console.log("Không thể khôi phục video, đang tải video đầu tiên...");
           const firstChapter = [...course.chapters].sort((a, b) => {
             const numA = getNumberFromTitle(a.title);
             const numB = getNumberFromTitle(b.title);
@@ -508,7 +454,6 @@ export default function WatchCourse({ params }) {
                 .sort(sortFiles)[0];
 
               if (firstVideo) {
-                console.log("Đã tìm thấy video đầu tiên:", firstVideo.name);
                 setExpandedChapterIndex(0);
                 setExpandedLessonId(firstLesson.id);
                 handleLessonClick(firstLesson, firstChapter, firstVideo);
@@ -518,7 +463,6 @@ export default function WatchCourse({ params }) {
         }
       }
 
-      // Đánh dấu quá trình tải ban đầu đã hoàn thành
       setIsInitialLoad(false);
     }
 
@@ -535,12 +479,6 @@ export default function WatchCourse({ params }) {
   useEffect(() => {
     const saveCurrentVideoState = () => {
       if (activeVideo && activeLesson && activeChapter) {
-        console.log(
-          "Saving current video state before unload:",
-          activeVideo.name
-        );
-
-        // Save current course state to localStorage
         localStorage.setItem(
           "courseState",
           JSON.stringify({
@@ -554,11 +492,9 @@ export default function WatchCourse({ params }) {
       }
     };
 
-    // Save on page unload
     window.addEventListener("beforeunload", saveCurrentVideoState);
 
     return () => {
-      // Save on component unmount
       saveCurrentVideoState();
       window.removeEventListener("beforeunload", saveCurrentVideoState);
     };
