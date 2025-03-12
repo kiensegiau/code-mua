@@ -12,26 +12,16 @@ const ForumTopic = ({ topic, onTopicClick }) => {
     // Ngăn sự kiện lan tỏa
     e.stopPropagation();
 
-    console.log(
-      "ForumTopic: Click trực tiếp được kích hoạt cho topic:",
-      topic.id
-    );
-
     // Hiệu ứng click
     setIsClicked(true);
     setTimeout(() => setIsClicked(false), 300);
 
     // Thêm thông báo nếu onTopicClick không tồn tại
     if (!onTopicClick) {
-      console.error(
-        "Error: onTopicClick callback không được cung cấp cho ForumTopic"
-      );
-      // Xóa alert
       return;
     }
 
     // Gọi callback onTopicClick
-    console.log("ForumTopic: Gọi onTopicClick cho topic:", topic.id);
     onTopicClick(topic);
   };
 

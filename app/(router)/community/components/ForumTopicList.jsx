@@ -29,20 +29,14 @@ const ForumTopicList = ({
   };
 
   const handleTopicClick = (topic) => {
-    console.log("ForumTopicList: handleTopicClick gọi với topic:", topic.id);
-
     if (onSelectTopic) {
-      console.log("ForumTopicList: Gọi onSelectTopic với topic:", topic.id);
       onSelectTopic(topic);
-    } else {
-      console.log("CẢNH BÁO: onSelectTopic không được định nghĩa");
     }
   };
 
   // Phương thức mới để đảm bảo click trực tiếp vào container sẽ kích hoạt sự kiện
   const handleContainerClick = (topic, e) => {
     e.stopPropagation(); // Ngăn sự kiện lan toả
-    console.log("Container click được kích hoạt cho topic:", topic.id);
 
     // Hiển thị animation click
     const target = e.currentTarget;
@@ -101,7 +95,6 @@ const ForumTopicList = ({
       <div className="grid grid-cols-1 gap-4">
         {topics && topics.length > 0 ? (
           topics.map((topic) => {
-            console.log("Rendering topic id:", topic.id, "title:", topic.title);
             return (
               <div
                 key={`container-${topic.id}`}
@@ -114,11 +107,7 @@ const ForumTopicList = ({
                   className="absolute inset-0 z-10 rounded-xl"
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log(
-                      "Overlay click được kích hoạt cho topic:",
-                      topic.id
-                    );
-                    handleTopicClick(topic);
+                    handleContainerClick(topic, e);
                   }}
                 ></div>
 

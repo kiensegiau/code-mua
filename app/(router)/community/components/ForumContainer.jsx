@@ -19,11 +19,6 @@ const ForumContainer = ({ initialTopics = [] }) => {
 
   // Debug để xem khi nào component được render lại và selectedTopic có giá trị
   useEffect(() => {
-    console.log(
-      "ForumContainer rendered, selectedTopic:",
-      selectedTopic ? selectedTopic.id : "null"
-    );
-
     // Tăng render count mỗi khi component render lại
     setDebugInfo((prev) => ({
       ...prev,
@@ -32,16 +27,7 @@ const ForumContainer = ({ initialTopics = [] }) => {
   }, [selectedTopic]);
 
   // Log trạng thái khi component mount
-  useEffect(() => {
-    console.log(
-      "ForumContainer mounted with initialTopics:",
-      initialTopics.length
-    );
-    console.log(
-      "Sample topic:",
-      initialTopics.length > 0 ? initialTopics[0].id : "none"
-    );
-  }, []);
+  useEffect(() => {}, []);
 
   // Sử dụng useCallback để tránh tạo lại hàm mỗi lần render
   const handleSelectTopic = useCallback((topic) => {

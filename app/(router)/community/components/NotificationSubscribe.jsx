@@ -65,8 +65,6 @@ const NotificationSubscribe = ({ onClose }) => {
     setTimeout(() => {
       setLoading(false);
       setSubscribed(true);
-      console.log("Đăng ký thông báo với email:", email);
-      console.log("Thiết lập thông báo:", notifications);
 
       // Đóng component sau 2 giây khi đăng ký thành công
       setTimeout(() => {

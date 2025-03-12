@@ -21,30 +21,15 @@ const TopicDetail = ({
   onSubmitComment,
   onMessage,
 }) => {
-  // Debug render
-  console.log(
-    "TopicDetail được render với topic ID:",
-    topic ? topic.id : "undefined"
-  );
-
   const contentRef = useRef(null);
 
   // Thêm useEffect để debug khi component mount và thiết lập click ra ngoài
   useEffect(() => {
-    console.log("TopicDetail đã mount với onCloseDetail:", !!onCloseDetail);
-
     // Thêm event listener cho click ra ngoài
     const handleOutsideClick = (e) => {
       if (contentRef.current && !contentRef.current.contains(e.target)) {
-        console.log("Click ra ngoài vùng chi tiết");
         if (typeof onCloseDetail === "function") {
-          console.log("Gọi onCloseDetail từ click ra ngoài");
           onCloseDetail();
-        } else {
-          console.log(
-            "CẢNH BÁO: onCloseDetail không phải là function khi click ra ngoài",
-            onCloseDetail
-          );
         }
       }
     };
@@ -62,25 +47,13 @@ const TopicDetail = ({
     // Ngăn chặn sự kiện lan tỏa
     e.stopPropagation();
 
-    console.log("Đã nhấn nút quay lại - TopicDetail");
-
     if (typeof onCloseDetail === "function") {
-      console.log("Gọi onCloseDetail từ nút Quay lại");
-
       // Gọi hàm callback để quay lại
       onCloseDetail();
-
-      console.log("Đã gọi onCloseDetail thành công");
-    } else {
-      console.log(
-        "CẢNH BÁO: onCloseDetail không phải là function",
-        onCloseDetail
-      );
     }
   };
 
   if (!topic) {
-    console.log("CẢNH BÁO: TopicDetail nhận topic là null hoặc undefined");
     return (
       <div className="p-8 text-center">
         <p>Không tìm thấy thông tin bài viết</p>

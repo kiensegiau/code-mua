@@ -33,7 +33,6 @@ function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu } =
     useMobileMenu();
-  console.log(profile);
 
   const handleSignOut = () => {
     auth.signOut();
@@ -41,7 +40,6 @@ function Header() {
     localStorage.removeItem("refreshToken");
     router.push("/sign-in");
   };
-  console.log(profile);
 
   return (
     <>

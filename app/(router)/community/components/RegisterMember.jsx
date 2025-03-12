@@ -150,7 +150,6 @@ const RegisterMember = ({ onClose }) => {
 
       // Giả lập API call
       setTimeout(() => {
-        console.log("Đăng ký thành viên với thông tin:", formData);
         setLoading(false);
         setSubmitted(true);
 
