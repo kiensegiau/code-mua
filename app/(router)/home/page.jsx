@@ -160,9 +160,7 @@ function HomePage() {
     await loadSlim(engine);
   };
 
-  const particlesLoaded = async (container) => {
-    console.log("Particles container loaded", container);
-  };
+  const particlesLoaded = async (container) => {};
 
   const getParticlesConfig = () => {
     const isMobile = window.innerWidth < 768;

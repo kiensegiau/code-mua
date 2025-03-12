@@ -54,14 +54,9 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
   const verifyEnrollment = async () => {
     try {
       setVerifying(true);
-      console.log("Bắt đầu xác minh đăng ký cho khóa học:", {
-        courseId: courseInfo?.id,
-        courseTitle: courseInfo?.title,
-      });
 
       // Kiểm tra lại user và profile
       if (!user || !profile) {
-        console.log("Không có user hoặc profile");
         toast.error("Vui lòng đăng nhập để đăng ký khóa học");
         router.push("/sign-in");
         return false;
@@ -69,17 +64,12 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
 
       // Kiểm tra khóa học tồn tại
       if (!courseInfo?.id) {
-        console.log("Không tìm thấy courseInfo.id");
         toast.error("Không tìm thấy thông tin khóa học");
         return false;
       }
 
       // Kiểm tra lại số dư
       if (coursePrice > userBalance) {
-        console.log("Số dư không đủ", {
-          coursePrice,
-          userBalance,
-        });
         toast.error("Số dư không đủ để mua khóa học này");
         return false;
       }
@@ -94,7 +84,6 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       });
 
       if (isAlreadyEnrolled) {
-        console.log("Đã tìm thấy khóa học trong danh sách đã đăng ký");
         toast.error("Bạn đã đăng ký khóa học này rồi");
         return false;
       }
@@ -137,7 +126,6 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
 
   const handleConfirmEnroll = async () => {
     try {
-      console.log("Bắt đầu xử lý đăng ký khóa học");
       setEnrolling(true);
 
       // Xác minh lại toàn bộ điều kiện
@@ -146,8 +134,6 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
 
       // Lưu courseId thay vì object phức tạp
       const courseId = courseInfo.id;
-
-      console.log("Thông tin khóa học đăng ký:", { courseId });
 
       const userDocRef = doc(db, "users", profile.id);
       const courseRef = doc(db, "courses", courseInfo.id);
@@ -205,7 +191,6 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
         });
       });
 
-      console.log("Đã cập nhật thành công");
       toast.success("Đăng ký khóa học thành công!");
 
       // Đóng modal trước khi chuyển trang

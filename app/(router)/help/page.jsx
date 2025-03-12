@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect } from 'react';
-import { motion, useAnimation, useScroll, useTransform } from 'framer-motion';
+import React, { useEffect } from "react";
+import { motion, useAnimation, useScroll, useTransform } from "framer-motion";
 import { loadSlim } from "tsparticles-slim";
 import Particles from "react-tsparticles";
 import {
@@ -14,8 +14,8 @@ import {
   HelpCircle,
   FileText,
   ChevronRight,
-  ExternalLink
-} from 'lucide-react';
+  ExternalLink,
+} from "lucide-react";
 
 export default function HelpPage() {
   const containerVariants = {
@@ -23,9 +23,9 @@ export default function HelpPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -34,9 +34,9 @@ export default function HelpPage() {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5
-      }
-    }
+        duration: 0.5,
+      },
+    },
   };
 
   // Scroll-triggered animations control
@@ -54,18 +54,18 @@ export default function HelpPage() {
     controls.start("visible");
     supportControls.start("visible");
     categoryControls.start("visible");
-    
+
     const handleScroll = () => {
       // These will add additional animation effects on scroll
       // but content will be visible from the start
       if (window.scrollY > 100) {
         controls.start("visible");
       }
-      
+
       if (window.scrollY > 300) {
         supportControls.start("visible");
       }
-      
+
       if (window.scrollY > 500) {
         categoryControls.start("visible");
       }
@@ -74,7 +74,7 @@ export default function HelpPage() {
     window.addEventListener("scroll", handleScroll);
     // Trigger initial scroll handler to check initial position
     handleScroll();
-    
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, [controls, supportControls, categoryControls]);
 
@@ -82,9 +82,7 @@ export default function HelpPage() {
     await loadSlim(engine);
   };
 
-  const particlesLoaded = async (container) => {
-    console.log("Particles container loaded", container);
-  };
+  const particlesLoaded = async (container) => {};
 
   const particlesConfig = {
     background: {
@@ -136,83 +134,78 @@ export default function HelpPage() {
   const contactMethods = [
     {
       icon: Facebook,
-      title: 'Facebook',
-      description: 'Theo dõi và nhắn tin qua Facebook',
-      link: 'https://facebook.com/your-page',
-      color: 'bg-blue-500/10 text-blue-500',
-      buttonText: 'Truy cập Facebook'
+      title: "Facebook",
+      description: "Theo dõi và nhắn tin qua Facebook",
+      link: "https://facebook.com/your-page",
+      color: "bg-blue-500/10 text-blue-500",
+      buttonText: "Truy cập Facebook",
     },
     {
       icon: MessageCircle,
-      title: 'Zalo',
-      description: 'Nhắn tin nhanh qua Zalo',
-      link: 'https://zalo.me/your-number',
-      color: 'bg-blue-400/10 text-blue-400',
-      buttonText: 'Mở Zalo'
+      title: "Zalo",
+      description: "Nhắn tin nhanh qua Zalo",
+      link: "https://zalo.me/your-number",
+      color: "bg-blue-400/10 text-blue-400",
+      buttonText: "Mở Zalo",
     },
     {
       icon: Send,
-      title: 'Telegram',
-      description: 'Liên hệ qua Telegram',
-      link: 'https://t.me/your-username',
-      color: 'bg-sky-400/10 text-sky-400',
-      buttonText: 'Mở Telegram'
-    }
+      title: "Telegram",
+      description: "Liên hệ qua Telegram",
+      link: "https://t.me/your-username",
+      color: "bg-sky-400/10 text-sky-400",
+      buttonText: "Mở Telegram",
+    },
   ];
 
   const supportCategories = [
     {
       icon: HelpCircle,
-      title: 'Câu hỏi thường gặp',
-      description: 'Tìm câu trả lời nhanh cho các vấn đề phổ biến',
+      title: "Câu hỏi thường gặp",
+      description: "Tìm câu trả lời nhanh cho các vấn đề phổ biến",
       items: [
-        'Làm sao để bắt đầu học?',
-        'Cách thanh toán học phí',
-        'Quên mật khẩu',
-        'Vấn đề kỹ thuật'
-      ]
+        "Làm sao để bắt đầu học?",
+        "Cách thanh toán học phí",
+        "Quên mật khẩu",
+        "Vấn đề kỹ thuật",
+      ],
     },
     {
       icon: FileText,
-      title: 'Hướng dẫn sử dụng',
-      description: 'Tài liệu chi tiết về cách sử dụng platform',
+      title: "Hướng dẫn sử dụng",
+      description: "Tài liệu chi tiết về cách sử dụng platform",
       items: [
-        'Hướng dẫn xem video',
-        'Cách làm bài tập',
-        'Tải tài liệu',
-        'Theo dõi tiến độ'
-      ]
+        "Hướng dẫn xem video",
+        "Cách làm bài tập",
+        "Tải tài liệu",
+        "Theo dõi tiến độ",
+      ],
     },
     {
       icon: MessageSquare,
-      title: 'Hỗ trợ trực tiếp',
-      description: 'Đội ngũ hỗ trợ luôn sẵn sàng giúp đỡ bạn',
-      items: [
-        'Chat trực tuyến',
-        'Gọi điện thoại',
-        'Gửi email',
-        'Đặt lịch hẹn'
-      ]
-    }
+      title: "Hỗ trợ trực tiếp",
+      description: "Đội ngũ hỗ trợ luôn sẵn sàng giúp đỡ bạn",
+      items: ["Chat trực tuyến", "Gọi điện thoại", "Gửi email", "Đặt lịch hẹn"],
+    },
   ];
 
   // Button hover animation variants
   const buttonVariants = {
     initial: { scale: 1 },
-    hover: { 
-      scale: 1.05, 
-      transition: { 
-        type: "spring", 
-        stiffness: 400, 
-        damping: 10 
-      } 
-    }
+    hover: {
+      scale: 1.05,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10,
+      },
+    },
   };
 
   // List item hover animation
   const listItemVariants = {
     initial: { x: 0 },
-    hover: { x: 5, transition: { duration: 0.2 } }
+    hover: { x: 5, transition: { duration: 0.2 } },
   };
 
   return (
@@ -257,7 +250,7 @@ export default function HelpPage() {
       </div>
 
       {/* Hero Section with parallax effect */}
-      <motion.div 
+      <motion.div
         className="relative bg-gradient-to-b from-[#1f1f1f] to-[#141414] py-16 md:py-24"
         style={{ opacity: opacityTransform }}
       >
@@ -268,7 +261,7 @@ export default function HelpPage() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <motion.h1 
+            <motion.h1
               className="text-3xl md:text-4xl font-bold mb-4"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -276,19 +269,20 @@ export default function HelpPage() {
             >
               Chúng tôi luôn sẵn sàng hỗ trợ bạn
             </motion.h1>
-            <motion.p 
+            <motion.p
               className="text-gray-400 text-lg max-w-2xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              Đội ngũ hỗ trợ chuyên nghiệp, nhiệt tình 24/7. Hãy liên hệ với chúng tôi qua các kênh bên dưới.
+              Đội ngũ hỗ trợ chuyên nghiệp, nhiệt tình 24/7. Hãy liên hệ với
+              chúng tôi qua các kênh bên dưới.
             </motion.p>
           </motion.div>
         </div>
-        
+
         {/* Decorative element with scroll parallax */}
-        <motion.div 
+        <motion.div
           className="absolute -bottom-8 left-0 right-0 h-16 bg-gradient-to-r from-[#141414] via-[#ff4d4f]/10 to-[#141414] opacity-30"
           style={{ y: yParallax }}
         />
@@ -309,7 +303,9 @@ export default function HelpPage() {
                 variants={itemVariants}
                 className="bg-[#1f1f1f] rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-pointer relative z-10"
               >
-                <div className={`w-12 h-12 rounded-lg ${method.color} flex items-center justify-center mb-4 hover:rotate-12 transition-all duration-300`}>
+                <div
+                  className={`w-12 h-12 rounded-lg ${method.color} flex items-center justify-center mb-4 hover:rotate-12 transition-all duration-300`}
+                >
                   <method.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{method.title}</h3>
@@ -320,7 +316,9 @@ export default function HelpPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-2 text-[#ff4d4f] transition-colors group"
                 >
-                  <span className="group-hover:underline">{method.buttonText}</span>
+                  <span className="group-hover:underline">
+                    {method.buttonText}
+                  </span>
                   <span className="transform transition-transform group-hover:translate-x-1">
                     <ExternalLink className="w-4 h-4" />
                   </span>
@@ -340,27 +338,33 @@ export default function HelpPage() {
             animate={supportControls}
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
-            <motion.div 
-              variants={itemVariants} 
+            <motion.div
+              variants={itemVariants}
               className="space-y-4 hover:bg-[#292929] p-4 rounded-lg transition-colors duration-300 cursor-pointer"
             >
               <div className="flex items-center space-x-2 text-[#ff4d4f] group">
                 <Phone className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
-                <h3 className="text-lg font-semibold group-hover:translate-x-1 transition-transform duration-300">Hotline</h3>
+                <h3 className="text-lg font-semibold group-hover:translate-x-1 transition-transform duration-300">
+                  Hotline
+                </h3>
               </div>
               <p className="text-2xl font-bold hover:text-[#ff4d4f] transition-colors duration-300">
                 1900 xxxx
               </p>
-              <p className="text-gray-400">Hỗ trợ 24/7 cho mọi vấn đề của bạn</p>
+              <p className="text-gray-400">
+                Hỗ trợ 24/7 cho mọi vấn đề của bạn
+              </p>
             </motion.div>
 
-            <motion.div 
-              variants={itemVariants} 
+            <motion.div
+              variants={itemVariants}
               className="space-y-4 hover:bg-[#292929] p-4 rounded-lg transition-colors duration-300 cursor-pointer"
             >
               <div className="flex items-center space-x-2 text-[#ff4d4f] group">
                 <Mail className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
-                <h3 className="text-lg font-semibold group-hover:translate-x-1 transition-transform duration-300">Email</h3>
+                <h3 className="text-lg font-semibold group-hover:translate-x-1 transition-transform duration-300">
+                  Email
+                </h3>
               </div>
               <p className="text-2xl font-bold hover:text-[#ff4d4f] transition-colors duration-300">
                 support@example.com
@@ -368,13 +372,15 @@ export default function HelpPage() {
               <p className="text-gray-400">Phản hồi trong vòng 24 giờ</p>
             </motion.div>
 
-            <motion.div 
-              variants={itemVariants} 
+            <motion.div
+              variants={itemVariants}
               className="space-y-4 hover:bg-[#292929] p-4 rounded-lg transition-colors duration-300 cursor-pointer"
             >
               <div className="flex items-center space-x-2 text-[#ff4d4f] group">
                 <Clock className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
-                <h3 className="text-lg font-semibold group-hover:translate-x-1 transition-transform duration-300">Giờ làm việc</h3>
+                <h3 className="text-lg font-semibold group-hover:translate-x-1 transition-transform duration-300">
+                  Giờ làm việc
+                </h3>
               </div>
               <p className="text-2xl font-bold hover:text-[#ff4d4f] transition-colors duration-300">
                 8:00 - 22:00
@@ -407,12 +413,14 @@ export default function HelpPage() {
                 <p className="text-gray-400 mb-4">{category.description}</p>
                 <ul className="space-y-2">
                   {category.items.map((item, i) => (
-                    <li 
-                      key={i} 
+                    <li
+                      key={i}
                       className="flex items-center space-x-2 text-gray-300 hover:text-white cursor-pointer group transition-colors duration-300"
                     >
                       <ChevronRight className="w-4 h-4 text-[#ff4d4f] group-hover:text-[#ff7070] transition-colors duration-300 group-hover:translate-x-1 transition-transform" />
-                      <span className="group-hover:translate-x-1 transition-transform duration-300">{item}</span>
+                      <span className="group-hover:translate-x-1 transition-transform duration-300">
+                        {item}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -421,7 +429,7 @@ export default function HelpPage() {
           </motion.div>
         </div>
       </div>
-      
+
       {/* Feedback button that follows scroll */}
       <motion.div
         className="fixed bottom-6 right-6 z-50"
@@ -429,13 +437,11 @@ export default function HelpPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.5 }}
       >
-        <button
-          className="bg-[#ff4d4f] text-white px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 hover:bg-[#ff3538] hover:scale-105 transition-all duration-300 active:scale-95"
-        >
+        <button className="bg-[#ff4d4f] text-white px-4 py-3 rounded-full shadow-lg flex items-center space-x-2 hover:bg-[#ff3538] hover:scale-105 transition-all duration-300 active:scale-95">
           <MessageSquare className="w-5 h-5" />
           <span>Hỗ trợ ngay</span>
         </button>
       </motion.div>
     </div>
   );
-} 
+}
