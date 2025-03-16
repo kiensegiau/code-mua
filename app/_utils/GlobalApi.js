@@ -20,7 +20,7 @@ const GlobalApi = {
     const { grade, subject, limit: limitCount = 50, page = 1 } = options;
 
     try {
-      console.log("Bắt đầu lấy danh sách khóa học với options:", options);
+      // console.log("Bắt đầu lấy danh sách khóa học với options:", options);
 
       let coursesQuery = collection(db, "courses");
       let queryConstraints = [];
@@ -43,9 +43,8 @@ const GlobalApi = {
         coursesQuery = query(coursesQuery, ...queryConstraints);
       }
 
-      console.log("Đang thực hiện truy vấn với các ràng buộc");
+      // console.log("Đang thực hiện truy vấn với các ràng buộc");
       const snapshot = await getDocs(coursesQuery);
-      console.log(`Đã lấy được ${snapshot.docs.length} khóa học`);
 
       return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
@@ -56,14 +55,14 @@ const GlobalApi = {
 
   getUserProfile: async (UserId) => {
     try {
-      console.log("Bắt đầu lấy thông tin người dùng");
+      // console.log("Bắt đầu lấy thông tin người dùng");
 
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("uid", "==", UserId));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.log("Không tìm thấy người dùng với email:", UserId);
+        // console.log("Không tìm thấy người dùng với email:", UserId);
         return null;
       }
 
@@ -72,7 +71,7 @@ const GlobalApi = {
         ...doc.data(),
       }));
 
-      console.log("Đã tìm thấy người dùng với email:", users);
+      // console.log("Đã tìm thấy người dùng với email:", users);
       return users[0];
     } catch (error) {
       console.error("Lỗi khi tìm kiếm người dùng:", error);
@@ -82,14 +81,14 @@ const GlobalApi = {
 
   updateUserProfile: async (UserId, updatedData) => {
     try {
-      console.log("Bắt đầu cập nhật thông tin người dùng");
+      // console.log("Bắt đầu cập nhật thông tin người dùng");
 
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("uid", "==", UserId));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.log("Không tìm thấy người dùng với ID:", UserId);
+        // console.log("Không tìm thấy người dùng với ID:", UserId);
         return null;
       }
 
@@ -98,7 +97,7 @@ const GlobalApi = {
 
       await updateDoc(userRef, updatedData);
 
-      console.log("Đã cập nhật thông tin người dùng thành công");
+      // console.log("Đã cập nhật thông tin người dùng thành công");
 
       // Lấy thông tin người dùng sau khi cập nhật
       const updatedUserDoc = await getDoc(userRef);
@@ -281,7 +280,7 @@ const GlobalApi = {
       if (courseSnap.exists()) {
         return { id: courseSnap.id, ...courseSnap.data() };
       } else {
-        console.log("Không tìm thấy khóa học");
+        // console.log("Không tìm thấy khóa học");
         return null;
       }
     } catch (error) {
@@ -347,11 +346,11 @@ const GlobalApi = {
   },
 
   getLessonData: async (courseId, chapterId, lessonId) => {
-    console.log("Bắt đầu lấy dữ liệu bài học:", {
-      courseId,
-      chapterId,
-      lessonId,
-    });
+    // console.log("Bắt đầu lấy dữ liệu bài học:", {
+    //   courseId,
+    //   chapterId,
+    //   lessonId,
+    // });
     try {
       const lessonRef = doc(
         db,
@@ -362,12 +361,12 @@ const GlobalApi = {
         "lessons",
         lessonId
       );
-      console.log("Tham chiếu đến bài học:", lessonRef);
+      // console.log("Tham chiếu đến bài học:", lessonRef);
       const lessonSnap = await getDoc(lessonRef);
-      console.log("Đã lấy snapshot của bài học");
+      // console.log("Đã lấy snapshot của bài học");
       if (lessonSnap.exists()) {
         const lessonData = { id: lessonSnap.id, ...lessonSnap.data() };
-        console.log("Dữ liệu bài học:", lessonData);
+        // console.log("Dữ liệu bài học:", lessonData);
         return lessonData;
       } else {
         console.error("Không tìm thấy dữ liệu bài học");

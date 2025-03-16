@@ -55,13 +55,16 @@ const Header = memo(({ courseInfo, videoProgress, handleLogout }) => (
     <div className="flex items-center">
       <Link
         key="back-link"
-        href="/course-list"
-        className="mr-4 flex items-center text-gray-300 hover:text-white transition-colors"
+        href="/courses"
+        className="flex items-center justify-center text-gray-300 hover:text-white transition-colors bg-gray-800/50 hover:bg-gray-800 px-2 py-1.5 rounded-full"
       >
-        <ArrowLeftCircle className="w-5 h-5 mr-1" />
-        <span className="hidden sm:inline">Quay lại</span>
+        <ArrowLeft className="w-4 h-4" />
+        <span className="hidden xs:inline ml-1.5 text-sm font-medium">
+          Quay lại
+        </span>
       </Link>
-      <h1 className="text-white font-medium text-base truncate">
+      <div className="h-4 w-[1px] bg-gray-800 hidden xs:block mx-3"></div>
+      <h1 className="text-white font-medium text-sm md:text-base truncate">
         {courseInfo?.title || "Đang tải..."}
       </h1>
     </div>
@@ -69,10 +72,12 @@ const Header = memo(({ courseInfo, videoProgress, handleLogout }) => (
       <button
         key="logout-button"
         onClick={handleLogout}
-        className="flex items-center text-gray-300 hover:text-white transition-colors"
+        className="flex items-center text-white bg-[#ff4d4f]/90 hover:bg-[#ff4d4f] transition-colors px-2 py-1.5 rounded-full"
       >
-        <LogOut className="w-4 h-4 mr-1" />
-        <span className="hidden sm:inline">Đăng xuất</span>
+        <LogOut className="w-3.5 h-3.5" />
+        <span className="hidden xs:inline ml-1.5 text-xs font-medium">
+          Đăng xuất
+        </span>
       </button>
     )}
   </header>
