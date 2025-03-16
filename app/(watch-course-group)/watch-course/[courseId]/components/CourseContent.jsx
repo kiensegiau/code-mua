@@ -41,11 +41,11 @@ const FileItem = memo(function FileItem({ file, isActive, onClick }) {
   return (
     <div
       onClick={() => onClick(file)}
-      className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group 
+      className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group
         ${
           isActive
-            ? "bg-purple-600/20 border-l-2 border-purple-400/60"
-            : "hover:bg-gray-800/70 border-l-2 border-transparent hover:border-gray-600"
+            ? "bg-purple-600/10 border-l-2 border-purple-400"
+            : "hover:bg-gray-800/50 border-l-2 border-transparent hover:border-gray-600/50"
         }`}
     >
       <div className="flex items-center w-full min-w-0">
@@ -125,7 +125,7 @@ const SubfolderItem = memo(function SubfolderItem({
   }, [subfolder.files, activeVideoId]);
 
   return (
-    <div className="my-1">
+    <div className="my-0.5 border-b border-gray-700/30">
       <div
         onClick={(e) => {
           e.preventDefault();
@@ -135,8 +135,8 @@ const SubfolderItem = memo(function SubfolderItem({
         className={`flex items-center h-[45px] px-10 cursor-pointer transition-all duration-200 ease-in-out group
           ${
             isExpanded || hasActiveFile
-              ? "border-l-4 border-teal-500"
-              : "hover:border-l-4 hover:border-teal-400/40 border-l-4 border-transparent"
+              ? "border-l-2 border-teal-400"
+              : "hover:bg-gray-800/50 border-l-2 border-transparent hover:border-gray-600/50"
           }`}
       >
         <div className="flex items-center w-full min-w-0">
@@ -190,7 +190,7 @@ const SubfolderItem = memo(function SubfolderItem({
         </div>
       </div>
       {isExpanded && (
-        <div className="bg-gray-800/20 py-1">
+        <div className="bg-gray-800/10 py-1">
           {sortedFiles.map((file) => (
             <FileItem
               key={file.id}
@@ -378,18 +378,18 @@ const LessonItem = memo(function LessonItem({
   }, [lesson.subfolders]);
 
   return (
-    <div className="my-1">
+    <div className="my-0.5 border-b border-gray-700/30">
       <div
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           onLessonClick(lesson, chapter);
         }}
-        className={`flex items-center h-[50px] px-7 cursor-pointer transition-all duration-200 ease-in-out group
+        className={`flex items-center h-[45px] px-7 cursor-pointer transition-all duration-200 ease-in-out group
           ${
             isActive || isExpanded
-              ? "border-l-4 border-indigo-500"
-              : "hover:border-l-4 hover:border-indigo-400/40 border-l-4 border-transparent"
+              ? "border-l-2 border-indigo-400"
+              : "hover:bg-gray-800/50 border-l-2 border-transparent hover:border-gray-600/50"
           }`}
       >
         <div className="flex items-center w-full min-w-0">
@@ -439,7 +439,7 @@ const LessonItem = memo(function LessonItem({
         </div>
       </div>
       {isExpanded && (
-        <div className="bg-[#1a1a1a]/30 py-1">
+        <div className="bg-gray-800/10 py-1">
           {/* Hiển thị files trực tiếp của lesson (nếu có) */}
           {sortedFiles.length > 0 &&
             sortedFiles.map((file) => (
@@ -490,13 +490,13 @@ const ChapterItem = memo(function ChapterItem({
   }, [chapter.lessons, sortByNumber]);
 
   return (
-    <div className="border-b border-gray-800 last:border-b-0">
+    <div className="border-b border-gray-700/50 last:border-b-0">
       <div
-        className={`flex items-center h-[60px] px-5 cursor-pointer transition-all duration-200 ease-in-out
+        className={`flex items-center h-[55px] px-5 cursor-pointer transition-all duration-200 ease-in-out
           ${
             isExpanded
-              ? "border-l-4 border-blue-500"
-              : "hover:border-l-4 hover:border-blue-400/40 border-l-4 border-transparent"
+              ? "border-l-2 border-blue-400"
+              : "hover:bg-gray-800/50 border-l-2 border-transparent hover:border-gray-600/50"
           }`}
         onClick={() => onChapterClick(index)}
       >
@@ -536,7 +536,7 @@ const ChapterItem = memo(function ChapterItem({
       </div>
 
       {isExpanded && (
-        <div className="bg-[#1a1a1a]/30">
+        <div className="bg-gray-800/5">
           {sortedLessons.map((lesson, lessonIndex) => (
             <LessonItem
               key={lesson.id || `lesson-${index}-${lessonIndex}`}

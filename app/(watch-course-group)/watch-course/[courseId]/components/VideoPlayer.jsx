@@ -27,7 +27,7 @@ const getStreamUrl = async (key) => {
 // Component loading riêng biệt
 const LoadingOverlay = memo(function LoadingOverlay() {
   return (
-    <div className="absolute inset-0 bg-black z-10 flex items-center justify-center">
+    <div className="absolute inset-0 bg-black dark:bg-black z-10 flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-gray-300 border-t-[#ff4d4f] rounded-full animate-spin"></div>
     </div>
   );

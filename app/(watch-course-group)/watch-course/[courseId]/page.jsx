@@ -131,7 +131,7 @@ const VideoSection = memo(
 
       {/* Video container */}
       <div
-        className="w-full bg-[#1f1f1f] relative"
+        className="w-full relative bg-black dark:bg-[#1f1f1f]"
         style={{ height: "var(--video-height)" }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
@@ -595,7 +595,7 @@ export default function WatchCourse({ params }) {
 
   return (
     <div
-      className="h-screen bg-[#141414] flex flex-col overflow-hidden"
+      className="h-screen bg-white dark:bg-[#141414] flex flex-col overflow-hidden"
       style={{ "--video-height": videoHeight }}
     >
       {/* Header */}
@@ -619,7 +619,7 @@ export default function WatchCourse({ params }) {
         />
 
         {/* Course Content Section */}
-        <div className="flex-1 md:flex-none md:w-[380px] bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-800 h-[calc(100vh-52px-56px-var(--video-height))] md:h-[calc(100vh-52px)] custom-scrollbar">
+        <div className="flex-1 md:flex-none md:w-[380px] bg-gray-100 dark:bg-[#1f1f1f] border-t md:border-t-0 md:border-l border-gray-300 dark:border-gray-800 h-[calc(100vh-52px-56px-var(--video-height))] md:h-[calc(100vh-52px)] custom-scrollbar">
           <CourseContent
             ref={courseContentRef}
             chapters={courseInfo?.chapters || []}

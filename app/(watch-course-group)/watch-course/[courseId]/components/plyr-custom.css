@@ -61,6 +61,7 @@
   height: 100%;
   border-radius: 0;
   overflow: hidden;
+  background-color: #000 !important; /* Luôn giữ màu nền đen */
 }
 
 /* Tùy chỉnh thời gian hiển thị */
