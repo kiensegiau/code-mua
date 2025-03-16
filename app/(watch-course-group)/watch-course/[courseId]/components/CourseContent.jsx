@@ -15,6 +15,8 @@ import {
   IoDocumentOutline,
   IoLinkOutline,
   IoFolderOutline,
+  IoSchoolOutline,
+  IoListOutline,
 } from "react-icons/io5";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -401,7 +403,7 @@ const LessonItem = memo(function LessonItem({
                 : "bg-gray-800 group-hover:bg-gray-700/70"
             }`}
           >
-            <IoDocumentOutline
+            <IoListOutline
               className={`w-3.5 h-3.5 transition-colors duration-200
               ${
                 isActive || isExpanded
