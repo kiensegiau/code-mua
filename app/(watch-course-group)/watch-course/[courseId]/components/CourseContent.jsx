@@ -26,32 +26,58 @@ const FileItem = memo(function FileItem({ file, isActive, onClick }) {
   return (
     <div
       onClick={() => onClick(file)}
-      className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group hover:bg-gray-800/50`}
+      className={`flex items-center h-[40px] px-14 cursor-pointer transition-all duration-200 ease-in-out group 
+        ${
+          isActive
+            ? "bg-purple-600/20 border-l-2 border-purple-400/60"
+            : "hover:bg-gray-800/70 border-l-2 border-transparent hover:border-gray-600"
+        }`}
     >
       <div className="flex items-center w-full min-w-0">
         <div
-          className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 bg-gray-800 group-hover:bg-[#ff4d4f]/5`}
+          className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 
+            ${
+              isActive
+                ? "bg-purple-600/10"
+                : "bg-gray-800 group-hover:bg-gray-700"
+            }`}
         >
           {isVideo ? (
             <IoPlayCircleOutline
-              className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
+              className={`w-3 h-3 
+                ${
+                  isActive
+                    ? "text-purple-300"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
             />
           ) : isDocument ? (
             <IoDocumentOutline
-              className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
+              className={`w-3 h-3 
+                ${
+                  isActive
+                    ? "text-purple-300"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
             />
           ) : (
             <IoLinkOutline
-              className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
+              className={`w-3 h-3 
+                ${
+                  isActive
+                    ? "text-purple-300"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
             />
           )}
         </div>
         <span
-          className={`text-sm truncate ${
-            isActive
-              ? "text-[#ff4d4f] font-medium"
-              : "text-gray-400 group-hover:text-gray-300"
-          }`}
+          className={`text-sm truncate 
+            ${
+              isActive
+                ? "text-white font-medium"
+                : "text-gray-400 group-hover:text-gray-300"
+            }`}
           title={file.name}
         >
           {file.name}
@@ -75,6 +101,14 @@ const SubfolderItem = memo(function SubfolderItem({
     return subfolder.files ? [...subfolder.files].sort(sortFiles) : [];
   }, [subfolder.files, sortFiles]);
 
+  // Kiểm tra xem có file nào trong subfolder đang active không
+  const hasActiveFile = useMemo(() => {
+    return (
+      subfolder.files &&
+      subfolder.files.some((file) => file.id === activeVideoId)
+    );
+  }, [subfolder.files, activeVideoId]);
+
   return (
     <div className="my-1">
       <div
@@ -84,27 +118,58 @@ const SubfolderItem = memo(function SubfolderItem({
           toggleSubfolder(subfolder.id);
         }}
         className={`flex items-center h-[45px] px-10 cursor-pointer transition-all duration-200 ease-in-out group
-          bg-gray-900/50 hover:bg-gray-800/70 border-l-4 border-transparent hover:border-[#ff4d4f]/30`}
+          ${
+            isExpanded || hasActiveFile
+              ? "border-l-4 border-teal-500"
+              : "hover:border-l-4 hover:border-teal-400/40 border-l-4 border-transparent"
+          }`}
       >
         <div className="flex items-center w-full pointer-events-none min-w-0">
           <div
-            className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 bg-gray-800 group-hover:bg-[#ff4d4f]/5`}
+            className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 
+              ${
+                isExpanded || hasActiveFile
+                  ? "bg-teal-600/10"
+                  : "bg-gray-800 group-hover:bg-gray-700/70"
+              }`}
           >
             <IoFolderOutline
-              className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
+              className={`w-3 h-3 
+                ${
+                  isExpanded || hasActiveFile
+                    ? "text-teal-300"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
             />
           </div>
           <span
-            className={`text-sm truncate transition-colors duration-200 text-gray-300 group-hover:text-gray-200`}
+            className={`text-sm truncate transition-colors duration-200 
+              ${
+                isExpanded || hasActiveFile
+                  ? "text-white font-medium"
+                  : "text-gray-400 group-hover:text-gray-300"
+              }`}
             title={subfolder.name}
           >
             {subfolder.name}
           </span>
           <div className="ml-auto flex-shrink-0">
             {isExpanded ? (
-              <IoChevronUp className="w-4 h-4 text-gray-400" />
+              <IoChevronUp
+                className={`w-4 h-4 ${
+                  isExpanded || hasActiveFile
+                    ? "text-teal-300"
+                    : "text-gray-400"
+                }`}
+              />
             ) : (
-              <IoChevronDown className="w-4 h-4 text-gray-400" />
+              <IoChevronDown
+                className={`w-4 h-4 ${
+                  isExpanded || hasActiveFile
+                    ? "text-teal-300"
+                    : "text-gray-400"
+                }`}
+              />
             )}
           </div>
         </div>
@@ -307,44 +372,59 @@ const LessonItem = memo(function LessonItem({
         }}
         className={`flex items-center h-[50px] px-7 cursor-pointer transition-all duration-200 ease-in-out group
           ${
-            isActive
-              ? "bg-[#ff4d4f]/10 border-l-4 border-[#ff4d4f]"
-              : "bg-[#1f1f1f] hover:bg-gray-800/50 hover:border-l-4 hover:border-[#ff4d4f]/40 border-l-4 border-transparent"
+            isActive || isExpanded
+              ? "border-l-4 border-indigo-500"
+              : "hover:border-l-4 hover:border-indigo-400/40 border-l-4 border-transparent"
           }`}
       >
         <div className="flex items-center w-full pointer-events-none min-w-0">
           <div
             className={`flex items-center justify-center w-6 h-6 rounded-lg flex-shrink-0 mr-3 transition-all duration-200
             ${
-              isActive
-                ? "bg-[#ff4d4f]/10"
-                : "bg-gray-800 group-hover:bg-[#ff4d4f]/5"
+              isActive || isExpanded
+                ? "bg-indigo-600/10"
+                : "bg-gray-800 group-hover:bg-gray-700/70"
             }`}
           >
-            <IoPlayCircleOutline
+            <IoDocumentOutline
               className={`w-3.5 h-3.5 transition-colors duration-200
               ${
-                isActive
-                  ? "text-[#ff4d4f]"
-                  : "text-gray-400 group-hover:text-[#ff4d4f]/60"
+                isActive || isExpanded
+                  ? "text-indigo-300"
+                  : "text-gray-400 group-hover:text-gray-300"
               }`}
             />
           </div>
           <span
             className={`text-sm truncate transition-colors duration-200
             ${
-              isActive
-                ? "text-[#ff4d4f] font-medium"
+              isActive || isExpanded
+                ? "text-white font-semibold"
                 : "text-gray-400 group-hover:text-gray-300"
             }`}
             title={lesson.title}
           >
             {lesson.title}
           </span>
+          <div className="ml-auto flex-shrink-0">
+            {isExpanded ? (
+              <IoChevronUp
+                className={`w-4 h-4 ${
+                  isActive || isExpanded ? "text-indigo-300" : "text-gray-400"
+                }`}
+              />
+            ) : (
+              <IoChevronDown
+                className={`w-4 h-4 ${
+                  isActive || isExpanded ? "text-indigo-300" : "text-gray-400"
+                }`}
+              />
+            )}
+          </div>
         </div>
       </div>
       {isExpanded && (
-        <div className="bg-gray-800/30 py-1">
+        <div className="bg-[#1a1a1a]/30 py-1">
           {/* Hiển thị files trực tiếp của lesson (nếu có) */}
           {sortedFiles.length > 0 &&
             sortedFiles.map((file) => (
@@ -397,16 +477,33 @@ const ChapterItem = memo(function ChapterItem({
   return (
     <div className="border-b border-gray-800 last:border-b-0">
       <div
-        className="flex items-center h-[60px] px-5 bg-[#1f1f1f] cursor-pointer hover:bg-gray-800/50 transition-all duration-200 ease-in-out"
+        className={`flex items-center h-[60px] px-5 cursor-pointer transition-all duration-200 ease-in-out
+          ${
+            isExpanded
+              ? "border-l-4 border-blue-500"
+              : "hover:border-l-4 hover:border-blue-400/40 border-l-4 border-transparent"
+          }`}
         onClick={() => onChapterClick(index)}
       >
         <div className="flex items-center flex-1 min-w-0">
-          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#ff4d4f]/10 flex-shrink-0 mr-3">
-            <IoBookOutline className="w-4 h-4 text-[#ff4d4f]" />
+          <div
+            className={`flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0 mr-3 
+            ${isExpanded ? "bg-blue-600/10" : "bg-gray-800"}`}
+          >
+            <IoBookOutline
+              className={`w-4 h-4 ${
+                isExpanded ? "text-blue-300" : "text-gray-400"
+              }`}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <h4
-              className="text-[15px] font-medium text-gray-200 mb-1 truncate"
+              className={`text-[15px] font-medium mb-1 truncate
+                ${
+                  isExpanded
+                    ? "text-white font-semibold"
+                    : "text-gray-300 font-medium"
+                }`}
               title={chapter.title}
             >
               {chapter.title}
@@ -417,14 +514,14 @@ const ChapterItem = memo(function ChapterItem({
           </div>
         </div>
         {isExpanded ? (
-          <IoChevronUp className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <IoChevronUp className="w-5 h-5 text-blue-300 flex-shrink-0" />
         ) : (
           <IoChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
         )}
       </div>
 
       {isExpanded && (
-        <div className="bg-[#1f1f1f]">
+        <div className="bg-[#1a1a1a]/30">
           {sortedLessons.map((lesson, lessonIndex) => (
             <LessonItem
               key={lesson.id || `lesson-${index}-${lessonIndex}`}
@@ -780,7 +877,7 @@ const CourseContent = forwardRef(
               className={`px-4 py-2.5 text-base font-medium relative w-full
               ${
                 activeLesson
-                  ? "text-[#ff4d4f] border-b-2 border-[#ff4d4f]"
+                  ? "text-gray-200 border-b-2 border-gray-600"
                   : "text-gray-400 hover:text-gray-300"
               }`}
             >
