@@ -60,13 +60,17 @@ function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="font-black text-lg md:text-xl bg-gradient-to-r from-[#ff4d4f] to-[#ff7875] text-transparent bg-clip-text tracking-wider">
-              KHOAHOC<span className="text-[#ff4d4f]">.LIVE</span>
+              <span className="hidden md:inline">KHOAHOC</span>
+              <span className="text-[#ff4d4f]">
+                <span className="hidden md:inline">.</span>
+                <span className="hidden md:inline">LIVE</span>
+              </span>
             </span>
           </Link>
         </div>
 
         {/* Search bar - Desktop */}
-        <div className="flex-1 px-4 lg:px-6">
+        <div className="hidden md:flex flex-1 px-4 lg:px-6">
           <div className="relative max-w-[680px] mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
@@ -79,7 +83,7 @@ function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1 md:gap-4">
           {/* Search Icon - Mobile */}
           <button
             onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -88,8 +92,8 @@ function Header() {
             <Search className="h-5 w-5 text-gray-400" />
           </button>
 
-          {/* Nút chuyển chế độ sáng/tối */}
-          <div className="relative flex items-center">
+          {/* Nút chuyển chế độ sáng/tối - Ẩn trên mobile */}
+          <div className="hidden md:flex relative items-center">
             <button
               onClick={toggleTheme}
               className="flex items-center focus:outline-none"
@@ -136,6 +140,23 @@ function Header() {
             </div>
           )}
 
+          {/* Số dư - Mobile - Thu gọn hơn */}
+          {user && (
+            <div className="md:hidden flex items-center px-1.5 py-1 bg-[var(--card-background)]/50 rounded-lg border border-[var(--border-color)]">
+              <Wallet className="h-3.5 w-3.5 text-[#ff4d4f]" />
+              <span className="text-xs font-medium text-[var(--text-color)] ml-1">
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })
+                  .format(profile?.balance || 0)
+                  .replace(/\s+₫/, "₫")}
+              </span>
+            </div>
+          )}
+
           {/* Notifications */}
           <button className="relative hover:bg-[var(--hover-color)] p-1.5 rounded-lg transition-colors">
             <Bell className="text-gray-400 h-5 w-5" />
@@ -160,17 +181,16 @@ function Header() {
               {/* User Menu Dropdown */}
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-1 w-48 bg-[var(--card-background)] rounded-lg shadow-lg border border-[var(--border-color)] py-1">
-                  {/* Số dư - Mobile */}
-                  <div className="md:hidden flex items-center gap-2 px-4 py-2 text-sm text-gray-400 border-b border-[var(--border-color)]">
-                    <Wallet className="h-4 w-4 text-[#ff4d4f]" />
-                    <span>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      }).format(profile?.balance || 0)}
-                    </span>
+                  {/* Nút chuyển chế độ sáng/tối - Chỉ hiển thị trong menu trên mobile */}
+                  <div className="md:hidden flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-color)] hover:bg-[var(--hover-color)] border-b border-[var(--border-color)]">
+                    {theme === "dark" ? (
+                      <Sun className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <Moon className="h-5 w-5 text-gray-400" />
+                    )}
+                    <button onClick={toggleTheme} className="w-full text-left">
+                      {theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}
+                    </button>
                   </div>
 
                   <Link
