@@ -12,14 +12,13 @@ const getStreamUrl = async (key) => {
     const data = await response.json();
 
     if (data.success && data.streamUrl) {
-      console.log("Đã lấy được stream URL");
       return data.streamUrl;
     } else {
-      console.error("Lỗi khi lấy stream URL:", data.error || "Không xác định");
+      // console.error("Lỗi khi lấy stream URL:", data.error || "Không xác định");
       return null;
     }
   } catch (error) {
-    console.error("Lỗi khi gọi API stream:", error);
+    // console.error("Lỗi khi gọi API stream:", error);
     return null;
   }
 };
@@ -41,6 +40,7 @@ const NavigationButtons = memo(function NavigationButtons({
   return (
     <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-4 pointer-events-none">
       <button
+        key="prev-button"
         onClick={onPrevious}
         className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
         title="Bài trước"
@@ -49,6 +49,7 @@ const NavigationButtons = memo(function NavigationButtons({
       </button>
 
       <button
+        key="next-button"
         onClick={onNext}
         className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
         title="Bài tiếp theo"
@@ -86,13 +87,6 @@ const VideoPlayer = memo(function VideoPlayer({
   }, [file]);
 
   useEffect(() => {
-    console.log("Video file received in player:", {
-      file,
-      key: file?.storage?.key,
-      type: file?.type,
-      id: file?.id,
-    });
-
     if (file) {
       setIsLoading(true);
       setVideoKey(`${file.id}-${Date.now()}`);
@@ -104,9 +98,6 @@ const VideoPlayer = memo(function VideoPlayer({
         );
         const savedPosition = savedPositions[file.id];
         if (savedPosition && savedPosition.position > 0) {
-          console.log(
-            `Phục hồi vị trí cho video ${file.id}: ${savedPosition.position}s`
-          );
           setCurrentTime(savedPosition.position);
           if (playerRef.current) {
             playerRef.current.currentTime = savedPosition.position;
@@ -115,8 +106,7 @@ const VideoPlayer = memo(function VideoPlayer({
           setCurrentTime(0);
         }
       } catch (error) {
-        console.error("Lỗi khi khôi phục vị trí video:", error);
-        setCurrentTime(0);
+        // console.error("Lỗi khi khôi phục vị trí video:", error);
       }
     }
   }, [file]);
@@ -125,7 +115,8 @@ const VideoPlayer = memo(function VideoPlayer({
   useEffect(() => {
     const fetchStreamUrl = async () => {
       if (!file?.storage?.key) {
-        console.error("Không có storage key cho video");
+        // console.error("Không có storage key cho video");
+        setIsLoading(false);
         return;
       }
 
@@ -134,9 +125,8 @@ const VideoPlayer = memo(function VideoPlayer({
 
       if (url) {
         setStreamUrl(url);
-        console.log("Đã cập nhật URL video:", file.id);
       } else {
-        console.error("Không thể lấy URL video");
+        // console.error("Không thể lấy URL video");
       }
     };
 
@@ -207,9 +197,7 @@ const VideoPlayer = memo(function VideoPlayer({
     player.on("ready", () => {
       handleLoadedMetadata();
       if (autoPlay) {
-        player.play().catch(() => {
-          console.log("Autoplay bị chặn bởi trình duyệt");
-        });
+        player.play().catch(() => {});
       }
     });
 
@@ -224,7 +212,6 @@ const VideoPlayer = memo(function VideoPlayer({
   const handleVideoEnd = useCallback(() => {
     if (!file?.id) return;
 
-    console.log("Video đã kết thúc, xóa tiến trình và chuyển bài tiếp theo");
     saveVideoPosition(file.id, 0, videoDuration);
 
     if (onEnded) {
@@ -235,7 +222,6 @@ const VideoPlayer = memo(function VideoPlayer({
   const handleVideoPlay = useCallback(() => {
     if (!file?.id) return;
 
-    console.log(`Video đang phát: ${file.id}`);
     localStorage.setItem("lastWatchedVideoId", file.id);
 
     // Lưu trạng thái khóa học hiện tại vào localStorage
@@ -252,7 +238,6 @@ const VideoPlayer = memo(function VideoPlayer({
 
   const handleLoadedMetadata = useCallback(() => {
     setIsLoading(false);
-    console.log(`Video đã tải: ${file?.id}`);
   }, [file]);
 
   // Lưu vị trí video vào localStorage
@@ -280,7 +265,7 @@ const VideoPlayer = memo(function VideoPlayer({
         localStorage.setItem("lastWatchedVideoId", videoId);
       }
     } catch (error) {
-      console.error("Lỗi khi lưu vị trí video:", error);
+      // console.error("Lỗi khi lưu vị trí video:", error);
     }
   }, []);
 

@@ -27,7 +27,10 @@ import { useVideoNavigation } from "./hooks/useVideoNavigation";
 const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center w-full h-full">
+    <div
+      key="video-player-loading"
+      className="flex items-center justify-center w-full h-full"
+    >
       <div className="w-8 h-8 border-2 border-[#ff4d4f] border-t-transparent rounded-full animate-spin"></div>
     </div>
   ),
@@ -48,52 +51,31 @@ LoadingScreen.displayName = "LoadingScreen";
 
 // Component Header
 const Header = memo(({ courseInfo, videoProgress, handleLogout }) => (
-  <div className="bg-[#1f1f1f] border-b border-gray-800 flex-none">
-    <div className="max-w-[1600px] mx-auto px-4">
-      <div className="flex items-center h-[52px]">
-        {/* Left Section */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Link
-            href="/courses"
-            className="flex items-center gap-2 text-gray-300 hover:text-[#ff4d4f] transition-colors flex-shrink-0 bg-gray-800/50 hover:bg-gray-800 px-3 py-1.5 rounded-full"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm hidden xs:block font-medium">
-              Quay lại
-            </span>
-          </Link>
-
-          <div className="h-4 w-[1px] bg-gray-800 hidden xs:block flex-shrink-0"></div>
-
-          <div className="flex-1 min-w-0">
-            <div className="hidden xs:block text-[11px] uppercase tracking-wider text-[#ff4d4f] font-medium mb-0.5">
-              Đang học
-            </div>
-            <h1 className="text-sm text-gray-100 truncate pr-4 font-medium">
-              {courseInfo?.title || "Đang tải..."}
-            </h1>
-          </div>
-        </div>
-
-        {/* Right Section */}
-        <div className="flex items-center gap-4">
-          <div className="text-xs bg-gray-800/50 px-3 py-1.5 rounded-full hidden sm:flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <span className="text-[#ff4d4f] font-medium"></span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="text-white hover:text-white transition-colors whitespace-nowrap bg-[#ff4d4f] hover:bg-[#ff4d4f]/90 px-3 py-1.5 rounded-full font-medium flex items-center gap-2 text-xs"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Đăng xuất</span>
-          </button>
-        </div>
-      </div>
+  <header className="bg-[#1f1f1f] border-b border-gray-800 flex h-[52px] justify-between items-center px-4 z-10 shadow-md">
+    <div className="flex items-center">
+      <Link
+        key="back-link"
+        href="/course-list"
+        className="mr-4 flex items-center text-gray-300 hover:text-white transition-colors"
+      >
+        <ArrowLeftCircle className="w-5 h-5 mr-1" />
+        <span className="hidden sm:inline">Quay lại</span>
+      </Link>
+      <h1 className="text-white font-medium text-base truncate">
+        {courseInfo?.title || "Đang tải..."}
+      </h1>
     </div>
-  </div>
+    {handleLogout && (
+      <button
+        key="logout-button"
+        onClick={handleLogout}
+        className="flex items-center text-gray-300 hover:text-white transition-colors"
+      >
+        <LogOut className="w-4 h-4 mr-1" />
+        <span className="hidden sm:inline">Đăng xuất</span>
+      </button>
+    )}
+  </header>
 ));
 
 Header.displayName = "Header";
@@ -107,7 +89,7 @@ const VideoSection = memo(
     handleTimeUpdate,
     handleNext,
     handlePrevious,
-    key,
+    keyProp,
   }) => (
     <div className="flex-none md:flex md:flex-col md:h-[calc(100vh-52px)] overflow-hidden">
       {/* Video Info - Moved to top */}
@@ -118,7 +100,9 @@ const VideoSection = memo(
               {activeLesson.title}
               {activeVideo && (
                 <>
-                  <span className="mx-2 text-gray-400">|</span>
+                  <span key="title-separator" className="mx-2 text-gray-400">
+                    |
+                  </span>
                   {activeVideo.name}
                 </>
               )}
@@ -137,7 +121,7 @@ const VideoSection = memo(
         <div className="absolute inset-0 flex items-center justify-center">
           {activeVideo ? (
             <VideoPlayer
-              key={key}
+              key={keyProp}
               file={activeVideo}
               onEnded={handleVideoEnd}
               onTimeUpdate={handleTimeUpdate}
@@ -146,7 +130,10 @@ const VideoSection = memo(
               autoPlay={true}
             />
           ) : (
-            <div className="flex items-center justify-center h-full w-full">
+            <div
+              key="empty-video-message"
+              className="flex items-center justify-center h-full w-full"
+            >
               <p className="text-gray-400">
                 Vui lòng chọn một bài học để bắt đầu
               </p>
@@ -491,9 +478,9 @@ export default function WatchCourse({ params }) {
                     (sf) => sf.id === savedState.subfolderId
                   );
                   if (subfolder) {
-                    console.log(
-                      `Khôi phục video từ subfolder: ${subfolder.name}`
-                    );
+                    // console.log(
+                    //   `Khôi phục video từ subfolder: ${subfolder.name}`
+                    // );
                   }
                 }
               }
@@ -615,7 +602,7 @@ export default function WatchCourse({ params }) {
           handleTimeUpdate={handleTimeUpdate}
           handleNext={handleNext}
           handlePrevious={handlePrevious}
-          key={key}
+          keyProp={key}
         />
 
         {/* Course Content Section */}

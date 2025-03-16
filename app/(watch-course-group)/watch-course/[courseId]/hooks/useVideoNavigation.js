@@ -236,7 +236,7 @@ export const useVideoNavigation = ({
           localStorage.setItem("lastWatchedSubfolderId", subfolderInfo.id);
         }
       } catch (error) {
-        console.error("Error saving last watched state:", error);
+        // console.error("Error saving last watched state:", error);
       }
     },
     [courseInfo]
@@ -246,8 +246,6 @@ export const useVideoNavigation = ({
   const handleLessonClickWrapper = useCallback(
     (lesson, chapter, video) => {
       if (!video || !lesson || !chapter) return;
-
-      console.log("Setting active video:", video);
 
       // Cập nhật chương đang mở
       if (chapter && chapter.id !== activeChapter?.id) {
@@ -278,7 +276,6 @@ export const useVideoNavigation = ({
             };
             // Lưu subfolderId để LessonItem có thể mở đúng subfolder
             localStorage.setItem("lastWatchedSubfolderId", subfolder.id);
-            console.log(`Video thuộc subfolder: ${subfolder.name}`);
             break;
           }
         }
@@ -310,7 +307,6 @@ export const useVideoNavigation = ({
     try {
       // Kiểm tra nếu đã có video được chọn thì không cần khôi phục
       if (activeVideo) {
-        console.log("Đã có video được chọn, bỏ qua việc khôi phục tự động");
         return false;
       }
 
@@ -363,14 +359,12 @@ export const useVideoNavigation = ({
       // Thực hiện khôi phục trạng thái
       if (chapter && lesson && video) {
         handleLessonClickWrapper(lesson, chapter, video);
-        console.log("Đã khôi phục trạng thái xem video thành công");
         return true;
       }
     } catch (error) {
-      console.error("Lỗi khi khôi phục trạng thái xem video:", error);
+      // console.error("Lỗi khi khôi phục trạng thái xem video:", error);
+      return false;
     }
-
-    return false;
   }, [courseInfo, activeVideo, handleLessonClickWrapper]);
 
   // Chuyển đến video tiếp theo
@@ -486,7 +480,7 @@ export const useVideoNavigation = ({
 
       toast.success("Đã hoàn thành khóa học!");
     } catch (error) {
-      console.error("Error navigating to next video:", error);
+      // console.error("Error navigating to next video:", error);
       toast.error("Có lỗi xảy ra khi chuyển video");
     }
   }, [
@@ -619,7 +613,7 @@ export const useVideoNavigation = ({
 
       toast("Đã về đầu khóa học!");
     } catch (error) {
-      console.error("Error navigating to previous video:", error);
+      // console.error("Error navigating to previous video:", error);
       toast.error("Có lỗi xảy ra khi chuyển video");
     }
   }, [

@@ -24,7 +24,7 @@ import dynamic from "next/dynamic";
 // Import Tippy với dynamic import để tránh SSR
 const Tippy = dynamic(() => import("@tippyjs/react"), {
   ssr: false,
-  loading: ({ children }) => children,
+  loading: ({ children }) => <div key="tippy-loading">{children}</div>,
 });
 
 // CSS sẽ được import ở phía client
@@ -195,7 +195,7 @@ const SubfolderItem = memo(function SubfolderItem({
         <div className="bg-gray-800/10 py-1">
           {sortedFiles.map((file) => (
             <FileItem
-              key={file.id}
+              key={`file-${file.id || file._id || Date.now()}`}
               file={file}
               isActive={activeVideoId === file.id}
               onClick={onFileClick}
@@ -256,7 +256,7 @@ const LessonItem = memo(function LessonItem({
 
       return savedState;
     } catch (e) {
-      console.error("Lỗi khi khôi phục trạng thái subfolder:", e);
+      // console.error("Lỗi khi khôi phục trạng thái subfolder:", e);
       return {};
     }
   });
@@ -298,7 +298,7 @@ const LessonItem = memo(function LessonItem({
             JSON.stringify(newState)
           );
         } catch (e) {
-          console.error("Lỗi khi lưu trạng thái subfolder:", e);
+          // console.error("Lỗi khi lưu trạng thái subfolder:", e);
         }
       }
     }
@@ -313,7 +313,7 @@ const LessonItem = memo(function LessonItem({
           JSON.stringify(expandedSubfolders)
         );
       } catch (e) {
-        console.error("Lỗi khi lưu trạng thái subfolder:", e);
+        // console.error("Lỗi khi lưu trạng thái subfolder:", e);
       }
     }
   }, [expandedSubfolders, lesson.id]);
@@ -339,7 +339,7 @@ const LessonItem = memo(function LessonItem({
               JSON.stringify(newState)
             );
           } catch (e) {
-            console.error("Lỗi khi lưu trạng thái subfolder:", e);
+            // console.error("Lỗi khi lưu trạng thái subfolder:", e);
           }
 
           return newState;
@@ -357,7 +357,7 @@ const LessonItem = memo(function LessonItem({
               JSON.stringify(newState)
             );
           } catch (e) {
-            console.error("Lỗi khi lưu trạng thái subfolder:", e);
+            // console.error("Lỗi khi lưu trạng thái subfolder:", e);
           }
 
           return newState;
@@ -446,7 +446,7 @@ const LessonItem = memo(function LessonItem({
           {sortedFiles.length > 0 &&
             sortedFiles.map((file) => (
               <FileItem
-                key={file.id || file._id}
+                key={`lesson-file-${file.id || file._id || Date.now()}`}
                 file={file}
                 isActive={activeVideoId === file.id}
                 onClick={onFileClick}
@@ -457,7 +457,7 @@ const LessonItem = memo(function LessonItem({
           {sortedSubfolders.length > 0 &&
             sortedSubfolders.map((subfolder) => (
               <SubfolderItem
-                key={subfolder.id}
+                key={`subfolder-${subfolder.id || Date.now()}`}
                 subfolder={subfolder}
                 isExpanded={!!expandedSubfolders[subfolder.id]}
                 toggleSubfolder={toggleSubfolder}
@@ -541,7 +541,7 @@ const ChapterItem = memo(function ChapterItem({
         <div className="bg-gray-800/5">
           {sortedLessons.map((lesson, lessonIndex) => (
             <LessonItem
-              key={lesson.id || `lesson-${index}-${lessonIndex}`}
+              key={`lesson-${lesson.id || `${index}-${lessonIndex}`}`}
               lesson={lesson}
               chapter={chapter}
               isActive={activeLesson?._id === lesson._id}
@@ -629,13 +629,11 @@ const CourseContent = forwardRef(
         currentChapterIndex !== -1 &&
         expandedChapterIndex !== currentChapterIndex
       ) {
-        console.log("Auto-expanding chapter:", currentChapterIndex);
         setExpandedChapterIndex(currentChapterIndex);
       }
 
       // Cập nhật expanded lesson nếu khác với giá trị hiện tại
       if (expandedLessonId !== activeLesson.id) {
-        console.log("Auto-expanding lesson:", activeLesson.id);
         setExpandedLessonId(activeLesson.id);
       }
 
@@ -663,8 +661,6 @@ const CourseContent = forwardRef(
         activeChapter &&
         chapters.length > 0
       ) {
-        console.log("Initial page load - synchronizing course content view");
-
         // Tìm index của chapter hiện tại
         const sortedChapters = [...chapters].sort(sortByNumber);
         const currentChapterIndex = sortedChapters.findIndex(
@@ -888,10 +884,11 @@ const CourseContent = forwardRef(
 
     return (
       <div className="h-full bg-[#1f1f1f] shadow-lg flex flex-col border-l border-gray-800">
-        <TippyStyles />
+        <TippyStyles key="tippy-styles" />
         <div className="flex-none border-b border-gray-800 w-full">
           <div className="flex items-center w-full">
             <button
+              key="course-content-button"
               className={`px-4 py-2.5 text-base font-medium relative w-full
               ${
                 activeLesson
@@ -907,7 +904,7 @@ const CourseContent = forwardRef(
         <div className="flex-1 overflow-y-auto min-h-0 pb-4 custom-scrollbar">
           {sortedChapters.map((chapter, index) => (
             <ChapterItem
-              key={chapter.id || `chapter-${index}`}
+              key={`chapter-${chapter.id || index}`}
               chapter={chapter}
               index={index}
               isExpanded={expandedChapterIndex === index}
