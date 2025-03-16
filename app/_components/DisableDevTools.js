@@ -35,7 +35,8 @@ export default function DisableDevTools() {
       const t2 = performance.now();
 
       if (t2 - t1 > timeThreshold) {
-        document.body.innerHTML = "Không được phép mở DevTools!. Nếu cần tải xuống hãy liên hệ admin";
+        document.body.innerHTML =
+          "Không được phép mở DevTools!. Nếu cần tải xuống hãy liên hệ admin";
       }
     }
 
