@@ -327,9 +327,23 @@ export default function WatchCourse({ params }) {
         let foundChapter = null;
 
         if (targetChapter && targetLesson) {
+          // Kiểm tra trong files của lesson
           foundVideo = (targetLesson.files || []).find(
             (file) => file.id === videoId && file.type?.includes("video")
           );
+
+          // Nếu không tìm thấy trong files, kiểm tra trong subfolders
+          if (!foundVideo && targetLesson.subfolders) {
+            for (const subfolder of targetLesson.subfolders) {
+              const videoInSubfolder = (subfolder.files || []).find(
+                (file) => file.id === videoId && file.type?.includes("video")
+              );
+              if (videoInSubfolder) {
+                foundVideo = videoInSubfolder;
+                break;
+              }
+            }
+          }
 
           if (foundVideo) {
             foundLesson = targetLesson;
@@ -340,6 +354,7 @@ export default function WatchCourse({ params }) {
         if (!foundVideo) {
           for (const chapter of course.chapters) {
             for (const lesson of chapter.lessons || []) {
+              // Kiểm tra trong files của lesson
               const videoFile = (lesson.files || []).find(
                 (file) => file.id === videoId && file.type?.includes("video")
               );
@@ -349,6 +364,28 @@ export default function WatchCourse({ params }) {
                 foundLesson = lesson;
                 foundChapter = chapter;
                 break;
+              }
+
+              // Nếu không tìm thấy trong files, kiểm tra trong subfolders
+              if (!foundVideo && lesson.subfolders) {
+                let foundInSubfolder = false;
+
+                for (const subfolder of lesson.subfolders) {
+                  const videoInSubfolder = (subfolder.files || []).find(
+                    (file) =>
+                      file.id === videoId && file.type?.includes("video")
+                  );
+
+                  if (videoInSubfolder) {
+                    foundVideo = videoInSubfolder;
+                    foundLesson = lesson;
+                    foundChapter = chapter;
+                    foundInSubfolder = true;
+                    break;
+                  }
+                }
+
+                if (foundInSubfolder) break;
               }
             }
             if (foundVideo) break;

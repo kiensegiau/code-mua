@@ -14,6 +14,7 @@ import {
   IoPlayCircleOutline,
   IoDocumentOutline,
   IoLinkOutline,
+  IoFolderOutline,
 } from "react-icons/io5";
 import { toast } from "sonner";
 
@@ -60,6 +61,70 @@ const FileItem = memo(function FileItem({ file, isActive, onClick }) {
   );
 });
 
+// Component thư mục con (subfolder)
+const SubfolderItem = memo(function SubfolderItem({
+  subfolder,
+  isExpanded,
+  toggleSubfolder,
+  activeVideoId,
+  onFileClick,
+  sortFiles,
+}) {
+  // Sắp xếp files trong subfolder
+  const sortedFiles = useMemo(() => {
+    return subfolder.files ? [...subfolder.files].sort(sortFiles) : [];
+  }, [subfolder.files, sortFiles]);
+
+  return (
+    <div className="my-1">
+      <div
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSubfolder(subfolder.id);
+        }}
+        className={`flex items-center h-[45px] px-10 cursor-pointer transition-all duration-200 ease-in-out group
+          bg-gray-900/50 hover:bg-gray-800/70 border-l-4 border-transparent hover:border-[#ff4d4f]/30`}
+      >
+        <div className="flex items-center w-full pointer-events-none min-w-0">
+          <div
+            className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 bg-gray-800 group-hover:bg-[#ff4d4f]/5`}
+          >
+            <IoFolderOutline
+              className={`w-3 h-3 text-gray-400 group-hover:text-[#ff4d4f]/60`}
+            />
+          </div>
+          <span
+            className={`text-sm truncate transition-colors duration-200 text-gray-300 group-hover:text-gray-200`}
+            title={subfolder.name}
+          >
+            {subfolder.name}
+          </span>
+          <div className="ml-auto flex-shrink-0">
+            {isExpanded ? (
+              <IoChevronUp className="w-4 h-4 text-gray-400" />
+            ) : (
+              <IoChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </div>
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="bg-gray-800/20 py-1">
+          {sortedFiles.map((file) => (
+            <FileItem
+              key={file.id}
+              file={file}
+              isActive={activeVideoId === file.id}
+              onClick={onFileClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
 // Component bài học
 const LessonItem = memo(function LessonItem({
   lesson,
@@ -71,10 +136,28 @@ const LessonItem = memo(function LessonItem({
   onFileClick,
   sortFiles,
 }) {
+  // State để quản lý việc mở/đóng các subfolder
+  const [expandedSubfolders, setExpandedSubfolders] = useState({});
+
+  // Hàm toggle subfolder
+  const toggleSubfolder = useCallback((subfolderId) => {
+    setExpandedSubfolders((prev) => ({
+      ...prev,
+      [subfolderId]: !prev[subfolderId],
+    }));
+  }, []);
+
   // Hàm render files trong lesson
   const sortedFiles = useMemo(() => {
     return lesson.files ? [...lesson.files].sort(sortFiles) : [];
   }, [lesson.files, sortFiles]);
+
+  // Sắp xếp subfolders theo tên
+  const sortedSubfolders = useMemo(() => {
+    return lesson.subfolders
+      ? [...lesson.subfolders].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+  }, [lesson.subfolders]);
 
   return (
     <div className="my-1">
@@ -122,16 +205,32 @@ const LessonItem = memo(function LessonItem({
           </span>
         </div>
       </div>
-      {isExpanded && lesson.files && (
+      {isExpanded && (
         <div className="bg-gray-800/30 py-1">
-          {sortedFiles.map((file) => (
-            <FileItem
-              key={file.id || file._id}
-              file={file}
-              isActive={activeVideoId === file.id}
-              onClick={onFileClick}
-            />
-          ))}
+          {/* Hiển thị files trực tiếp của lesson (nếu có) */}
+          {sortedFiles.length > 0 &&
+            sortedFiles.map((file) => (
+              <FileItem
+                key={file.id || file._id}
+                file={file}
+                isActive={activeVideoId === file.id}
+                onClick={onFileClick}
+              />
+            ))}
+
+          {/* Hiển thị subfolders (nếu có) */}
+          {sortedSubfolders.length > 0 &&
+            sortedSubfolders.map((subfolder) => (
+              <SubfolderItem
+                key={subfolder.id}
+                subfolder={subfolder}
+                isExpanded={!!expandedSubfolders[subfolder.id]}
+                toggleSubfolder={toggleSubfolder}
+                activeVideoId={activeVideoId}
+                onFileClick={onFileClick}
+                sortFiles={sortFiles}
+              />
+            ))}
         </div>
       )}
     </div>

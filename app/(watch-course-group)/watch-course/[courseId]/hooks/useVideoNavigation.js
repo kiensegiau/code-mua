@@ -35,13 +35,33 @@ export const useVideoNavigation = ({
       .find((file) => file.id === videoId);
   }, []);
 
-  // Lọc và sắp xếp video trong bài học hiện tại
+  // Lọc và sắp xếp tất cả các video trong bài học hiện tại (bao gồm cả subfolders)
   const currentLessonVideos = useMemo(() => {
-    if (!activeLesson?.files) return [];
-    return activeLesson.files
-      .filter((f) => f.type?.includes("video"))
-      .sort((a, b) => sortItems(a, b, "name"));
-  }, [activeLesson?.files, sortItems]);
+    if (!activeLesson) return [];
+
+    let videos = [];
+
+    // Thêm videos từ files của lesson
+    if (activeLesson.files) {
+      videos.push(
+        ...activeLesson.files.filter((f) => f.type?.includes("video"))
+      );
+    }
+
+    // Thêm videos từ các subfolders
+    if (activeLesson.subfolders) {
+      activeLesson.subfolders.forEach((subfolder) => {
+        if (subfolder.files) {
+          videos.push(
+            ...subfolder.files.filter((f) => f.type?.includes("video"))
+          );
+        }
+      });
+    }
+
+    // Sắp xếp tất cả videos theo tên
+    return videos.sort((a, b) => sortItems(a, b, "name"));
+  }, [activeLesson, sortItems]);
 
   // Lấy danh sách bài học đã sắp xếp trong chương hiện tại
   const sortedLessonsInCurrentChapter = useMemo(() => {
@@ -256,47 +276,39 @@ export const useVideoNavigation = ({
       const lesson = chapter.lessons.find((l) => l.id === savedState.lessonId);
       if (!lesson) return false;
 
-      // Tìm video
-      const video = findVideoById(lesson.files, savedState.videoId);
-      if (!video) return false;
-
-      // Tìm chỉ số chương chính xác
-      const sortedChaptersCopy = [...courseInfo.chapters].sort(sortItems);
-      const chapterIndex = sortedChaptersCopy.findIndex(
-        (c) => c.id === chapter.id
+      // Tìm video trong files của lesson
+      let video = (lesson.files || []).find(
+        (f) => f.id === savedState.videoId && f.type?.includes("video")
       );
 
-      // Logs để debug
-      console.log("Khôi phục trạng thái xem:", {
-        chapterIndex,
-        chapterId: chapter.id,
-        lessonId: lesson.id,
-        videoId: video.id,
-      });
+      // Nếu không tìm thấy trong lesson files, tìm trong subfolders
+      if (!video && lesson.subfolders) {
+        for (const subfolder of lesson.subfolders) {
+          const videoInSubfolder = (subfolder.files || []).find(
+            (f) => f.id === savedState.videoId && f.type?.includes("video")
+          );
 
-      // Không sử dụng timeout ở đây để tránh xung đột
-      if (chapterIndex !== -1) {
-        setExpandedChapterIndex(chapterIndex);
+          if (videoInSubfolder) {
+            video = videoInSubfolder;
+            break;
+          }
+        }
       }
-      setExpandedLessonId(lesson.id);
 
-      // Đặt video hoạt động
-      handleLessonClickWrapper(lesson, chapter, video);
+      if (!video) return false;
 
-      return true;
+      // Thực hiện khôi phục trạng thái
+      if (chapter && lesson && video) {
+        handleLessonClickWrapper(lesson, chapter, video);
+        console.log("Đã khôi phục trạng thái xem video thành công");
+        return true;
+      }
     } catch (error) {
-      console.error("Error restoring last watched state:", error);
-      return false;
+      console.error("Lỗi khi khôi phục trạng thái xem video:", error);
     }
-  }, [
-    courseInfo,
-    activeVideo,
-    setExpandedChapterIndex,
-    setExpandedLessonId,
-    handleLessonClickWrapper,
-    findVideoById,
-    sortItems,
-  ]);
+
+    return false;
+  }, [courseInfo, activeVideo, handleLessonClickWrapper]);
 
   // Chuyển đến video tiếp theo
   const handleNext = useCallback(() => {
