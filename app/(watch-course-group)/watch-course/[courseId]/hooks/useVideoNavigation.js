@@ -178,12 +178,32 @@ export const useVideoNavigation = ({
     (lesson, chapter, video) => {
       if (!courseInfo || !video || !lesson || !chapter) return;
 
+      // Kiểm tra xem video có thuộc subfolder nào không
+      let subfolderInfo = null;
+
+      if (lesson.subfolders && lesson.subfolders.length > 0) {
+        for (const subfolder of lesson.subfolders) {
+          if (
+            subfolder.files &&
+            subfolder.files.some((file) => file.id === video.id)
+          ) {
+            subfolderInfo = {
+              id: subfolder.id,
+              name: subfolder.name,
+            };
+            break;
+          }
+        }
+      }
+
       const lastWatchedState = {
         courseId: courseInfo.id,
         courseSlug: courseInfo.slug,
         videoId: video.id,
         lessonId: lesson.id,
         chapterId: chapter.id,
+        subfolderId: subfolderInfo?.id || null,
+        subfolderName: subfolderInfo?.name || null,
         timestamp: new Date().toISOString(),
       };
 
@@ -192,6 +212,29 @@ export const useVideoNavigation = ({
           `last_watched_${courseInfo.id}`,
           JSON.stringify(lastWatchedState)
         );
+
+        // Đồng thời cập nhật courseState để duy trì tính nhất quán
+        localStorage.setItem(
+          "courseState",
+          JSON.stringify({
+            courseId: courseInfo.id,
+            videoId: video.id,
+            lessonId: lesson.id,
+            chapterId: chapter.id,
+            subfolderId: subfolderInfo?.id || null,
+            subfolderName: subfolderInfo?.name || null,
+            lastPlayedTime: Date.now(),
+            timestamp: Date.now(),
+          })
+        );
+
+        // Cập nhật lastWatchedVideoId cho khả năng tương thích với code cũ
+        localStorage.setItem("lastWatchedVideoId", video.id);
+
+        // Lưu thêm thông tin subfolderId để tiện cho việc khôi phục
+        if (subfolderInfo?.id) {
+          localStorage.setItem("lastWatchedSubfolderId", subfolderInfo.id);
+        }
       } catch (error) {
         console.error("Error saving last watched state:", error);
       }
@@ -219,6 +262,26 @@ export const useVideoNavigation = ({
       // Cập nhật bài học đang mở
       if (lesson && lesson.id !== activeLesson?.id) {
         setExpandedLessonId(lesson.id);
+      }
+
+      // Kiểm tra xem video có thuộc subfolder nào không
+      let subfolderInfo = null;
+      if (lesson.subfolders && lesson.subfolders.length > 0) {
+        for (const subfolder of lesson.subfolders) {
+          if (
+            subfolder.files &&
+            subfolder.files.some((file) => file.id === video.id)
+          ) {
+            subfolderInfo = {
+              id: subfolder.id,
+              name: subfolder.name,
+            };
+            // Lưu subfolderId để LessonItem có thể mở đúng subfolder
+            localStorage.setItem("lastWatchedSubfolderId", subfolder.id);
+            console.log(`Video thuộc subfolder: ${subfolder.name}`);
+            break;
+          }
+        }
       }
 
       if (handleLessonClick) {
@@ -313,7 +376,7 @@ export const useVideoNavigation = ({
   // Chuyển đến video tiếp theo
   const handleNext = useCallback(() => {
     try {
-      // 1. Thử video tiếp theo trong bài học hiện tại
+      // 1. Thử video tiếp theo trong bài học hiện tại (bao gồm cả videos trong subfolders)
       const nextVideo = findNextVideo();
       if (nextVideo) {
         handleLessonClickWrapper(activeLesson, activeChapter, nextVideo);
@@ -325,11 +388,36 @@ export const useVideoNavigation = ({
       let nextLesson = findNextLesson(currentLesson);
 
       while (nextLesson) {
-        const firstVideo = nextLesson.files
-          .filter((f) => f.type?.includes("video"))
-          .sort((a, b) => sortItems(a, b, "name"))[0];
+        // Tập hợp tất cả videos trong lesson (bao gồm cả từ subfolders)
+        let lessonVideos = [];
 
-        if (firstVideo) {
+        // Lấy videos từ files trực tiếp
+        if (nextLesson.files && nextLesson.files.length > 0) {
+          lessonVideos.push(
+            ...nextLesson.files
+              .filter((f) => f.type?.includes("video"))
+              .sort((a, b) => sortItems(a, b, "name"))
+          );
+        }
+
+        // Lấy videos từ subfolders
+        if (nextLesson.subfolders && nextLesson.subfolders.length > 0) {
+          for (const subfolder of nextLesson.subfolders) {
+            if (subfolder.files && subfolder.files.length > 0) {
+              lessonVideos.push(
+                ...subfolder.files
+                  .filter((f) => f.type?.includes("video"))
+                  .sort((a, b) => sortItems(a, b, "name"))
+              );
+            }
+          }
+        }
+
+        // Sắp xếp lại tất cả video theo tên
+        lessonVideos.sort((a, b) => sortItems(a, b, "name"));
+
+        if (lessonVideos.length > 0) {
+          const firstVideo = lessonVideos[0];
           setExpandedLessonId(nextLesson.id);
           handleLessonClickWrapper(nextLesson, activeChapter, firstVideo);
           return;
@@ -344,34 +432,52 @@ export const useVideoNavigation = ({
       let nextChapter = findNextChapter(currentChapter);
 
       while (nextChapter) {
-        const firstLessonWithVideo = nextChapter.lessons
-          .sort(sortItems)
-          .find((lesson) =>
-            lesson.files.some((f) => f.type?.includes("video"))
-          );
+        for (const lesson of nextChapter.lessons.sort(sortItems)) {
+          // Tập hợp tất cả videos trong lesson (bao gồm cả từ subfolders)
+          let lessonVideos = [];
 
-        if (firstLessonWithVideo) {
-          const firstVideo = firstLessonWithVideo.files
-            .filter((f) => f.type?.includes("video"))
-            .sort((a, b) => sortItems(a, b, "name"))[0];
-
-          // Tìm chương index để cập nhật chính xác
-          const nextChapterIndex = sortedChapters.findIndex(
-            (c) => c.id === nextChapter.id
-          );
-          if (nextChapterIndex !== -1) {
-            setExpandedChapterIndex(nextChapterIndex);
-          } else {
-            setExpandedChapterIndex((prevIndex) => prevIndex + 1);
+          // Lấy videos từ files trực tiếp
+          if (lesson.files && lesson.files.length > 0) {
+            lessonVideos.push(
+              ...lesson.files
+                .filter((f) => f.type?.includes("video"))
+                .sort((a, b) => sortItems(a, b, "name"))
+            );
           }
 
-          setExpandedLessonId(firstLessonWithVideo.id);
-          handleLessonClickWrapper(
-            firstLessonWithVideo,
-            nextChapter,
-            firstVideo
-          );
-          return;
+          // Lấy videos từ subfolders
+          if (lesson.subfolders && lesson.subfolders.length > 0) {
+            for (const subfolder of lesson.subfolders) {
+              if (subfolder.files && subfolder.files.length > 0) {
+                lessonVideos.push(
+                  ...subfolder.files
+                    .filter((f) => f.type?.includes("video"))
+                    .sort((a, b) => sortItems(a, b, "name"))
+                );
+              }
+            }
+          }
+
+          // Sắp xếp lại tất cả video theo tên
+          lessonVideos.sort((a, b) => sortItems(a, b, "name"));
+
+          if (lessonVideos.length > 0) {
+            const firstVideo = lessonVideos[0];
+
+            // Tìm chương index để cập nhật chính xác
+            const nextChapterIndex = sortedChapters.findIndex(
+              (c) => c.id === nextChapter.id
+            );
+            if (nextChapterIndex !== -1) {
+              setExpandedChapterIndex(nextChapterIndex);
+            } else {
+              setExpandedChapterIndex((prevIndex) => prevIndex + 1);
+            }
+
+            setExpandedLessonId(lesson.id);
+            handleLessonClickWrapper(lesson, nextChapter, firstVideo);
+            return;
+          }
         }
 
         currentChapter = nextChapter;
@@ -399,7 +505,7 @@ export const useVideoNavigation = ({
   // Chuyển đến video trước đó
   const handlePrevious = useCallback(() => {
     try {
-      // 1. Thử video trước đó trong bài học hiện tại
+      // 1. Thử video trước đó trong bài học hiện tại (bao gồm cả videos trong subfolders)
       const prevVideo = findPreviousVideo();
       if (prevVideo) {
         handleLessonClickWrapper(activeLesson, activeChapter, prevVideo);
@@ -411,12 +517,36 @@ export const useVideoNavigation = ({
       let prevLesson = findPreviousLesson(currentLesson);
 
       while (prevLesson) {
-        const lastVideo = prevLesson.files
-          .filter((f) => f.type?.includes("video"))
-          .sort((a, b) => sortItems(a, b, "name"))
-          .pop();
+        // Tập hợp tất cả videos trong lesson (bao gồm cả từ subfolders)
+        let lessonVideos = [];
 
-        if (lastVideo) {
+        // Lấy videos từ files trực tiếp
+        if (prevLesson.files && prevLesson.files.length > 0) {
+          lessonVideos.push(
+            ...prevLesson.files
+              .filter((f) => f.type?.includes("video"))
+              .sort((a, b) => sortItems(a, b, "name"))
+          );
+        }
+
+        // Lấy videos từ subfolders
+        if (prevLesson.subfolders && prevLesson.subfolders.length > 0) {
+          for (const subfolder of prevLesson.subfolders) {
+            if (subfolder.files && subfolder.files.length > 0) {
+              lessonVideos.push(
+                ...subfolder.files
+                  .filter((f) => f.type?.includes("video"))
+                  .sort((a, b) => sortItems(a, b, "name"))
+              );
+            }
+          }
+        }
+
+        // Sắp xếp lại tất cả video theo tên
+        lessonVideos.sort((a, b) => sortItems(a, b, "name"));
+
+        if (lessonVideos.length > 0) {
+          const lastVideo = lessonVideos[lessonVideos.length - 1];
           setExpandedLessonId(prevLesson.id);
           handleLessonClickWrapper(prevLesson, activeChapter, lastVideo);
           return;
@@ -431,32 +561,56 @@ export const useVideoNavigation = ({
       let prevChapter = findPreviousChapter(currentChapter);
 
       while (prevChapter) {
-        const lastLessonWithVideo = [...prevChapter.lessons]
+        const sortedLessons = [...prevChapter.lessons]
           .sort(sortItems)
-          .reverse()
-          .find((lesson) =>
-            lesson.files.some((f) => f.type?.includes("video"))
-          );
+          .reverse();
 
-        if (lastLessonWithVideo) {
-          const lastVideo = lastLessonWithVideo.files
-            .filter((f) => f.type?.includes("video"))
-            .sort((a, b) => sortItems(a, b, "name"))
-            .pop();
+        for (const lesson of sortedLessons) {
+          // Tập hợp tất cả videos trong lesson (bao gồm cả từ subfolders)
+          let lessonVideos = [];
 
-          // Tìm chương index để cập nhật chính xác
-          const prevChapterIndex = sortedChapters.findIndex(
-            (c) => c.id === prevChapter.id
-          );
-          if (prevChapterIndex !== -1) {
-            setExpandedChapterIndex(prevChapterIndex);
-          } else {
-            setExpandedChapterIndex((prevIndex) => prevIndex - 1);
+          // Lấy videos từ files trực tiếp
+          if (lesson.files && lesson.files.length > 0) {
+            lessonVideos.push(
+              ...lesson.files
+                .filter((f) => f.type?.includes("video"))
+                .sort((a, b) => sortItems(a, b, "name"))
+            );
           }
 
-          setExpandedLessonId(lastLessonWithVideo.id);
-          handleLessonClickWrapper(lastLessonWithVideo, prevChapter, lastVideo);
-          return;
+          // Lấy videos từ subfolders
+          if (lesson.subfolders && lesson.subfolders.length > 0) {
+            for (const subfolder of lesson.subfolders) {
+              if (subfolder.files && subfolder.files.length > 0) {
+                lessonVideos.push(
+                  ...subfolder.files
+                    .filter((f) => f.type?.includes("video"))
+                    .sort((a, b) => sortItems(a, b, "name"))
+                );
+              }
+            }
+          }
+
+          // Sắp xếp lại tất cả video theo tên
+          lessonVideos.sort((a, b) => sortItems(a, b, "name"));
+
+          if (lessonVideos.length > 0) {
+            const lastVideo = lessonVideos[lessonVideos.length - 1];
+
+            // Tìm chương index để cập nhật chính xác
+            const prevChapterIndex = sortedChapters.findIndex(
+              (c) => c.id === prevChapter.id
+            );
+            if (prevChapterIndex !== -1) {
+              setExpandedChapterIndex(prevChapterIndex);
+            } else {
+              setExpandedChapterIndex((prevIndex) => prevIndex - 1);
+            }
+
+            setExpandedLessonId(lesson.id);
+            handleLessonClickWrapper(lesson, prevChapter, lastVideo);
+            return;
+          }
         }
 
         currentChapter = prevChapter;

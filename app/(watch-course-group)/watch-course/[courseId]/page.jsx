@@ -397,6 +397,28 @@ export default function WatchCourse({ params }) {
           setExpandedChapterIndex(chapterIndex);
           setExpandedLessonId(foundLesson.id);
 
+          // Xác định subfolder nếu video nằm trong subfolder
+          let subfolderInfo = null;
+          if (foundLesson.subfolders) {
+            for (const subfolder of foundLesson.subfolders) {
+              if (
+                subfolder.files &&
+                subfolder.files.some((file) => file.id === foundVideo.id)
+              ) {
+                subfolderInfo = {
+                  id: subfolder.id,
+                  name: subfolder.name,
+                };
+                break;
+              }
+            }
+          }
+
+          // Lưu thông tin subfolder vào localStorage để component LessonItem có thể mở đúng subfolder
+          if (subfolderInfo) {
+            localStorage.setItem("lastWatchedSubfolderId", subfolderInfo.id);
+          }
+
           setActiveChapter(foundChapter);
           setActiveLesson(foundLesson);
           setActiveVideo(foundVideo);
@@ -446,6 +468,36 @@ export default function WatchCourse({ params }) {
             setTimeout(() => {
               setExpandedLessonId(savedState.lessonId);
             }, 150);
+          }
+
+          // Kiểm tra và lưu thông tin subfolder
+          if (savedState.subfolderId) {
+            localStorage.setItem(
+              "lastWatchedSubfolderId",
+              savedState.subfolderId
+            );
+
+            // Tìm thông tin video trong subfolder
+            if (savedState.chapterId && savedState.lessonId) {
+              const chapter = courseInfo.chapters.find(
+                (c) => c.id === savedState.chapterId
+              );
+              if (chapter) {
+                const lesson = chapter.lessons.find(
+                  (l) => l.id === savedState.lessonId
+                );
+                if (lesson && lesson.subfolders) {
+                  const subfolder = lesson.subfolders.find(
+                    (sf) => sf.id === savedState.subfolderId
+                  );
+                  if (subfolder) {
+                    console.log(
+                      `Khôi phục video từ subfolder: ${subfolder.name}`
+                    );
+                  }
+                }
+              }
+            }
           }
         } catch (error) {
           // Ignore restore error
