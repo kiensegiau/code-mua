@@ -7,12 +7,6 @@ import PageTransition from "./(router)/_components/PageTransition";
 import dynamic from "next/dynamic";
 import { ThemeProvider } from "./_context/ThemeContext";
 import QueryProvider from "./_providers/QueryProvider";
-import Script from "next/script";
-
-// Lazy load components
-const DisableDevTools = dynamic(() => import("./_components/DisableDevTools"), {
-  ssr: false,
-});
 
 // Tối ưu font loading với display swap
 const outfit = Outfit({
@@ -20,23 +14,6 @@ const outfit = Outfit({
   display: "swap",
   preload: true,
   weight: ["400", "500", "600", "700"],
-});
-
-// Lazy load AuthWrapper để cải thiện thời gian tải trang ban đầu
-const AuthWrapper = dynamic(() => import("./_components/AuthWrapper"), {
-  ssr: false,
-  loading: () => (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-      }}
-    >
-      <div>Loading...</div>
-    </div>
-  ),
 });
 
 // Thêm metadata để cải thiện SEO
@@ -55,20 +32,14 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi">
-      <head>
-        <Script
-          src="https://cdn.jsdelivr.net/npm/disable-devtool"
-          strategy="beforeInteractive"
-        />
-      </head>
+      <head>{/* Không có Script disable-devtool */}</head>
       <body className={`${outfit.className} theme-bg theme-text`}>
-        <DisableDevTools />
+        {/* Không có DisableDevTools */}
         <QueryProvider>
           <AuthProvider>
             <ThemeProvider>
-              <AuthWrapper>
-                <PageTransition>{children}</PageTransition>
-              </AuthWrapper>
+              {/* Bỏ qua AuthWrapper */}
+              <PageTransition>{children}</PageTransition>
             </ThemeProvider>
           </AuthProvider>
         </QueryProvider>
