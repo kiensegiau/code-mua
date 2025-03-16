@@ -17,6 +17,21 @@ import {
   IoFolderOutline,
 } from "react-icons/io5";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+
+// Import Tippy với dynamic import để tránh SSR
+const Tippy = dynamic(() => import("@tippyjs/react"), {
+  ssr: false,
+  loading: ({ children }) => children,
+});
+
+// CSS sẽ được import ở phía client
+const TippyStyles = () => {
+  useEffect(() => {
+    import("tippy.js/dist/tippy.css");
+  }, []);
+  return null;
+};
 
 // Component hiển thị file trong bài học
 const FileItem = memo(function FileItem({ file, isActive, onClick }) {
@@ -72,12 +87,12 @@ const FileItem = memo(function FileItem({ file, isActive, onClick }) {
           )}
         </div>
         <span
-          className={`text-sm truncate 
-            ${
-              isActive
-                ? "text-white font-medium"
-                : "text-gray-400 group-hover:text-gray-300"
-            }`}
+          className={`text-sm truncate
+              ${
+                isActive
+                  ? "text-white font-medium"
+                  : "text-gray-400 group-hover:text-gray-300"
+              }`}
           title={file.name}
         >
           {file.name}
@@ -124,7 +139,7 @@ const SubfolderItem = memo(function SubfolderItem({
               : "hover:border-l-4 hover:border-teal-400/40 border-l-4 border-transparent"
           }`}
       >
-        <div className="flex items-center w-full pointer-events-none min-w-0">
+        <div className="flex items-center w-full min-w-0">
           <div
             className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 
               ${
@@ -143,12 +158,12 @@ const SubfolderItem = memo(function SubfolderItem({
             />
           </div>
           <span
-            className={`text-sm truncate transition-colors duration-200 
-              ${
-                isExpanded || hasActiveFile
-                  ? "text-white font-medium"
-                  : "text-gray-400 group-hover:text-gray-300"
-              }`}
+            className={`text-sm truncate transition-colors duration-200
+                ${
+                  isExpanded || hasActiveFile
+                    ? "text-white font-medium"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
             title={subfolder.name}
           >
             {subfolder.name}
@@ -377,7 +392,7 @@ const LessonItem = memo(function LessonItem({
               : "hover:border-l-4 hover:border-indigo-400/40 border-l-4 border-transparent"
           }`}
       >
-        <div className="flex items-center w-full pointer-events-none min-w-0">
+        <div className="flex items-center w-full min-w-0">
           <div
             className={`flex items-center justify-center w-6 h-6 rounded-lg flex-shrink-0 mr-3 transition-all duration-200
             ${
@@ -397,11 +412,11 @@ const LessonItem = memo(function LessonItem({
           </div>
           <span
             className={`text-sm truncate transition-colors duration-200
-            ${
-              isActive || isExpanded
-                ? "text-white font-semibold"
-                : "text-gray-400 group-hover:text-gray-300"
-            }`}
+              ${
+                isActive || isExpanded
+                  ? "text-white font-semibold"
+                  : "text-gray-400 group-hover:text-gray-300"
+              }`}
             title={lesson.title}
           >
             {lesson.title}
@@ -499,11 +514,11 @@ const ChapterItem = memo(function ChapterItem({
           <div className="flex-1 min-w-0">
             <h4
               className={`text-[15px] font-medium mb-1 truncate
-                ${
-                  isExpanded
-                    ? "text-white font-semibold"
-                    : "text-gray-300 font-medium"
-                }`}
+                  ${
+                    isExpanded
+                      ? "text-white font-semibold"
+                      : "text-gray-300 font-medium"
+                  }`}
               title={chapter.title}
             >
               {chapter.title}
@@ -871,6 +886,7 @@ const CourseContent = forwardRef(
 
     return (
       <div className="h-full bg-[#1f1f1f] shadow-lg flex flex-col border-l border-gray-800">
+        <TippyStyles />
         <div className="flex-none border-b border-gray-800 w-full">
           <div className="flex items-center w-full">
             <button
