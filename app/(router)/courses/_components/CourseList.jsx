@@ -43,7 +43,7 @@ const LazyLoadedCourseItem = ({ course, index }) => {
 };
 
 // Wrap bằng memo để tránh re-render khi parent component thay đổi
-const CourseList = React.memo(function CourseList({ grade }) {
+const CourseList = React.memo(function CourseList({ grade = null }) {
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [itemsPerPage, setItemsPerPage] = useState(4);
 
@@ -330,9 +330,5 @@ const CourseList = React.memo(function CourseList({ grade }) {
     </div>
   );
 });
-
-CourseList.defaultProps = {
-  grade: null, // Không lọc theo lớp nếu không có prop grade
-};
 
 export default CourseList;

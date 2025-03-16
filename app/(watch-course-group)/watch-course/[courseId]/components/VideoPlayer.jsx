@@ -37,12 +37,22 @@ const NavigationButtons = memo(function NavigationButtons({
   onNext,
   onPrevious,
 }) {
+  const [isVisible, setIsVisible] = useState(false);
+
   return (
-    <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-4 pointer-events-none">
+    <div
+      className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-4 pointer-events-none"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
       <button
         key="prev-button"
         onClick={onPrevious}
-        className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
+        className={`w-12 h-12 ${
+          isVisible ? "bg-black/50" : "bg-black/20"
+        } backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80 ${
+          isVisible ? "opacity-100" : "opacity-20"
+        }`}
         title="Bài trước"
       >
         <IoChevronBack className="w-6 h-6 text-white" />
@@ -51,7 +61,11 @@ const NavigationButtons = memo(function NavigationButtons({
       <button
         key="next-button"
         onClick={onNext}
-        className="w-12 h-12 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform duration-200 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80"
+        className={`w-12 h-12 ${
+          isVisible ? "bg-black/50" : "bg-black/20"
+        } backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 pointer-events-auto hover:bg-[#ff4d4f]/80 ${
+          isVisible ? "opacity-100" : "opacity-20"
+        }`}
         title="Bài tiếp theo"
       >
         <IoChevronForward className="w-6 h-6 text-white" />

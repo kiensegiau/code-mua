@@ -38,9 +38,7 @@ export default function useEnrolledCourses(options = {}) {
       setLoading(true);
       setError(null);
 
-      console.log("Đang lấy danh sách khóa học cho user:", userId);
       const courses = await GlobalApi.getEnrolledCourses(userId);
-      console.log("Đã nhận được khóa học:", courses);
 
       setEnrolledCourses(courses || []);
 
@@ -50,7 +48,6 @@ export default function useEnrolledCourses(options = {}) {
 
       return courses || [];
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách khóa học đã đăng ký:", error);
       setError(error.message || "Không thể tải danh sách khóa học");
       toast.error("Không thể tải danh sách khóa học");
       return [];
@@ -63,7 +60,6 @@ export default function useEnrolledCourses(options = {}) {
   useEffect(() => {
     if (autoFetch) {
       if (user?.uid) {
-        console.log("Auto-fetching enrolledCourses với userId:", user.uid);
         fetchEnrolledCourses(user.uid);
       } else {
         // Nếu không có user, thì không còn loading nữa
