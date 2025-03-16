@@ -149,14 +149,27 @@ const LessonItem = memo(function LessonItem({
       const lastWatchedSubfolderId = localStorage.getItem(
         "lastWatchedSubfolderId"
       );
+
       if (lastWatchedSubfolderId && lesson.subfolders) {
         const hasSubfolder = lesson.subfolders.some(
           (sf) => sf.id === lastWatchedSubfolderId
         );
+
         if (hasSubfolder) {
-          // Đảm bảo subfolder chứa video đang xem được mở
-          return { ...savedState, [lastWatchedSubfolderId]: true };
+          // Đảm bảo CHỈ mở subfolder chứa video đang xem, đóng tất cả subfolder khác
+          return { [lastWatchedSubfolderId]: true };
         }
+      }
+
+      // Nếu không có subfolder nào chứa video đang xem, kiểm tra xem có nhiều hơn
+      // một subfolder đang mở không và chỉ giữ một subfolder mở (nếu có)
+      const openedSubfolderIds = Object.entries(savedState)
+        .filter(([_, isOpen]) => isOpen)
+        .map(([id]) => id);
+
+      if (openedSubfolderIds.length > 1) {
+        // Chỉ giữ một subfolder mở (cái đầu tiên)
+        return { [openedSubfolderIds[0]]: true };
       }
 
       return savedState;
@@ -175,21 +188,39 @@ const LessonItem = memo(function LessonItem({
       lesson.subfolders.length > 0
     ) {
       // Tìm subfolder chứa video đang active
+      let activeSubfolderId = null;
+
       for (const subfolder of lesson.subfolders) {
         if (
           subfolder.files &&
           subfolder.files.some((file) => file.id === activeVideoId)
         ) {
-          // Nếu tìm thấy, tự động mở subfolder
-          setExpandedSubfolders((prev) => ({
-            ...prev,
-            [subfolder.id]: true,
-          }));
+          activeSubfolderId = subfolder.id;
           break;
         }
       }
+
+      // Nếu tìm thấy subfolder chứa video đang active
+      if (activeSubfolderId) {
+        // Đóng tất cả các subfolder và chỉ mở subfolder chứa video đang active
+        const newState = {
+          [activeSubfolderId]: true,
+        };
+
+        setExpandedSubfolders(newState);
+
+        // Lưu trạng thái
+        try {
+          localStorage.setItem(
+            `expanded_subfolders_${lesson.id}`,
+            JSON.stringify(newState)
+          );
+        } catch (e) {
+          console.error("Lỗi khi lưu trạng thái subfolder:", e);
+        }
+      }
     }
-  }, [isExpanded, activeVideoId, lesson.subfolders]);
+  }, [isExpanded, activeVideoId, lesson.subfolders, lesson.id]);
 
   // Lưu trạng thái khi expandedSubfolders thay đổi
   useEffect(() => {
@@ -209,20 +240,46 @@ const LessonItem = memo(function LessonItem({
   const toggleSubfolder = useCallback(
     (subfolderId) => {
       setExpandedSubfolders((prev) => {
-        const newState = {
-          ...prev,
-          [subfolderId]: !prev[subfolderId],
-        };
-        // Lưu trạng thái mỗi khi toggle
-        try {
-          localStorage.setItem(
-            `expanded_subfolders_${lesson.id}`,
-            JSON.stringify(newState)
-          );
-        } catch (e) {
-          console.error("Lỗi khi lưu trạng thái subfolder:", e);
+        // Kiểm tra xem subfolder hiện tại đã được mở chưa
+        const isCurrentlyOpen = prev[subfolderId];
+
+        // Nếu subfolder hiện tại đang đóng, thì mở nó và đóng tất cả các subfolder khác
+        if (!isCurrentlyOpen) {
+          // Đóng tất cả subfolder và chỉ mở subfolder được chọn
+          const newState = {
+            [subfolderId]: true,
+          };
+
+          // Lưu trạng thái mỗi khi toggle
+          try {
+            localStorage.setItem(
+              `expanded_subfolders_${lesson.id}`,
+              JSON.stringify(newState)
+            );
+          } catch (e) {
+            console.error("Lỗi khi lưu trạng thái subfolder:", e);
+          }
+
+          return newState;
+        } else {
+          // Nếu subfolder đang mở, thì chỉ đóng nó
+          const newState = {
+            ...prev,
+            [subfolderId]: false,
+          };
+
+          // Lưu trạng thái mỗi khi toggle
+          try {
+            localStorage.setItem(
+              `expanded_subfolders_${lesson.id}`,
+              JSON.stringify(newState)
+            );
+          } catch (e) {
+            console.error("Lỗi khi lưu trạng thái subfolder:", e);
+          }
+
+          return newState;
         }
-        return newState;
       });
     },
     [lesson.id]
