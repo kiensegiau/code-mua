@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
 // Định nghĩa các đường dẫn công khai một lần để tránh tạo lại mỗi request
-const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/forgot-password"];
-const STATIC_FILE_PATHS = ["/_next", "/api", "/static", "/favicon.ico"];
+const PUBLIC_PATHS = ["/sign-in", "/forgot-password", "/reset-password"];
+const STATIC_FILE_PATHS = ["/_next", "/static", "/favicon.ico"];
 
 export async function middleware(request) {
   const path = request.nextUrl.pathname;
@@ -33,12 +33,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 };
