@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
 // Định nghĩa các đường dẫn công khai một lần để tránh tạo lại mỗi request
-const PUBLIC_PATHS = ["/sign-in", "/forgot-password", "/reset-password"];
+const PUBLIC_PATHS = [
+  "/sign-in",
+  "/forgot-password",
+  "/reset-password",
+  "/sign-out",
+];
 const STATIC_FILE_PATHS = ["/_next", "/static", "/favicon.ico"];
 
 export async function middleware(request) {

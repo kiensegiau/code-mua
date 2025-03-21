@@ -221,10 +221,27 @@ export default function WatchCourse({ params }) {
     handleNext();
   }, [handleNext]);
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem("token");
-    router.push("/sign-in");
-    toast.success("Đăng xuất thành công");
+  const handleLogout = useCallback(async () => {
+    try {
+      // Gọi API để xóa cookie
+      const response = await fetch("/api/auth/sign-out", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Xóa dữ liệu từ localStorage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("token");
+
+      router.push("/sign-in");
+      toast.success("Đăng xuất thành công");
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+      toast.error("Có lỗi xảy ra khi đăng xuất");
+    }
   }, [router]);
 
   const handleTimeUpdate = useCallback(

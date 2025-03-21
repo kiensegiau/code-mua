@@ -34,11 +34,28 @@ function Header() {
   const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu } =
     useMobileMenu();
 
-  const handleSignOut = () => {
-    auth.signOut();
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    router.push("/sign-in");
+  const handleSignOut = async () => {
+    try {
+      // Gọi API để xóa cookie
+      const response = await fetch("/api/auth/sign-out", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Xóa dữ liệu từ localStorage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+
+      // Đăng xuất khỏi Firebase
+      auth.signOut();
+
+      // Chuyển hướng về trang đăng nhập
+      router.push("/sign-in");
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+    }
   };
 
   return (
