@@ -76,7 +76,7 @@ const WelcomeBanner = memo(function WelcomeBanner() {
       {/* Grid background - static */}
       <div
         className={`absolute inset-0 ${
-          isLightTheme ? "bg-grid-black/5" : "bg-grid-white/5"
+          isLightTheme ? "bg-grid-black-5" : "bg-grid-white-5"
         }`}
       />
 

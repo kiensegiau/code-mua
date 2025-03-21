@@ -579,7 +579,7 @@ body {
   color: #ff4d4f !important;
 }
 
-[data-theme="light"] .bg-\[\#ff4d4f\]\/10 {
+[data-theme="light"] .bg-custom-red-opacity-10 {
   background-color: rgba(255, 77, 79, 0.1) !important;
 }
 
@@ -642,7 +642,7 @@ select {
 }
 
 .sidebar-link.active {
-  @apply bg-[#ff4d4f]/10 text-[#ff4d4f];
+  @apply bg-custom-red-opacity-10 text-[#ff4d4f];
 }
 
 /* Custom scrollbar */

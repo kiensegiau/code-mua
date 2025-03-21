@@ -33,7 +33,7 @@ const nextConfig = {
     formats: ["image/webp"],
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     scrollRestoration: true,
   },
   compress: true,
