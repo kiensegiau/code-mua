@@ -55,7 +55,7 @@ export default function SignIn() {
             console.log(
               "🔒 Người dùng đã đăng nhập, chuyển hướng đến trang chủ"
             );
-            router.replace("/");
+            window.location.href = "/";
             return;
           } else {
             console.log("⚠️ Token không hợp lệ, xóa token");
@@ -71,7 +71,7 @@ export default function SignIn() {
               "👤 Đã phát hiện người dùng đăng nhập qua Firebase:",
               user.email
             );
-            router.replace("/");
+            window.location.href = "/";
           } else {
             setIsCheckingAuth(false);
           }
@@ -120,7 +120,10 @@ export default function SignIn() {
       console.log("💾 Tokens saved to localStorage");
 
       toast.success("Đăng nhập thành công!");
-      router.replace("/");
+      console.log("🚀 Đang chuyển hướng đến trang chủ...");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     } catch (error) {
       console.error("❌ Login error:", error);
       let errorMessage = "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.";
