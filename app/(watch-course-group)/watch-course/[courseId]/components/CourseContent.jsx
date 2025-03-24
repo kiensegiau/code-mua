@@ -112,6 +112,7 @@ const SubfolderItem = memo(function SubfolderItem({
   activeVideoId,
   onFileClick,
   sortFiles,
+  getNumberFromTitle,
 }) {
   // Sắp xếp files trong subfolder
   const sortedFiles = useMemo(() => {
@@ -217,6 +218,7 @@ const LessonItem = memo(function LessonItem({
   onLessonClick,
   onFileClick,
   sortFiles,
+  getNumberFromTitle,
 }) {
   // State để quản lý việc mở/đóng các subfolder
   const [expandedSubfolders, setExpandedSubfolders] = useState(() => {
@@ -375,9 +377,13 @@ const LessonItem = memo(function LessonItem({
   // Sắp xếp subfolders theo tên
   const sortedSubfolders = useMemo(() => {
     return lesson.subfolders
-      ? [...lesson.subfolders].sort((a, b) => a.name.localeCompare(b.name))
+      ? [...lesson.subfolders].sort((a, b) => {
+          const numA = getNumberFromTitle(a.name);
+          const numB = getNumberFromTitle(b.name);
+          return numA - numB;
+        })
       : [];
-  }, [lesson.subfolders]);
+  }, [lesson.subfolders, getNumberFromTitle]);
 
   return (
     <div className="my-0.5 border-b border-gray-700/30">
@@ -464,6 +470,7 @@ const LessonItem = memo(function LessonItem({
                 activeVideoId={activeVideoId}
                 onFileClick={onFileClick}
                 sortFiles={sortFiles}
+                getNumberFromTitle={getNumberFromTitle}
               />
             ))}
         </div>
@@ -485,6 +492,7 @@ const ChapterItem = memo(function ChapterItem({
   onFileClick,
   sortByNumber,
   sortFiles,
+  getNumberFromTitle,
 }) {
   // Sắp xếp bài học theo số
   const sortedLessons = useMemo(() => {
@@ -550,6 +558,7 @@ const ChapterItem = memo(function ChapterItem({
               onLessonClick={onLessonClick}
               onFileClick={onFileClick}
               sortFiles={sortFiles}
+              getNumberFromTitle={getNumberFromTitle}
             />
           ))}
         </div>
@@ -581,8 +590,44 @@ const CourseContent = forwardRef(
 
     // Hàm helper để lấy số từ title
     const getNumberFromTitle = useCallback((text = "") => {
-      const match = text.match(/(?:^|\.)?\s*(\d+)/);
-      return match ? parseInt(match[1]) : 999999;
+      // Nếu chuỗi rỗng hoặc null
+      if (!text) return 999999;
+
+      // Chuẩn hóa chuỗi (loại bỏ khoảng trắng thừa)
+      const normalizedText = text.trim();
+
+      // Xử lý trường hợp có định dạng x.y (ví dụ: "1.2 Bài học")
+      const dotFormatMatch = normalizedText.match(/^(\d+)\.(\d+)/);
+      if (dotFormatMatch) {
+        // Ưu tiên sắp xếp theo số đầu tiên, sau đó mới đến số thứ hai
+        const firstNumber = parseInt(dotFormatMatch[1]);
+        const secondNumber = parseInt(dotFormatMatch[2]);
+        // Trả về giá trị kết hợp (số thứ nhất * 1000 + số thứ hai)
+        return firstNumber * 1000 + secondNumber;
+      }
+
+      // Xử lý trường hợp có định dạng x-y
+      const dashFormatMatch = normalizedText.match(/^(\d+)-(\d+)/);
+      if (dashFormatMatch) {
+        const firstNumber = parseInt(dashFormatMatch[1]);
+        const secondNumber = parseInt(dashFormatMatch[2]);
+        return firstNumber * 1000 + secondNumber;
+      }
+
+      // Tìm số ở đầu chuỗi
+      const startNumberMatch = normalizedText.match(/^(\d+)/);
+      if (startNumberMatch) {
+        return parseInt(startNumberMatch[1]) * 1000;
+      }
+
+      // Tìm bất kỳ số nào đầu tiên trong chuỗi
+      const anyNumberMatch = normalizedText.match(/(\d+)/);
+      if (anyNumberMatch) {
+        return parseInt(anyNumberMatch[1]) * 1000;
+      }
+
+      // Không tìm thấy số, xếp xuống cuối
+      return 999999;
     }, []);
 
     // Hàm sort cho chapters và lessons
@@ -772,7 +817,7 @@ const CourseContent = forwardRef(
         }
       } else {
         // Tìm chapter tiếp theo
-        const sortedChapters = chapters.sort(sortByNumber);
+        const sortedChapters = [...chapters].sort(sortByNumber);
         const currentChapterIndex = sortedChapters.findIndex(
           (c) => c.id === activeChapter.id
         );
@@ -916,6 +961,7 @@ const CourseContent = forwardRef(
               onFileClick={handleFileClick}
               sortByNumber={sortByNumber}
               sortFiles={sortFiles}
+              getNumberFromTitle={getNumberFromTitle}
             />
           ))}
         </div>

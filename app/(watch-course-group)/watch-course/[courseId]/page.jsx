@@ -172,8 +172,44 @@ export default function WatchCourse({ params }) {
 
   // Helper functions
   const getNumberFromTitle = useCallback((text = "") => {
-    const match = text.match(/(?:^|\.)?\s*(\d+)/);
-    return match ? parseInt(match[1]) : 999999;
+    // Nếu chuỗi rỗng hoặc null
+    if (!text) return 999999;
+
+    // Chuẩn hóa chuỗi (loại bỏ khoảng trắng thừa)
+    const normalizedText = text.trim();
+
+    // Xử lý trường hợp có định dạng x.y (ví dụ: "1.2 Bài học")
+    const dotFormatMatch = normalizedText.match(/^(\d+)\.(\d+)/);
+    if (dotFormatMatch) {
+      // Ưu tiên sắp xếp theo số đầu tiên, sau đó mới đến số thứ hai
+      const firstNumber = parseInt(dotFormatMatch[1]);
+      const secondNumber = parseInt(dotFormatMatch[2]);
+      // Trả về giá trị kết hợp (số thứ nhất * 1000 + số thứ hai)
+      return firstNumber * 1000 + secondNumber;
+    }
+
+    // Xử lý trường hợp có định dạng x-y
+    const dashFormatMatch = normalizedText.match(/^(\d+)-(\d+)/);
+    if (dashFormatMatch) {
+      const firstNumber = parseInt(dashFormatMatch[1]);
+      const secondNumber = parseInt(dashFormatMatch[2]);
+      return firstNumber * 1000 + secondNumber;
+    }
+
+    // Tìm số ở đầu chuỗi
+    const startNumberMatch = normalizedText.match(/^(\d+)/);
+    if (startNumberMatch) {
+      return parseInt(startNumberMatch[1]) * 1000;
+    }
+
+    // Tìm bất kỳ số nào đầu tiên trong chuỗi
+    const anyNumberMatch = normalizedText.match(/(\d+)/);
+    if (anyNumberMatch) {
+      return parseInt(anyNumberMatch[1]) * 1000;
+    }
+
+    // Không tìm thấy số, xếp xuống cuối
+    return 999999;
   }, []);
 
   const sortFiles = useCallback(
@@ -280,6 +316,50 @@ export default function WatchCourse({ params }) {
     try {
       setLoading(true);
       const course = await GlobalApi.getCourseById(params.courseId);
+
+      // Sắp xếp chapters ngay khi nhận dữ liệu
+      if (course && course.chapters && course.chapters.length > 0) {
+        // Sắp xếp chapters theo số trong tiêu đề
+        course.chapters.sort((a, b) => {
+          const numA = getNumberFromTitle(a.title);
+          const numB = getNumberFromTitle(b.title);
+          return numA - numB;
+        });
+
+        // Sắp xếp lessons trong mỗi chapter
+        course.chapters.forEach((chapter) => {
+          if (chapter.lessons && chapter.lessons.length > 0) {
+            chapter.lessons.sort((a, b) => {
+              const numA = getNumberFromTitle(a.title);
+              const numB = getNumberFromTitle(b.title);
+              return numA - numB;
+            });
+
+            // Sắp xếp files trong mỗi lesson
+            chapter.lessons.forEach((lesson) => {
+              if (lesson.files && lesson.files.length > 0) {
+                lesson.files.sort(sortFiles);
+              }
+
+              // Sắp xếp subfolders và files trong subfolders
+              if (lesson.subfolders && lesson.subfolders.length > 0) {
+                lesson.subfolders.sort((a, b) => {
+                  const numA = getNumberFromTitle(a.name);
+                  const numB = getNumberFromTitle(b.name);
+                  return numA - numB;
+                });
+
+                lesson.subfolders.forEach((subfolder) => {
+                  if (subfolder.files && subfolder.files.length > 0) {
+                    subfolder.files.sort(sortFiles);
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+
       setCourseInfo(course);
       return course;
     } catch (error) {
@@ -288,7 +368,7 @@ export default function WatchCourse({ params }) {
     } finally {
       setLoading(false);
     }
-  }, [params.courseId]);
+  }, [params.courseId, getNumberFromTitle, sortFiles]);
 
   // Restore last watched video
   const restoreLastWatchedVideo = useCallback(
