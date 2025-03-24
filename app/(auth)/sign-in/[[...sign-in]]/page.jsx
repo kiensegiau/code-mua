@@ -1,10 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/app/_utils/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { generateTokens, setTokenCookie } from "@/app/_utils/jwt";
+import {
+  generateTokens,
+  setTokenCookie,
+  verifyJwtToken,
+} from "@/app/_utils/jwt";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -33,7 +37,53 @@ export default function SignIn() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
+
+  // Kiểm tra trạng thái đăng nhập khi trang được tải
+  useEffect(() => {
+    async function checkAuthStatus() {
+      try {
+        // Kiểm tra token từ cookie (cách tiếp cận giống middleware)
+        const accessToken = localStorage.getItem("accessToken");
+
+        if (accessToken) {
+          // Xác thực token
+          const isValid = await verifyJwtToken(accessToken);
+
+          if (isValid) {
+            console.log(
+              "🔒 Người dùng đã đăng nhập, chuyển hướng đến trang chủ"
+            );
+            router.replace("/");
+            return;
+          } else {
+            console.log("⚠️ Token không hợp lệ, xóa token");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+          }
+        }
+
+        // Kiểm tra Firebase auth state
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            console.log(
+              "👤 Đã phát hiện người dùng đăng nhập qua Firebase:",
+              user.email
+            );
+            router.replace("/");
+          } else {
+            setIsCheckingAuth(false);
+          }
+        });
+      } catch (error) {
+        console.error("❌ Lỗi kiểm tra trạng thái đăng nhập:", error);
+        setIsCheckingAuth(false);
+      }
+    }
+
+    checkAuthStatus();
+  }, [router]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -101,6 +151,15 @@ export default function SignIn() {
       setIsLoading(false);
     }
   };
+
+  // Hiển thị trạng thái loading khi đang kiểm tra xác thực
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="w-10 h-10 border-4 border-[#ff4d4f] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative bg-black overflow-hidden">

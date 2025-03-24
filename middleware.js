@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { verifyJwtToken } from "@/app/_utils/jwt";
 
-const PUBLIC_PATHS = ["/sign-in"];
+// Danh sách các đường dẫn không yêu cầu xác thực
+const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/forgot-password"];
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   console.log("🚀 Middleware running for path:", pathname);
 
   // Cho phép truy cập các route công khai
-  if (PUBLIC_PATHS.includes(pathname)) {
+  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     console.log("✅ Public path, allowing access");
     return NextResponse.next();
   }
@@ -26,8 +27,11 @@ export async function middleware(request) {
   try {
     // Xác thực token
     const verifiedToken = await verifyJwtToken(token);
-    console.log("🔒 Token verification result:", verifiedToken ? "Valid" : "Invalid");
-    
+    console.log(
+      "🔒 Token verification result:",
+      verifiedToken ? "Valid" : "Invalid"
+    );
+
     if (!verifiedToken) {
       console.log("❌ Token invalid, redirecting to login");
       return NextResponse.redirect(new URL("/sign-in", request.url));
@@ -55,4 +59,4 @@ export const config = {
      */
     "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
   ],
-}; 
+};
