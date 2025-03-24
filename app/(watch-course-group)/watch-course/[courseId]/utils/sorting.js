@@ -2,8 +2,10 @@
  * Hàm phân tích số từ tiêu đề/tên, hỗ trợ nhiều định dạng
  * - Xử lý format x.y (ví dụ: "1.2 Bài học")
  * - Xử lý format x-y (ví dụ: "1-2 Bài học")
+ * - Xử lý định dạng "Bài X Phần Y" (ví dụ: "Bài 1 Phần 2") - sắp xếp theo Y
  * - Xử lý định dạng có hai số liền nhau (ví dụ: "Bài 2 Danh từ 61 80")
  * - Xử lý số ở đầu chuỗi (ví dụ: "1 Bài học")
+ * - Xử lý chuỗi "Tổng Hợp Từ Vựng 1700 Phần (...)" - sắp xếp theo số ở cuối
  * - Xử lý bất kỳ số nào trong chuỗi nếu không tìm thấy theo các cách trên
  * @param {string} text - Chuỗi cần phân tích
  * @returns {number} - Số để sắp xếp
@@ -12,51 +14,119 @@ export const getNumberFromTitle = (text = "") => {
   // Nếu chuỗi rỗng hoặc null
   if (!text) return 999999;
 
-  // Chuẩn hóa chuỗi (loại bỏ khoảng trắng thừa)
-  const normalizedText = text.trim();
+  // Chuẩn hóa chuỗi (loại bỏ khoảng trắng thừa và chuyển về chữ thường)
+  const normalizedText = text.trim().toLowerCase();
 
-  // Xử lý trường hợp có định dạng x.y (ví dụ: "1.2 Bài học")
-  const dotFormatMatch = normalizedText.match(/^(\d+)\.(\d+)/);
-  if (dotFormatMatch) {
-    // Ưu tiên sắp xếp theo số đầu tiên, sau đó mới đến số thứ hai
-    const firstNumber = parseInt(dotFormatMatch[1]);
-    const secondNumber = parseInt(dotFormatMatch[2]);
-    // Trả về giá trị kết hợp (số thứ nhất * 1000 + số thứ hai)
-    return firstNumber * 1000 + secondNumber;
+  // ===== ĐỊNH DẠNG ĐẶC BIỆT =====
+
+  // 0A. Xử lý đặc biệt cho "Tổng Hợp Từ Vựng 1700 Phần" - cố định theo mẫu chính xác
+  if (normalizedText.includes("tổng hợp từ vựng 1700 phần")) {
+    // Tách lấy số ở cuối chuỗi
+    const matches = normalizedText.match(/phần\s*(\d+)|phần\s*\(?(\d+)\)?/i);
+    if (matches) {
+      const partNumber = parseInt(matches[1] || matches[2]);
+      return partNumber * 1000;
+    }
   }
 
-  // Xử lý trường hợp có định dạng x-y
-  const dashFormatMatch = normalizedText.match(/^(\d+)-(\d+)/);
-  if (dashFormatMatch) {
-    const firstNumber = parseInt(dashFormatMatch[1]);
-    const secondNumber = parseInt(dashFormatMatch[2]);
-    return firstNumber * 1000 + secondNumber;
-  }
-
-  // Trường hợp đặc biệt: "Bài X Danh từ Y Z" - lấy Y làm tiêu chí sắp xếp chính
-  const twoNumbersMatch = normalizedText.match(
-    /Bài \d+ Danh từ (\d+)[ -](\d+)/i
+  // 0B. Định dạng "Tổng Hợp Từ Vựng 1700 Phần (X)" - backup với regex linh hoạt hơn
+  const tongHopMatch = normalizedText.match(
+    /tổng\s+hợp\s+từ\s+vựng\s+1700\s+phần.*?(\d+)(?:\s|\(|\)|$)/i
   );
-  if (twoNumbersMatch) {
-    const firstNumber = parseInt(twoNumbersMatch[1]);
-    return firstNumber * 1000;
+  if (tongHopMatch) {
+    const partNumber = parseInt(tongHopMatch[1]);
+    return partNumber * 1000;
   }
 
-  // Tìm số ở đầu chuỗi
-  const startNumberMatch = normalizedText.match(/^(\d+)/);
-  if (startNumberMatch) {
-    return parseInt(startNumberMatch[1]) * 1000;
+  // ===== XỬ LÝ THEO MAGNITUDE PREFIXING =====
+
+  // Tìm tất cả các số trong chuỗi
+  const allNumbers = normalizedText.match(/\d+/g) || [];
+
+  if (allNumbers.length > 0) {
+    // 1. Định dạng "Bài X Phần Y" - lấy Y làm tiêu chí sắp xếp chính
+    const baiPhanMatch = normalizedText.match(/bài\s+\d+\s+phần\s+(\d+)/i);
+    if (baiPhanMatch) {
+      const partNumber = parseInt(baiPhanMatch[1]);
+      return addMagnitudePrefix(partNumber);
+    }
+
+    // 2. Định dạng "Bài X Danh từ Y Z" - lấy Y làm tiêu chí sắp xếp chính
+    const danhTuMatch = normalizedText.match(
+      /bài\s+\d+\s+danh\s+từ\s+(\d+)(?:\s+|-)(\d+)/i
+    );
+    if (danhTuMatch) {
+      const firstNumber = parseInt(danhTuMatch[1]);
+      return addMagnitudePrefix(firstNumber);
+    }
+
+    // 3. Định dạng "xx yy" - lấy xx làm tiêu chí sắp xếp
+    const twoNumbersPattern = /^(\d+)\s+(\d+)/;
+    const twoNumbers = normalizedText.match(twoNumbersPattern);
+    if (twoNumbers) {
+      const firstNumber = parseInt(twoNumbers[1]);
+      return addMagnitudePrefix(firstNumber);
+    }
+
+    // 4. Định dạng x.y (ví dụ: "1.2 Bài học")
+    const dotFormatMatch = normalizedText.match(/^(\d+)\.(\d+)/);
+    if (dotFormatMatch) {
+      const firstNumber = parseInt(dotFormatMatch[1]);
+      const secondNumber = parseInt(dotFormatMatch[2]);
+      // Kết hợp hai số thành một số duy nhất để sắp xếp
+      return addMagnitudePrefix(firstNumber * 1000 + secondNumber);
+    }
+
+    // 5. Định dạng x-y (ví dụ: "1-2 Bài học")
+    const dashFormatMatch = normalizedText.match(/^(\d+)-(\d+)/);
+    if (dashFormatMatch) {
+      const firstNumber = parseInt(dashFormatMatch[1]);
+      const secondNumber = parseInt(dashFormatMatch[2]);
+      return addMagnitudePrefix(firstNumber * 1000 + secondNumber);
+    }
+
+    // 6. Tìm số ở đầu chuỗi
+    const startNumberMatch = normalizedText.match(/^(\d+)/);
+    if (startNumberMatch) {
+      const num = parseInt(startNumberMatch[1]);
+      return addMagnitudePrefix(num);
+    }
+
+    // 7. Tìm số ở cuối chuỗi (đặc biệt hữu ích cho các tiêu đề dài giống nhau)
+    const endNumberMatch = normalizedText.match(/(\d+)(?:\s|\(|\)|$)$/);
+    if (endNumberMatch) {
+      const num = parseInt(endNumberMatch[1]);
+      return addMagnitudePrefix(num);
+    }
+
+    // 8. Sử dụng số đầu tiên tìm thấy (fallback)
+    const firstNumber = parseInt(allNumbers[0]);
+    return addMagnitudePrefix(firstNumber);
   }
 
-  // Tìm bất kỳ số nào đầu tiên trong chuỗi
-  const anyNumberMatch = normalizedText.match(/(\d+)/);
-  if (anyNumberMatch) {
-    return parseInt(anyNumberMatch[1]) * 1000;
-  }
-
-  // Không tìm thấy số, xếp xuống cuối
-  return 999999;
+  // 9. Không có số nào, sắp xếp theo bảng chữ cái
+  return normalizedText.charCodeAt(0) * 10000 + normalizedText.length;
 };
+
+/**
+ * Hàm áp dụng kỹ thuật "magnitude prefixing" cho số
+ * Đây là kỹ thuật để đảm bảo sắp xếp đúng thứ tự số
+ * bằng cách thêm số chữ số vào trước số đó
+ * Ví dụ: 5 -> 15000, 10 -> 210000, 100 -> 3100000
+ * @param {number} num - Số cần xử lý
+ * @returns {number} - Số đã được xử lý để sắp xếp
+ */
+function addMagnitudePrefix(num) {
+  if (num === 0) return 0;
+
+  // Đổi thành chuỗi để đếm số chữ số
+  const numStr = num.toString();
+  const digitCount = numStr.length;
+
+  // Thêm số chữ số vào đầu và nhân với 10^6 để đảm bảo đủ lớn
+  // Sau đó cộng thêm số gốc để giữ thứ tự giữa các số cùng độ dài
+  return digitCount * 1000000 + num;
+}
 
 /**
  * Sắp xếp các đối tượng theo số trong thuộc tính title
@@ -65,8 +135,19 @@ export const getNumberFromTitle = (text = "") => {
  * @returns {number} - Kết quả so sánh (-1, 0, 1)
  */
 export const sortByTitle = (a, b) => {
+  // Xử lý trường hợp title không tồn tại
+  if (!a.title && !b.title) return 0;
+  if (!a.title) return 1;
+  if (!b.title) return -1;
+
   const numA = getNumberFromTitle(a.title);
   const numB = getNumberFromTitle(b.title);
+
+  // Nếu hai số giống nhau, so sánh theo alphabet
+  if (numA === numB) {
+    return a.title.localeCompare(b.title);
+  }
+
   return numA - numB;
 };
 
@@ -77,7 +158,18 @@ export const sortByTitle = (a, b) => {
  * @returns {number} - Kết quả so sánh (-1, 0, 1)
  */
 export const sortByName = (a, b) => {
+  // Xử lý trường hợp name không tồn tại
+  if (!a.name && !b.name) return 0;
+  if (!a.name) return 1;
+  if (!b.name) return -1;
+
   const numA = getNumberFromTitle(a.name);
   const numB = getNumberFromTitle(b.name);
+
+  // Nếu hai số giống nhau, so sánh theo alphabet
+  if (numA === numB) {
+    return a.name.localeCompare(b.name);
+  }
+
   return numA - numB;
 };
