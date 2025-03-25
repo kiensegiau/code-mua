@@ -31,34 +31,6 @@ export const useVideoNavigation = ({
       .find((file) => file.id === videoId);
   }, []);
 
-  // Lọc và sắp xếp tất cả các video trong bài học hiện tại (bao gồm cả subfolders)
-  const currentLessonVideos = useMemo(() => {
-    if (!activeLesson) return [];
-
-    let videos = [];
-
-    // Thêm videos từ files của lesson
-    if (activeLesson.files) {
-      videos.push(
-        ...activeLesson.files.filter((f) => f.type?.includes("video"))
-      );
-    }
-
-    // Thêm videos từ các subfolders
-    if (activeLesson.subfolders) {
-      activeLesson.subfolders.forEach((subfolder) => {
-        if (subfolder.files) {
-          videos.push(
-            ...subfolder.files.filter((f) => f.type?.includes("video"))
-          );
-        }
-      });
-    }
-
-    // Sắp xếp tất cả videos theo tên
-    return videos.sort((a, b) => sortItems(a, b, "name"));
-  }, [activeLesson, sortItems]);
-
   // Lấy danh sách bài học đã sắp xếp trong chương hiện tại
   const sortedLessonsInCurrentChapter = useMemo(() => {
     if (!activeChapter?.lessons) return [];
@@ -73,33 +45,99 @@ export const useVideoNavigation = ({
 
   // Tìm video tiếp theo trong bài học hiện tại
   const findNextVideo = useCallback(() => {
-    if (!activeVideo || !currentLessonVideos.length) return null;
+    if (!activeVideo || !activeLesson) return null;
 
-    const currentIndex = currentLessonVideos.findIndex(
-      (v) => v.id === activeVideo.id
+    // Sắp xếp lại tất cả videos trong lesson hiện tại để đảm bảo trình tự chính xác
+    const allVideosInCurrentLesson = [];
+
+    // 1. Thêm videos từ files trực tiếp của lesson
+    if (activeLesson.files) {
+      const directVideos = activeLesson.files
+        .filter(f => f.type?.includes("video"))
+        .sort((a, b) => sortItems(a, b, "name"));
+      allVideosInCurrentLesson.push(...directVideos);
+    }
+
+    // 2. Thêm videos từ subfolders theo thứ tự subfolder
+    if (activeLesson.subfolders) {
+      // Sắp xếp subfolders trước
+      const sortedSubfolders = [...activeLesson.subfolders].sort((a, b) => {
+        const numA = getNumberFromTitle(a.name);
+        const numB = getNumberFromTitle(b.name);
+        return numA - numB;
+      });
+
+      // Lấy videos từ mỗi subfolder đã sắp xếp
+      sortedSubfolders.forEach(subfolder => {
+        if (subfolder.files) {
+          const subfolderVideos = subfolder.files
+            .filter(f => f.type?.includes("video"))
+            .sort((a, b) => sortItems(a, b, "name"));
+          allVideosInCurrentLesson.push(...subfolderVideos);
+        }
+      });
+    }
+
+    // Tìm vị trí của video hiện tại trong danh sách đã sắp xếp
+    const currentIndex = allVideosInCurrentLesson.findIndex(
+      video => video.id === activeVideo.id
     );
 
-    if (currentIndex < currentLessonVideos.length - 1) {
-      return currentLessonVideos[currentIndex + 1];
+    // Nếu tìm thấy và còn video tiếp theo, trả về video tiếp theo
+    if (currentIndex !== -1 && currentIndex < allVideosInCurrentLesson.length - 1) {
+      return allVideosInCurrentLesson[currentIndex + 1];
     }
 
     return null;
-  }, [activeVideo, currentLessonVideos]);
+  }, [activeVideo, activeLesson, sortItems, getNumberFromTitle]);
 
   // Tìm video trước đó trong bài học hiện tại
   const findPreviousVideo = useCallback(() => {
-    if (!activeVideo || !currentLessonVideos.length) return null;
+    if (!activeVideo || !activeLesson) return null;
 
-    const currentIndex = currentLessonVideos.findIndex(
-      (v) => v.id === activeVideo.id
+    // Sắp xếp lại tất cả videos trong lesson hiện tại để đảm bảo trình tự chính xác
+    const allVideosInCurrentLesson = [];
+
+    // 1. Thêm videos từ files trực tiếp của lesson
+    if (activeLesson.files) {
+      const directVideos = activeLesson.files
+        .filter(f => f.type?.includes("video"))
+        .sort((a, b) => sortItems(a, b, "name"));
+      allVideosInCurrentLesson.push(...directVideos);
+    }
+
+    // 2. Thêm videos từ subfolders theo thứ tự subfolder
+    if (activeLesson.subfolders) {
+      // Sắp xếp subfolders trước
+      const sortedSubfolders = [...activeLesson.subfolders].sort((a, b) => {
+        const numA = getNumberFromTitle(a.name);
+        const numB = getNumberFromTitle(b.name);
+        return numA - numB;
+      });
+
+      // Lấy videos từ mỗi subfolder đã sắp xếp
+      sortedSubfolders.forEach(subfolder => {
+        if (subfolder.files) {
+          const subfolderVideos = subfolder.files
+            .filter(f => f.type?.includes("video"))
+            .sort((a, b) => sortItems(a, b, "name"));
+          allVideosInCurrentLesson.push(...subfolderVideos);
+        }
+      });
+    }
+
+    // Tìm vị trí của video hiện tại trong danh sách đã sắp xếp
+    const currentIndex = allVideosInCurrentLesson.findIndex(
+      video => video.id === activeVideo.id
     );
 
+    // Nếu tìm thấy và còn video trước đó, trả về video trước đó
     if (currentIndex > 0) {
-      return currentLessonVideos[currentIndex - 1];
+      return allVideosInCurrentLesson[currentIndex - 1];
     }
 
     return null;
-  }, [activeVideo, currentLessonVideos]);
+  }, [activeVideo, activeLesson, sortItems, getNumberFromTitle]);
 
   // Tìm bài học tiếp theo trong chương hiện tại
   const findNextLesson = useCallback(
@@ -369,8 +407,64 @@ export const useVideoNavigation = ({
       // 1. Thử video tiếp theo trong bài học hiện tại (bao gồm cả videos trong subfolders)
       const nextVideo = findNextVideo();
       if (nextVideo) {
+        // Ghi log debug thông tin về video tiếp theo được tìm thấy
+        console.debug("Tìm thấy video tiếp theo trong bài học hiện tại:", {
+          id: nextVideo.id,
+          name: nextVideo.name,
+          lessonId: activeLesson?.id,
+          chapterId: activeChapter?.id
+        });
         handleLessonClickWrapper(activeLesson, activeChapter, nextVideo);
         return;
+      }
+
+      console.debug("Không tìm thấy video tiếp theo trong bài học hiện tại, tìm ở bài học kế tiếp");
+
+      // Kiểm tra nếu lesson hiện tại còn file video nào (để phòng hờ sắp xếp bị sai)
+      if (activeLesson) {
+        let remainingVideos = [];
+        
+        // Kiểm tra trong files trực tiếp
+        if (activeLesson.files) {
+          remainingVideos.push(
+            ...activeLesson.files
+              .filter(f => f.type?.includes("video") && f.id !== activeVideo?.id)
+          );
+        }
+        
+        // Kiểm tra trong subfolders
+        if (activeLesson.subfolders) {
+          activeLesson.subfolders.forEach(subfolder => {
+            if (subfolder.files) {
+              remainingVideos.push(
+                ...subfolder.files
+                  .filter(f => f.type?.includes("video") && f.id !== activeVideo?.id)
+              );
+            }
+          });
+        }
+        
+        // Nếu vẫn còn videos trong lesson hiện tại mà không được tìm thấy bởi findNextVideo
+        // thì đây có thể là lỗi sắp xếp, hãy tìm video tiếp theo theo cách khác
+        if (remainingVideos.length > 0) {
+          console.debug("Phát hiện có video bị bỏ qua!", { remainingCount: remainingVideos.length });
+          
+          // Sắp xếp tất cả videos đang có và tìm video tiếp theo theo tên
+          const allVideosInLesson = [
+            ...(activeLesson.files || []).filter(f => f.type?.includes("video")),
+            ...(activeLesson.subfolders || []).flatMap(subfolder => 
+              (subfolder.files || []).filter(f => f.type?.includes("video"))
+            )
+          ].sort((a, b) => sortItems(a, b, "name"));
+          
+          const currentIndex = allVideosInLesson.findIndex(v => v.id === activeVideo?.id);
+          if (currentIndex >= 0 && currentIndex < allVideosInLesson.length - 1) {
+            const realNextVideo = allVideosInLesson[currentIndex + 1];
+            console.debug("Tìm thấy video tiếp theo bằng logic dự phòng:", realNextVideo.name);
+            handleLessonClickWrapper(activeLesson, activeChapter, realNextVideo);
+            return;
+          }
+        }
       }
 
       // 2. Thử video đầu tiên của bài học tiếp theo trong chương hiện tại
