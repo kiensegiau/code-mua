@@ -44,38 +44,84 @@ export default function SignIn() {
   useEffect(() => {
     async function checkAuthStatus() {
       try {
-        // Kiểm tra token từ cookie (cách tiếp cận giống middleware)
+        // Kiểm tra token từ localStorage
         const accessToken = localStorage.getItem("accessToken");
 
+        // Nếu có token trong localStorage nhưng không có trong cookie, xóa token trong localStorage
         if (accessToken) {
-          // Xác thực token
-          const isValid = await verifyJwtToken(accessToken);
+          const cookies = document.cookie.split(";");
+          const tokenCookie = cookies.find((cookie) =>
+            cookie.trim().startsWith("accessToken=")
+          );
 
-          if (isValid) {
+          if (!tokenCookie) {
             console.log(
-              "🔒 Người dùng đã đăng nhập, chuyển hướng đến trang chủ"
+              "⚠️ Phát hiện token trong localStorage nhưng không có trong cookie, xóa token"
             );
-            window.location.href = "/";
-            return;
-          } else {
-            console.log("⚠️ Token không hợp lệ, xóa token");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
           }
         }
 
         // Kiểm tra Firebase auth state
-        onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
           if (user) {
             console.log(
               "👤 Đã phát hiện người dùng đăng nhập qua Firebase:",
               user.email
             );
-            window.location.href = "/";
+
+            // Kiểm tra xem token có tồn tại trong cookie không
+            const cookies = document.cookie.split(";");
+            const tokenCookie = cookies.find((cookie) =>
+              cookie.trim().startsWith("accessToken=")
+            );
+
+            // Nếu chưa có cookie, tạo token và thiết lập cookie trước khi chuyển hướng
+            if (!tokenCookie) {
+              console.log(
+                "🔄 Phát hiện người dùng Firebase nhưng không có cookie, tạo token mới"
+              );
+              try {
+                const { accessToken, refreshToken } = await generateTokens(
+                  user
+                );
+
+                // Thiết lập cookie
+                document.cookie = `accessToken=${accessToken}; path=/; max-age=604800; samesite=strict`;
+
+                // Lưu vào localStorage
+                localStorage.setItem("accessToken", accessToken);
+                localStorage.setItem("refreshToken", refreshToken);
+
+                console.log(
+                  "✅ Đã tạo token mới và lưu vào cookie, chuyển hướng đến trang chủ"
+                );
+                window.location.href = "/";
+              } catch (error) {
+                console.error("❌ Lỗi khi tạo token mới:", error);
+                // Đăng xuất khỏi Firebase để tránh vòng lặp
+                await auth.signOut();
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                setIsCheckingAuth(false);
+              }
+            } else {
+              console.log(
+                "✅ Người dùng Firebase đã có token trong cookie, chuyển hướng đến trang chủ"
+              );
+              window.location.href = "/";
+            }
           } else {
+            console.log(
+              "🔍 Không phát hiện người dùng Firebase, hiển thị trang đăng nhập"
+            );
             setIsCheckingAuth(false);
           }
         });
+
+        // Clean up function để ngăn memory leak
+        return () => unsubscribe();
       } catch (error) {
         console.error("❌ Lỗi kiểm tra trạng thái đăng nhập:", error);
         setIsCheckingAuth(false);
@@ -83,7 +129,7 @@ export default function SignIn() {
     }
 
     checkAuthStatus();
-  }, [router]);
+  }, []);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -97,35 +143,60 @@ export default function SignIn() {
     }
 
     try {
-      console.log("🔑 Attempting login for:", email);
+      console.log("🔑 Đang đăng nhập với:", email);
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
-      console.log("✅ Firebase login successful");
+      console.log("✅ Đăng nhập Firebase thành công");
 
       const user = userCredential.user;
-      console.log("👤 User info:", { email: user.email, uid: user.uid });
+      console.log("👤 Thông tin người dùng:", {
+        email: user.email,
+        uid: user.uid,
+      });
 
       const { accessToken, refreshToken } = await generateTokens(user);
-      console.log("🎟️ Tokens generated");
+      console.log("🎟️ Đã tạo token");
 
-      await setTokenCookie(accessToken);
-      console.log("🍪 Token saved to cookie");
+      // Đảm bảo token được lưu vào cookie
+      const cookieSet = await setTokenCookie(accessToken);
+
+      if (!cookieSet) {
+        console.log(
+          "⚠️ Không thể thiết lập cookie qua hàm setTokenCookie, thử phương pháp thay thế"
+        );
+        // Thiết lập cookie trực tiếp nếu cần
+        document.cookie = `accessToken=${accessToken}; path=/; max-age=604800; samesite=strict`;
+      }
 
       // Lưu token vào localStorage để sử dụng khi cần
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      console.log("💾 Tokens saved to localStorage");
+      console.log("💾 Đã lưu token vào localStorage");
 
-      toast.success("Đăng nhập thành công!");
-      console.log("🚀 Đang chuyển hướng đến trang chủ...");
+      // Xác minh cookie đã được thiết lập thành công
       setTimeout(() => {
+        const cookies = document.cookie.split(";");
+        const tokenCookie = cookies.find((cookie) =>
+          cookie.trim().startsWith("accessToken=")
+        );
+
+        if (!tokenCookie) {
+          console.error(
+            "⚠️ Không thể thiết lập cookie sau nhiều lần thử, thử lần cuối"
+          );
+          // Thử một lần nữa với cài đặt cookie đơn giản nhất
+          document.cookie = `accessToken=${accessToken}; path=/`;
+        }
+
+        toast.success("Đăng nhập thành công!");
+        console.log("🚀 Đang chuyển hướng đến trang chủ...");
         window.location.href = "/";
-      }, 500);
+      }, 200);
     } catch (error) {
-      console.error("❌ Login error:", error);
+      console.error("❌ Lỗi đăng nhập:", error);
       let errorMessage = "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.";
       switch (error.code) {
         case "auth/invalid-email":

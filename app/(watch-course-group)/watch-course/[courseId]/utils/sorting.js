@@ -3,6 +3,7 @@
  * - Xử lý format x.y (ví dụ: "1.2 Bài học")
  * - Xử lý format x-y (ví dụ: "1-2 Bài học")
  * - Xử lý định dạng "Bài X Phần Y" (ví dụ: "Bài 1 Phần 2") - sắp xếp theo Y
+ * - Xử lý định dạng "Buổi X" (ví dụ: "Buổi 1", "Buổi 10") - sắp xếp theo số buổi
  * - Xử lý định dạng có hai số liền nhau (ví dụ: "Bài 2 Danh từ 61 80")
  * - Xử lý số ở đầu chuỗi (ví dụ: "1 Bài học")
  * - Xử lý chuỗi "Tổng Hợp Từ Vựng 1700 Phần (...)" - sắp xếp theo số ở cuối
@@ -18,6 +19,13 @@ export const getNumberFromTitle = (text = "") => {
   const normalizedText = text.trim().toLowerCase();
 
   // ===== ĐỊNH DẠNG ĐẶC BIỆT =====
+
+  // 0. Xử lý định dạng "Buổi X" - thêm case này để xử lý đúng thứ tự các buổi
+  const buoiMatch = normalizedText.match(/buổi\s+(\d+)/i);
+  if (buoiMatch) {
+    const buoiNumber = parseInt(buoiMatch[1]);
+    return addMagnitudePrefix(buoiNumber);
+  }
 
   // 0A. Xử lý đặc biệt cho "Tổng Hợp Từ Vựng 1700 Phần" - cố định theo mẫu chính xác
   if (normalizedText.includes("tổng hợp từ vựng 1700 phần")) {
