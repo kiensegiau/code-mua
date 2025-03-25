@@ -6,21 +6,21 @@ const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/forgot-password"];
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  console.log("🚀 Middleware running for path:", pathname);
+  console.log("🚀 Middleware đang chạy cho đường dẫn:", pathname);
 
   // Cho phép truy cập các route công khai
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
-    console.log("✅ Public path, allowing access");
+    console.log("✅ Đường dẫn công khai, cho phép truy cập");
     return NextResponse.next();
   }
 
   // Lấy token từ cookie
   const token = request.cookies.get("accessToken")?.value;
-  console.log("🔑 Token from cookie:", token ? "Found" : "Not found");
+  console.log("🔑 Token từ cookie:", token ? "Tìm thấy" : "Không tìm thấy");
 
   // Nếu không có token, chuyển hướng về trang đăng nhập
   if (!token) {
-    console.log("❌ No token found, redirecting to login");
+    console.log("❌ Không tìm thấy token, chuyển hướng đến trang đăng nhập");
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
@@ -28,21 +28,53 @@ export async function middleware(request) {
     // Xác thực token
     const verifiedToken = await verifyJwtToken(token);
     console.log(
-      "🔒 Token verification result:",
-      verifiedToken ? "Valid" : "Invalid"
+      "🔒 Kết quả xác thực token:",
+      verifiedToken ? "Hợp lệ" : "Không hợp lệ"
     );
 
-    if (!verifiedToken) {
-      console.log("❌ Token invalid, redirecting to login");
-      return NextResponse.redirect(new URL("/sign-in", request.url));
+    if (!verifiedToken || !verifiedToken.uid) {
+      console.log("❌ Token không hợp lệ, chuyển hướng đến trang đăng nhập");
+      const response = NextResponse.redirect(new URL("/sign-in", request.url));
+      response.cookies.delete("accessToken");
+      return response;
     }
 
-    console.log("✅ Token valid, allowing access");
-    return NextResponse.next();
+    // Kiểm tra tài khoản có tồn tại không qua API route
+    try {
+      // Gọi API để kiểm tra tài khoản
+      const apiUrl = new URL("/api/auth/verify-user", request.url);
+      apiUrl.searchParams.append("uid", verifiedToken.uid);
+      
+      const apiResponse = await fetch(apiUrl.toString(), {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      const apiData = await apiResponse.json();
+      
+      if (!apiResponse.ok || !apiData.exists) {
+        console.log("❌ Người dùng không tồn tại hoặc đã bị xóa, xóa token và chuyển hướng");
+        const response = NextResponse.redirect(new URL("/sign-in", request.url));
+        response.cookies.delete("accessToken");
+        return response;
+      }
+      
+      console.log("✅ Người dùng tồn tại, cho phép truy cập");
+      return NextResponse.next();
+    } catch (userError) {
+      console.error("❌ Lỗi kiểm tra người dùng:", userError);
+      // Lỗi khi kiểm tra tài khoản, tạm thời cho phép truy cập
+      // Để tránh người dùng bị khóa vì lỗi kỹ thuật
+      return NextResponse.next();
+    }
   } catch (error) {
-    console.error("❌ Token verification error:", error);
+    console.error("❌ Lỗi xác thực token:", error);
     // Token không hợp lệ, chuyển hướng về trang đăng nhập
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    const response = NextResponse.redirect(new URL("/sign-in", request.url));
+    response.cookies.delete("accessToken");
+    return response;
   }
 }
 
