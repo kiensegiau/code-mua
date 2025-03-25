@@ -21,13 +21,34 @@ export const getNumberFromTitle = (text = "") => {
   // ===== ĐỊNH DẠNG ĐẶC BIỆT =====
 
   // 0. Xử lý định dạng "Buổi X" - thêm case này để xử lý đúng thứ tự các buổi
-  const buoiMatch = normalizedText.match(/buổi\s+(\d+)/i);
+  const buoiMatch = normalizedText.match(/^buổi\s+(\d+)/i);
   if (buoiMatch) {
     const buoiNumber = parseInt(buoiMatch[1]);
     return addMagnitudePrefix(buoiNumber);
   }
 
-  // 0A. Xử lý đặc biệt cho "Tổng Hợp Từ Vựng 1700 Phần" - cố định theo mẫu chính xác
+  // 0A. Xử lý định dạng "Bài X" - tương tự như Buổi X
+  const baiMatch = normalizedText.match(/^bài\s+(\d+)/i);
+  if (baiMatch) {
+    const baiNumber = parseInt(baiMatch[1]);
+    return addMagnitudePrefix(baiNumber);
+  }
+
+  // 0B. Xử lý định dạng "Chương X" - tương tự như Buổi X
+  const chuongMatch = normalizedText.match(/^chương\s+(\d+)/i);
+  if (chuongMatch) {
+    const chuongNumber = parseInt(chuongMatch[1]);
+    return addMagnitudePrefix(chuongNumber);
+  }
+
+  // 0C. Xử lý định dạng "Phần X" - tương tự như Buổi X
+  const phanMatch = normalizedText.match(/^phần\s+(\d+)/i);
+  if (phanMatch) {
+    const phanNumber = parseInt(phanMatch[1]);
+    return addMagnitudePrefix(phanNumber);
+  }
+
+  // 0D. Xử lý đặc biệt cho "Tổng Hợp Từ Vựng 1700 Phần" - cố định theo mẫu chính xác
   if (normalizedText.includes("tổng hợp từ vựng 1700 phần")) {
     // Tách lấy số ở cuối chuỗi
     const matches = normalizedText.match(/phần\s*(\d+)|phần\s*\(?(\d+)\)?/i);
@@ -37,7 +58,7 @@ export const getNumberFromTitle = (text = "") => {
     }
   }
 
-  // 0B. Định dạng "Tổng Hợp Từ Vựng 1700 Phần (X)" - backup với regex linh hoạt hơn
+  // 0E. Định dạng "Tổng Hợp Từ Vựng 1700 Phần (X)" - backup với regex linh hoạt hơn
   const tongHopMatch = normalizedText.match(
     /tổng\s+hợp\s+từ\s+vựng\s+1700\s+phần.*?(\d+)(?:\s|\(|\)|$)/i
   );
