@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Maximize, Minimize } from "lucide-react";
 
 const PDFViewer = ({ file, isOpen, onClose }) => {
   const [streamUrl, setStreamUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Hàm để lấy signed URL từ wasabi nếu có storage key
   const getStreamUrl = async (key) => {
@@ -67,37 +68,66 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
     }
   }, [isOpen, file]);
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1f1f1f] rounded-lg w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden border border-gray-800 shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h3 className="text-lg font-medium text-white">
-            {file?.name || "Xem tài liệu PDF"}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4 transition-all duration-300">
+      <div className={`bg-gradient-to-b from-[#1e1e2e] to-[#181825] rounded-xl w-full ${isFullscreen ? 'h-full max-w-full' : 'max-w-5xl h-[85vh]'} flex flex-col overflow-hidden border border-indigo-500/20 shadow-2xl transition-all duration-300`}>
+        {/* Header với các controls */}
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-800/50 bg-[#1e1e2e]/90 backdrop-blur-sm">
+          <div className="flex items-center space-x-2 max-w-[70%]">
+            <div className="hidden sm:block w-2 h-2 rounded-full bg-red-500"></div>
+            <div className="hidden sm:block w-2 h-2 rounded-full bg-yellow-500"></div>
+            <div className="hidden sm:block w-2 h-2 rounded-full bg-green-500"></div>
+            <h3 className="text-sm sm:text-lg font-medium text-white ml-0 sm:ml-4 truncate">
+              {file?.name || "Xem tài liệu PDF"}
+            </h3>
+          </div>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <button 
+              onClick={toggleFullscreen}
+              className="text-gray-400 hover:text-white transition-colors p-1 sm:p-1.5 rounded-full hover:bg-gray-800/50"
+              title={isFullscreen ? "Thu nhỏ" : "Toàn màn hình"}
+            >
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={onClose}
+              className="text-white bg-red-500/80 hover:bg-red-500 transition-colors p-1 sm:p-1.5 rounded-full"
+              title="Đóng"
+              aria-label="Đóng"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 w-full h-full overflow-hidden bg-black">
+        <div className="flex-1 w-full h-full overflow-hidden bg-black/50 backdrop-blur-sm">
           {isLoading && (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-gray-300 border-t-[#ff4d4f] rounded-full animate-spin"></div>
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-purple-300/20 border-t-purple-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-10 h-10 border-4 border-blue-300/20 border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
+              </div>
             </div>
           )}
 
           {error && (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center p-6 max-w-md">
-                <p className="text-red-500 mb-4">{error}</p>
+              <div className="text-center p-8 max-w-md bg-gray-900/90 rounded-xl shadow-xl border border-red-500/20">
+                <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-red-500/10">
+                  <X className="w-10 h-10 text-red-500" />
+                </div>
+                <p className="text-red-400 mb-6 text-lg">{error}</p>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-[#ff4d4f] text-white rounded-md hover:bg-[#ff3538] transition-colors"
+                  className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-md hover:from-red-500 hover:to-red-400 transition-colors shadow-lg"
                 >
                   Đóng
                 </button>
@@ -120,4 +150,4 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
   );
 };
 
-export default PDFViewer; 
+export default PDFViewer;
