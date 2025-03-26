@@ -44,7 +44,7 @@ function Layout({ children }) {
       <div className="min-h-screen bg-[var(--background-color)] text-[var(--text-color)]">
         <Header />
 
-        <div className="flex pt-16">
+        <div className="">
           {" "}
           {/* pt-16 để tránh nội dung bị che bởi header cố định */}
           {/* Sidebar - cố định bên trái, ẩn trên mobile */}

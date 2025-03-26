@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import useEnrolledCourses from "@/app/_hooks/useEnrolledCourses";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   BookOpen,
   Clock,
@@ -16,6 +17,24 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
+
+// Lazy load CourseItem để tối ưu performance
+const CourseItem = dynamic(() => import("../courses/_components/CourseItem"), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 h-full">
+      <div className="aspect-video bg-gray-800 animate-pulse" />
+      <div className="p-3 md:p-4">
+        <div className="h-5 bg-gray-800 rounded animate-pulse mb-3" />
+        <div className="h-4 bg-gray-800 rounded animate-pulse w-2/3 mb-3" />
+        <div className="flex justify-between mt-4">
+          <div className="h-4 bg-gray-800 rounded animate-pulse w-1/4" />
+          <div className="h-4 bg-gray-800 rounded animate-pulse w-1/4" />
+        </div>
+      </div>
+    </div>
+  ),
+});
 
 function MyCourses() {
   const coursesPerPage = 9;
@@ -56,12 +75,12 @@ function MyCourses() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#141414]">
+    <div className="flex flex-col min-h-screen bg-[#141414] !pt-0">
       <div className="flex flex-1">
-        <div className="flex-1 px-4 md:px-6 py-4 md:py-6">
+        <div className="flex-1 px-3 md:px-6 py-2 md:py-6">
           <div className="max-w-7xl mx-auto">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4 mb-3 md:mb-6">
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-200">
                   Khóa học của tôi
@@ -71,19 +90,8 @@ function MyCourses() {
                 </p>
               </div>
 
-              {/* Search and Refresh */}
-              <div className="flex gap-2 items-center">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    placeholder="Tìm kiếm khóa học..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full md:w-[250px] rounded-full bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
-                  />
-                </div>
-
+              {/* Refresh Button only */}
+              <div className="hidden md:flex gap-2 items-center">
                 <button
                   onClick={() => refresh()}
                   className="p-2 rounded-full bg-[#1f1f1f] border border-gray-800 text-gray-400 hover:text-gray-200 transition-colors"
@@ -95,7 +103,7 @@ function MyCourses() {
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-[#1f1f1f] p-4 rounded-xl border border-gray-800">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-[#ff4d4f]/10 rounded-lg">
@@ -166,8 +174,60 @@ function MyCourses() {
               </div>
             </div>
 
-            {/* Filter Buttons & Sort Options */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            {/* Filter Buttons for mobile - horizontal scrollable */}
+            <div className="mb-3 md:hidden">
+              <div className="flex overflow-x-auto pb-2 no-scrollbar">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setSelectedFilter("all")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      selectedFilter === "all"
+                        ? "bg-[#ff4d4f] text-white"
+                        : "bg-[#1f1f1f] text-gray-400 hover:text-gray-200 border border-gray-800"
+                    }`}
+                  >
+                    Tất cả
+                  </button>
+                  <button
+                    onClick={() => setSelectedFilter("in-progress")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      selectedFilter === "in-progress"
+                        ? "bg-[#ff4d4f] text-white"
+                        : "bg-[#1f1f1f] text-gray-400 hover:text-gray-200 border border-gray-800"
+                    }`}
+                  >
+                    Đang học
+                  </button>
+                  <button
+                    onClick={() => setSelectedFilter("completed")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      selectedFilter === "completed"
+                        ? "bg-[#ff4d4f] text-white"
+                        : "bg-[#1f1f1f] text-gray-400 hover:text-gray-200 border border-gray-800"
+                    }`}
+                  >
+                    Đã hoàn thành
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Search and Sort for mobile */}
+            <div className="flex flex-col gap-3 mb-4 md:hidden">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khóa học..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full rounded-lg bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
+                />
+              </div>
+            </div>
+
+            {/* Filter Buttons & Sort Options for desktop */}
+            <div className="hidden md:flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div className="flex space-x-2">
                 <button
                   onClick={() => setSelectedFilter("all")}
@@ -215,18 +275,32 @@ function MyCourses() {
                 </select>
               </div>
             </div>
+            
+            {/* Search Bar for desktop */}
+            <div className="hidden md:block mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khóa học..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full rounded-lg bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
+                />
+              </div>
+            </div>
 
             {/* Course Grid */}
             <div id="courses-grid">
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {[...Array(6)].map((_, index) => (
+                <div className="grid grid-cols-2 gap-3 md:gap-6">
+                  {[...Array(4)].map((_, index) => (
                     <div
                       key={index}
                       className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800"
                     >
                       <div className="aspect-video bg-gray-800 animate-pulse" />
-                      <div className="p-4">
+                      <div className="p-3 md:p-4">
                         <div className="h-5 bg-gray-800 rounded animate-pulse mb-3" />
                         <div className="h-4 bg-gray-800 rounded animate-pulse w-2/3 mb-3" />
                         <div className="flex justify-between mt-4">
@@ -261,128 +335,34 @@ function MyCourses() {
               ) : filteredAndSortedCourses &&
                 filteredAndSortedCourses.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div className="grid grid-cols-2 gap-3 md:gap-8">
                     {currentCourses &&
-                      currentCourses.map((course) => (
-                        <Link
-                          href={`/watch-course/${course.id}`}
-                          key={course.id}
-                          className="block group"
-                        >
-                          <div className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 hover:border-gray-700 transition-all duration-300 h-full flex flex-col">
-                            <div className="relative">
-                              <div className="relative aspect-video">
-                                {course.thumbnailUrl ? (
-                                  <>
-                                    <Image
-                                      src={course.thumbnailUrl}
-                                      alt={course.title}
-                                      layout="fill"
-                                      objectFit="cover"
-                                      className="transition-transform duration-300 group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                                  </>
-                                ) : (
-                                  <>
-                                    {/* Placeholder với gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[#1f1f1f] to-[#191919] flex items-center justify-center">
-                                      <div className="text-center relative">
-                                        {/* Hiệu ứng glow phía sau */}
-                                        <div className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl animate-pulse-custom"></div>
-
-                                        {/* Tạo hình trang trí ở các góc */}
-                                        <div className="absolute -top-24 -right-24 w-40 h-40 bg-[#ff4d4f]/5 rounded-full blur-2xl pointer-events-none"></div>
-                                        <div className="absolute -bottom-20 -left-20 w-32 h-32 bg-[#ff4d4f]/5 rounded-full blur-2xl pointer-events-none"></div>
-
-                                        <div className="relative">
-                                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#ff4d4f]/20 to-[#ff4d4f]/5 flex items-center justify-center mx-auto mb-3 border border-[#ff4d4f]/20">
-                                            <BookOpen className="w-8 h-8 text-[#ff4d4f]/50" />
-                                          </div>
-                                          <div className="space-y-1.5">
-                                            <p className="text-[#ff4d4f]/70 font-medium text-sm tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#ff4d4f]/90 to-[#ff7875]/90">
-                                              Hoc Mai
-                                            </p>
-                                            <p className="text-xs text-gray-500 px-4">
-                                              Khóa học sẽ hiển thị tại đây
-                                            </p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Hiệu ứng dạng lưới */}
-                                    <div
-                                      className="absolute inset-0 opacity-20"
-                                      style={{
-                                        backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px), 
-                                                       linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)`,
-                                        backgroundSize: "20px 20px",
-                                      }}
-                                    ></div>
-                                  </>
-                                )}
-                              </div>
-
-                              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-800">
-                                <div
-                                  className="h-full bg-[#ff4d4f] transition-all duration-300"
-                                  style={{ width: `${course.progress || 0}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="p-4 flex flex-col flex-1">
-                              <h3 className="text-base font-semibold text-gray-200 line-clamp-2 mb-1.5 group-hover:text-[#ff4d4f] transition-colors">
-                                {course.title}
-                              </h3>
-                              <p className="text-xs text-gray-400 mb-3 line-clamp-2">
-                                {course.description || "Không có mô tả"}
-                              </p>
-
-                              <div className="flex items-center gap-2 mt-auto">
-                                <div className="text-xs text-gray-400 bg-gray-800/50 py-1 px-2 rounded">
-                                  <span className="font-medium">
-                                    {course.lessons?.length || 0}
-                                  </span>{" "}
-                                  bài học
-                                </div>
-                                <div className="text-xs text-gray-400 bg-gray-800/50 py-1 px-2 rounded">
-                                  {course.duration || "N/A"}
-                                </div>
-                              </div>
-
-                              <div className="mt-auto pt-3 border-t border-gray-800">
-                                <div className="flex items-center justify-between mb-1.5">
-                                  <span className="text-sm font-medium text-gray-300">
-                                    Tiến độ
-                                  </span>
-                                  <span
-                                    className={`text-sm font-semibold ${
-                                      course.progress === 100
-                                        ? "text-green-500"
-                                        : "text-[#ff4d4f]"
-                                    }`}
-                                  >
-                                    {course.progress || 0}%
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <PlayCircle className="h-4 w-4 text-gray-400" />
-                                  <span className="text-xs text-gray-500">
-                                    {course.lastAccessed
-                                      ? `Học gần đây: ${new Date(
-                                          course.lastAccessed
-                                        ).toLocaleDateString("vi-VN")}`
-                                      : "Chưa bắt đầu học"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
+                      currentCourses.map((course) => {
+                        // Chuẩn bị dữ liệu cho CourseItem
+                        const courseData = {
+                          id: course.id,
+                          title: course.title,
+                          subname: "", // Bỏ mô tả ngắn
+                          description: "", // Bỏ mô tả chi tiết
+                          thumbnailUrl: course.thumbnailUrl,
+                          price: 0, // Đã mua rồi
+                          level: course.progress === 100 ? "Đã hoàn thành" : "Đang học",
+                          totalLessons: course.lessons?.length || 0,
+                          totalStudents: 0,
+                          duration: course.duration || "99+",
+                          teacher: course.teacher || "Hoc Mai",
+                          progress: course.progress || 0,
+                        };
+                        
+                        return (
+                          <div 
+                            key={course.id}
+                            className="course-item-container enrolled-course"
+                          >
+                            <CourseItem course={courseData} />
                           </div>
-                        </Link>
-                      ))}
+                        );
+                      })}
                   </div>
 
                   {/* Phân trang */}
