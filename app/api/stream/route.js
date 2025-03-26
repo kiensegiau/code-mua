@@ -41,8 +41,18 @@ function isVideoFile(key) {
   return key.match(/\.(mp4|webm|mov|ogg|avi|mkv)$/i) !== null;
 }
 
+// Kiểm tra xem file có phải PDF không
+function isPDFFile(key) {
+  return key.match(/\.(pdf)$/i) !== null;
+}
+
+// Kiểm tra xem file có phải file được hỗ trợ không
+function isSupportedFile(key) {
+  return isVideoFile(key) || isPDFFile(key);
+}
+
 /**
- * API để lấy signed URL cho video từ Wasabi
+ * API để lấy signed URL cho video hoặc PDF từ Wasabi
  * Method: GET
  * Query params:
  *   - key: Key của file trong Wasabi (bắt buộc)
@@ -75,11 +85,11 @@ export async function GET(request) {
       );
     }
 
-    // Nếu cần phát video, kiểm tra đây có phải file video không
-    if (!isVideoFile(key)) {
+    // Kiểm tra file có được hỗ trợ không (video hoặc PDF)
+    if (!isSupportedFile(key)) {
       return NextResponse.json(
         {
-          error: "File không phải định dạng video hỗ trợ",
+          error: "File không phải định dạng được hỗ trợ",
         },
         { status: 400 }
       );
@@ -115,7 +125,7 @@ export async function GET(request) {
     console.error("Lỗi khi tạo signed URL:", error);
     return NextResponse.json(
       {
-        error: "Không thể tạo URL cho video",
+        error: "Không thể tạo URL cho file",
         detail: error.message,
       },
       { status: 500 }

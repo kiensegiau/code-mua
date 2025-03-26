@@ -37,6 +37,19 @@ const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
   ),
 });
 
+// Lazy load PDFViewer để tối ưu hiệu năng
+const PDFViewer = dynamic(() => import("./components/PDFViewer"), {
+  ssr: false,
+  loading: () => (
+    <div
+      key="pdf-viewer-loading"
+      className="flex items-center justify-center w-full h-full"
+    >
+      <div className="w-8 h-8 border-2 border-[#ff4d4f] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  ),
+});
+
 // Aspect ratio và video height
 const aspectRatio = 9 / 16;
 const videoHeight = `${100 * aspectRatio}vw`;
@@ -168,6 +181,9 @@ export default function WatchCourse({ params }) {
   const [videoProgress, setVideoProgress] = useState({});
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  const [activePDF, setActivePDF] = useState(null);
+  const [isPDFOpen, setIsPDFOpen] = useState(false);
+
   const router = useRouter();
   const courseContentRef = useRef();
 
@@ -182,11 +198,16 @@ export default function WatchCourse({ params }) {
     if (chapter) setActiveChapter(chapter);
 
     if (file) {
-      if (file.type.includes("video")) {
+      if (file.type?.includes("video")) {
         setActiveVideo(file);
         setIsPlaying(true);
         setKey((prev) => prev + 1);
+      } else if (file.type?.includes("document") || file.name?.toLowerCase().endsWith(".pdf")) {
+        // Sử dụng PDF Viewer cho tài liệu
+        setActivePDF(file);
+        setIsPDFOpen(true);
       } else {
+        // File khác (không phải video/document)
         if (file.driveFileId) {
           const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/view`;
           window.open(driveViewUrl, "_blank");
@@ -249,12 +270,19 @@ export default function WatchCourse({ params }) {
 
   const handleFileClick = useCallback(
     (file) => {
+      // Đánh dấu đây là hành động của người dùng
+      if (!activeLesson || !activeChapter) {
+        return;
+      }
+
       if (file.type?.includes("video")) {
-        if (!activeLesson || !activeChapter) {
-          return;
-        }
         handleLessonClick(activeLesson, activeChapter, file);
+      } else if (file.type?.includes("document") || file.name?.toLowerCase().endsWith(".pdf")) {
+        // Sử dụng PDF Viewer cho tài liệu
+        setActivePDF(file);
+        setIsPDFOpen(true);
       } else {
+        // File khác (không phải video/document)
         if (file.driveFileId) {
           const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/view`;
           window.open(driveViewUrl, "_blank");
@@ -265,6 +293,11 @@ export default function WatchCourse({ params }) {
     },
     [activeLesson, activeChapter, handleLessonClick]
   );
+
+  const handleClosePDF = useCallback(() => {
+    setIsPDFOpen(false);
+    setActivePDF(null);
+  }, []);
 
   // API và tương tác dữ liệu
   const fetchCourseInfo = useCallback(async () => {
@@ -679,6 +712,15 @@ export default function WatchCourse({ params }) {
           />
         </div>
       </div>
+
+      {/* PDF Viewer Modal */}
+      {isPDFOpen && activePDF && (
+        <PDFViewer 
+          file={activePDF} 
+          isOpen={isPDFOpen} 
+          onClose={handleClosePDF} 
+        />
+      )}
     </div>
   );
 }
