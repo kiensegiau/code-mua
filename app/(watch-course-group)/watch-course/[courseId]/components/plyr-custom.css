@@ -9,6 +9,9 @@
   --plyr-audio-control-color-hover: rgba(255, 77, 79, 0.9);
   --plyr-range-fill-background: #ff4d4f;
   --plyr-video-progress-buffered-background: rgba(255, 255, 255, 0.3);
+  --plyr-range-thumb-height: 15px;
+  --plyr-range-thumb-width: 15px;
+  --plyr-range-track-height: 6px;
 }
 
 /* Tùy chỉnh thanh điều khiển */
@@ -73,11 +76,61 @@
 /* Cải thiện UX trên thiết bị di động */
 @media (max-width: 767px) {
   .plyr__controls {
-    padding: 5px;
+    padding: 8px 6px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .plyr__progress__container {
+    flex: 1 1 100%;
+    order: -1;
+    margin-bottom: 4px;
+    min-width: 100%;
+  }
+
+  .plyr--full-ui input[type="range"] {
+    height: 8px;
   }
 
   .plyr__control--overlaid {
     padding: 12px;
+  }
+  
+  /* Tăng kích thước điểm tua cho dễ chạm */
+  .plyr--full-ui input[type="range"]::-webkit-slider-thumb {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .plyr--full-ui input[type="range"]::-moz-range-thumb {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  /* Tăng chiều rộng thanh tiến trình mobile */
+  .plyr__progress input[type="range"] {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  /* Làm rõ thanh tiến trình trên mobile */
+  .plyr__progress__buffer,
+  .plyr__progress input[type="range"] {
+    height: 8px !important;
+  }
+  
+  /* Đẩy các nút xuống hàng thứ 2 */
+  .plyr__controls > button,
+  .plyr__controls > .plyr__time,
+  .plyr__controls > .plyr__menu,
+  .plyr__controls > .plyr__volume {
+    margin: 2px !important;
+  }
+  
+  /* Ẩn điều khiển âm thanh trên mobile */
+  .plyr__volume,
+  button[data-plyr="mute"] {
+    display: none !important;
   }
 }
 
