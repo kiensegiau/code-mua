@@ -7,7 +7,25 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalContentRef = useRef(null);
-  const iframeRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Kiểm tra xem thiết bị có phải là mobile không
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        )
+      );
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Hàm để lấy signed URL từ wasabi nếu có storage key
   const getStreamUrl = async (key) => {
@@ -28,6 +46,25 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
     }
   };
 
+  // Tạo URL xem PDF phù hợp với thiết bị
+  const createViewerUrl = (url) => {
+    if (!url) return "";
+    
+    // Nếu là Google Drive, giữ nguyên URL với tham số tối ưu
+    if (url.includes('drive.google.com')) {
+      return url;
+    }
+    
+    // Nếu là mobile, sử dụng Google Docs Viewer để hiển thị PDF không cần tải về
+    if (isMobile) {
+      const encodedUrl = encodeURIComponent(url);
+      return `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
+    }
+    
+    // Nếu là desktop, sử dụng URL trực tiếp từ Wasabi
+    return url;
+  };
+
   // Xử lý sự kiện click bên ngoài modal content
   const handleClickOutside = (event) => {
     if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
@@ -35,10 +72,14 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
     }
   };
 
-  // Mở PDF trong tab mới nếu không hiển thị được
+  // Mở PDF trong tab mới
   const openInNewTab = () => {
     if (streamUrl) {
-      window.open(streamUrl, '_blank');
+      // Đảm bảo mở URL gốc, không phải URL google viewer
+      const originalUrl = streamUrl.includes('docs.google.com/viewer') 
+        ? decodeURIComponent(streamUrl.split('url=')[1].split('&')[0]) 
+        : streamUrl;
+      window.open(originalUrl, '_blank');
     }
   };
 
@@ -59,13 +100,20 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
       setIsLoading(true);
       setError(null);
       
-      // Nếu file có storage key (từ wasabi), sử dụng API stream
-      if (file.storage?.key) {
+      // Ưu tiên sử dụng Google Drive trên thiết bị di động nếu có driveFileId
+      if (isMobile && file.driveFileId) {
+        const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true`;
+        setStreamUrl(driveViewUrl);
+        setIsLoading(false);
+      }
+      // Nếu file có storage key (từ wasabi) và không phải mobile hoặc không có driveFileId
+      else if (file.storage?.key) {
         getStreamUrl(file.storage.key)
           .then(url => {
             if (url) {
-              // Sử dụng URL trực tiếp từ Wasabi
-              setStreamUrl(url);
+              // Tạo URL phù hợp với thiết bị
+              const viewerUrl = createViewerUrl(url);
+              setStreamUrl(viewerUrl);
               setIsLoading(false);
             } else {
               // Fallback sang drive nếu không lấy được URL từ wasabi
@@ -95,7 +143,7 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
         setIsLoading(false);
       }
     }
-  }, [isOpen, file]);
+  }, [isOpen, file, isMobile]);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -175,27 +223,14 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
           )}
 
           {!isLoading && !error && streamUrl && (
-            <div className="w-full h-full">
-              <object
-                ref={iframeRef}
-                data={streamUrl}
-                type="application/pdf"
-                className="w-full h-full"
-                title="PDF Viewer"
-              >
-                <div className="flex flex-col items-center justify-center h-full w-full bg-gray-900 p-4">
-                  <p className="text-white mb-4">Không thể hiển thị PDF trực tiếp.</p>
-                  <div className="flex space-x-4">
-                    <button 
-                      onClick={openInNewTab}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
-                    >
-                      Mở trong tab mới
-                    </button>
-                  </div>
-                </div>
-              </object>
-            </div>
+            <iframe
+              src={streamUrl}
+              className="w-full h-full"
+              frameBorder="0"
+              allowFullScreen
+              title="PDF Viewer"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
           )}
         </div>
       </div>
