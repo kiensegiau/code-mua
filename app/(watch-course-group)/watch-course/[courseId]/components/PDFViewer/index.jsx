@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Maximize, Minimize } from "lucide-react";
+import { X, Maximize, Minimize, Download, ExternalLink } from "lucide-react";
 
 const PDFViewer = ({ file, isOpen, onClose }) => {
   const [streamUrl, setStreamUrl] = useState("");
@@ -7,6 +7,7 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalContentRef = useRef(null);
+  const iframeRef = useRef(null);
 
   // Hàm để lấy signed URL từ wasabi nếu có storage key
   const getStreamUrl = async (key) => {
@@ -34,6 +35,13 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
     }
   };
 
+  // Mở PDF trong tab mới nếu không hiển thị được
+  const openInNewTab = () => {
+    if (streamUrl) {
+      window.open(streamUrl, '_blank');
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       // Thêm event listener khi modal mở
@@ -56,12 +64,13 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
         getStreamUrl(file.storage.key)
           .then(url => {
             if (url) {
+              // Sử dụng URL trực tiếp từ Wasabi
               setStreamUrl(url);
               setIsLoading(false);
             } else {
               // Fallback sang drive nếu không lấy được URL từ wasabi
               if (file.driveFileId) {
-                const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview`;
+                const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true`;
                 setStreamUrl(driveViewUrl);
                 setIsLoading(false);
               } else {
@@ -78,7 +87,7 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
       } 
       // Sử dụng drive nếu không có storage key
       else if (file.driveFileId) {
-        const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview`;
+        const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true`;
         setStreamUrl(driveViewUrl);
         setIsLoading(false);
       } else {
@@ -111,6 +120,13 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
             </h3>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-3">
+            <button 
+              onClick={openInNewTab}
+              className="text-gray-400 hover:text-white transition-colors p-1 sm:p-1.5 rounded-full hover:bg-gray-800/50"
+              title="Mở trong tab mới"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </button>
             <button 
               onClick={toggleFullscreen}
               className="text-gray-400 hover:text-white transition-colors p-1 sm:p-1.5 rounded-full hover:bg-gray-800/50"
@@ -159,13 +175,27 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
           )}
 
           {!isLoading && !error && streamUrl && (
-            <iframe
-              src={streamUrl}
-              className="w-full h-full"
-              frameBorder="0"
-              allowFullScreen
-              title="PDF Viewer"
-            />
+            <div className="w-full h-full">
+              <object
+                ref={iframeRef}
+                data={streamUrl}
+                type="application/pdf"
+                className="w-full h-full"
+                title="PDF Viewer"
+              >
+                <div className="flex flex-col items-center justify-center h-full w-full bg-gray-900 p-4">
+                  <p className="text-white mb-4">Không thể hiển thị PDF trực tiếp.</p>
+                  <div className="flex space-x-4">
+                    <button 
+                      onClick={openInNewTab}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+                    >
+                      Mở trong tab mới
+                    </button>
+                  </div>
+                </div>
+              </object>
+            </div>
           )}
         </div>
       </div>
