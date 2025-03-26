@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Maximize, Minimize } from "lucide-react";
 
 const PDFViewer = ({ file, isOpen, onClose }) => {
@@ -6,6 +6,7 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const modalContentRef = useRef(null);
 
   // Hàm để lấy signed URL từ wasabi nếu có storage key
   const getStreamUrl = async (key) => {
@@ -25,6 +26,25 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
       return null;
     }
   };
+
+  // Xử lý sự kiện click bên ngoài modal content
+  const handleClickOutside = (event) => {
+    if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      // Thêm event listener khi modal mở
+      document.addEventListener('mousedown', handleClickOutside);
+      
+      // Cleanup - xóa event listener khi component unmount hoặc modal đóng
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen && file) {
@@ -76,7 +96,10 @@ const PDFViewer = ({ file, isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4 transition-all duration-300">
-      <div className={`bg-gradient-to-b from-[#1e1e2e] to-[#181825] rounded-xl w-full ${isFullscreen ? 'h-full max-w-full' : 'max-w-5xl h-[85vh]'} flex flex-col overflow-hidden border border-indigo-500/20 shadow-2xl transition-all duration-300`}>
+      <div 
+        ref={modalContentRef}
+        className={`bg-gradient-to-b from-[#1e1e2e] to-[#181825] rounded-xl w-full ${isFullscreen ? 'h-full max-w-full' : 'max-w-5xl h-[85vh]'} flex flex-col overflow-hidden border border-indigo-500/20 shadow-2xl transition-all duration-300`}
+      >
         {/* Header với các controls */}
         <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-800/50 bg-[#1e1e2e]/90 backdrop-blur-sm">
           <div className="flex items-center space-x-2 max-w-[70%]">
