@@ -136,7 +136,7 @@ export default function HelpPage() {
       icon: Facebook,
       title: "Facebook",
       description: "Theo dõi và nhắn tin qua Facebook",
-      link: "https://facebook.com/your-page",
+      link: "https://www.facebook.com/khoahoc6.0",
       color: "bg-blue-500/10 text-blue-500",
       buttonText: "Truy cập Facebook",
     },
