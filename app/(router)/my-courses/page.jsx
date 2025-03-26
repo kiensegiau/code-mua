@@ -293,19 +293,19 @@ function MyCourses() {
             {/* Course Grid */}
             <div id="courses-grid">
               {loading ? (
-                <div className="grid grid-cols-2 gap-3 md:gap-6">
-                  {[...Array(4)].map((_, index) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+                  {[...Array(12)].map((_, index) => (
                     <div
                       key={index}
                       className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800"
                     >
                       <div className="aspect-video bg-gray-800 animate-pulse" />
-                      <div className="p-3 md:p-4">
-                        <div className="h-5 bg-gray-800 rounded animate-pulse mb-3" />
-                        <div className="h-4 bg-gray-800 rounded animate-pulse w-2/3 mb-3" />
-                        <div className="flex justify-between mt-4">
-                          <div className="h-4 bg-gray-800 rounded animate-pulse w-1/4" />
-                          <div className="h-4 bg-gray-800 rounded animate-pulse w-1/4" />
+                      <div className="p-2 md:p-3">
+                        <div className="h-4 bg-gray-800 rounded animate-pulse mb-2" />
+                        <div className="h-3 bg-gray-800 rounded animate-pulse w-2/3 mb-2" />
+                        <div className="flex justify-between mt-3">
+                          <div className="h-3 bg-gray-800 rounded animate-pulse w-1/4" />
+                          <div className="h-3 bg-gray-800 rounded animate-pulse w-1/4" />
                         </div>
                       </div>
                     </div>
@@ -335,7 +335,7 @@ function MyCourses() {
               ) : filteredAndSortedCourses &&
                 filteredAndSortedCourses.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 gap-3 md:gap-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
                     {currentCourses &&
                       currentCourses.map((course) => {
                         // Chuẩn bị dữ liệu cho CourseItem
