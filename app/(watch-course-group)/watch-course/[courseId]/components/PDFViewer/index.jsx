@@ -1,230 +1,127 @@
-import React, { useState, useEffect, useRef } from "react";
-import { X, Maximize, Minimize, Download, ExternalLink } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, Maximize, Minimize, ExternalLink, Download } from "lucide-react";
 
 const PDFViewer = ({ file, isOpen, onClose }) => {
-  const [streamUrl, setStreamUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(isOpen);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const modalContentRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [error, setError] = useState(null);
+  const modalRef = useRef(null);
 
-  // Kiểm tra xem thiết bị có phải là mobile không
+  // Xử lý tất cả các effect khi component mở
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        )
-      );
+    if (!isOpen) return;
+    
+    // Xử lý click bên ngoài để đóng modal
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) onClose();
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    // Khởi tạo viewer khi mở
+    setIsLoading(true);
+    setError(null);
     
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-
-  // Hàm để lấy signed URL từ wasabi nếu có storage key
-  const getStreamUrl = async (key) => {
-    try {
-      const encodedKey = encodeURIComponent(key);
-      const response = await fetch(`/api/stream?key=${encodedKey}`);
-      const data = await response.json();
-
-      if (data.success && data.streamUrl) {
-        return data.streamUrl;
-      } else {
-        console.error("Lỗi khi lấy stream URL:", data.error || "Không xác định");
-        return null;
-      }
-    } catch (error) {
-      console.error("Lỗi khi gọi API stream:", error);
-      return null;
-    }
-  };
-
-  // Tạo URL xem PDF phù hợp với thiết bị
-  const createViewerUrl = (url) => {
-    if (!url) return "";
-    
-    // Nếu là Google Drive, giữ nguyên URL với tham số tối ưu
-    if (url.includes('drive.google.com')) {
-      return url;
+    if (!file?.driveFileId) {
+      setError("Không thể tải file PDF. File không có ID Google Drive.");
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
     }
     
-    // Nếu là mobile, sử dụng Google Docs Viewer để hiển thị PDF không cần tải về
-    if (isMobile) {
-      const encodedUrl = encodeURIComponent(url);
-      return `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
-    }
-    
-    // Nếu là desktop, sử dụng URL trực tiếp từ Wasabi
-    return url;
-  };
-
-  // Xử lý sự kiện click bên ngoài modal content
-  const handleClickOutside = (event) => {
-    if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
-      onClose();
-    }
-  };
-
-  // Mở PDF trong tab mới
-  const openInNewTab = () => {
-    if (streamUrl) {
-      // Đảm bảo mở URL gốc, không phải URL google viewer
-      const originalUrl = streamUrl.includes('docs.google.com/viewer') 
-        ? decodeURIComponent(streamUrl.split('url=')[1].split('&')[0]) 
-        : streamUrl;
-      window.open(originalUrl, '_blank');
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      // Thêm event listener khi modal mở
-      document.addEventListener('mousedown', handleClickOutside);
-      
-      // Cleanup - xóa event listener khi component unmount hoặc modal đóng
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (isOpen && file) {
-      setIsLoading(true);
-      setError(null);
-      
-      // Ưu tiên sử dụng Google Drive trên thiết bị di động nếu có driveFileId
-      if (isMobile && file.driveFileId) {
-        const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true`;
-        setStreamUrl(driveViewUrl);
-        setIsLoading(false);
-      }
-      // Nếu file có storage key (từ wasabi) và không phải mobile hoặc không có driveFileId
-      else if (file.storage?.key) {
-        getStreamUrl(file.storage.key)
-          .then(url => {
-            if (url) {
-              // Tạo URL phù hợp với thiết bị
-              const viewerUrl = createViewerUrl(url);
-              setStreamUrl(viewerUrl);
-              setIsLoading(false);
-            } else {
-              // Fallback sang drive nếu không lấy được URL từ wasabi
-              if (file.driveFileId) {
-                const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true`;
-                setStreamUrl(driveViewUrl);
-                setIsLoading(false);
-              } else {
-                setError("Không thể tải file PDF này.");
-                setIsLoading(false);
-              }
-            }
-          })
-          .catch(err => {
-            console.error("Lỗi khi tải file:", err);
-            setError("Đã có lỗi xảy ra khi tải file PDF.");
-            setIsLoading(false);
-          });
-      } 
-      // Sử dụng drive nếu không có storage key
-      else if (file.driveFileId) {
-        const driveViewUrl = `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true`;
-        setStreamUrl(driveViewUrl);
-        setIsLoading(false);
-      } else {
-        setError("Không thể tải file PDF này.");
-        setIsLoading(false);
-      }
-    }
-  }, [isOpen, file, isMobile]);
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, file, onClose]);
+  
   if (!isOpen) return null;
+  
+  // Các hàm xử lý sự kiện
+  const openInNewTab = () => file?.driveFileId && 
+    window.open(`https://drive.google.com/file/d/${file.driveFileId}/view?usp=sharing`, '_blank');
+
+  const downloadFile = () => {
+    if (!file?.driveFileId) return;
+    
+    // Tạo một thẻ a ẩn để tải xuống
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${file.driveFileId}`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = file.name || `document_${file.driveFileId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const driveUrl = file?.driveFileId ? 
+    `https://drive.google.com/file/d/${file.driveFileId}/preview?usp=drivesdk&embedded=true` : '';
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4 transition-all duration-300">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4">
       <div 
-        ref={modalContentRef}
-        className={`bg-gradient-to-b from-[#1e1e2e] to-[#181825] rounded-xl w-full ${isFullscreen ? 'h-full max-w-full' : 'max-w-5xl h-[85vh]'} flex flex-col overflow-hidden border border-indigo-500/20 shadow-2xl transition-all duration-300`}
+        ref={modalRef}
+        className={`bg-gradient-to-b from-[#1e1e2e] to-[#181825] rounded-xl w-full 
+        ${isFullscreen ? 'h-full max-w-full' : 'max-w-5xl h-[85vh]'} 
+        flex flex-col overflow-hidden border border-indigo-500/20 shadow-2xl`}
       >
-        {/* Header với các controls */}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-800/50 bg-[#1e1e2e]/90 backdrop-blur-sm">
-          <div className="flex items-center space-x-2 max-w-[70%]">
-            <div className="hidden sm:block w-2 h-2 rounded-full bg-red-500"></div>
-            <div className="hidden sm:block w-2 h-2 rounded-full bg-yellow-500"></div>
-            <div className="hidden sm:block w-2 h-2 rounded-full bg-green-500"></div>
-            <h3 className="text-sm sm:text-lg font-medium text-white ml-0 sm:ml-4 truncate">
-              {file?.name || "Xem tài liệu PDF"}
-            </h3>
-          </div>
-          <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 sm:px-6 py-3 border-b border-gray-800/50 bg-[#1e1e2e]/90">
+          <h3 className="text-sm sm:text-lg font-medium text-white truncate flex items-center">
+            <span className="hidden sm:flex mr-4 space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+              <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            </span>
+            {file?.name || "Xem tài liệu PDF"}
+          </h3>
+          <div className="flex items-center space-x-2">
             <button 
-              onClick={openInNewTab}
-              className="text-gray-400 hover:text-white transition-colors p-1 sm:p-1.5 rounded-full hover:bg-gray-800/50"
+              onClick={downloadFile} 
+              className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-800/50"
+              title="Tải xuống"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={openInNewTab} 
+              className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-800/50"
               title="Mở trong tab mới"
             >
               <ExternalLink className="w-4 h-4" />
             </button>
             <button 
-              onClick={toggleFullscreen}
-              className="text-gray-400 hover:text-white transition-colors p-1 sm:p-1.5 rounded-full hover:bg-gray-800/50"
+              onClick={() => setIsFullscreen(!isFullscreen)} 
+              className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-800/50"
               title={isFullscreen ? "Thu nhỏ" : "Toàn màn hình"}
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
             </button>
-            <button
-              onClick={onClose}
-              className="text-white bg-red-500/80 hover:bg-red-500 transition-colors p-1 sm:p-1.5 rounded-full"
+            <button 
+              onClick={onClose} 
+              className="text-white bg-red-500/80 hover:bg-red-500 p-1 rounded-full"
               title="Đóng"
-              aria-label="Đóng"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 w-full h-full overflow-hidden bg-black/50 backdrop-blur-sm">
-          {isLoading && (
+        {/* Content */}
+        <div className="flex-1 w-full h-full overflow-hidden bg-black/50">
+          {isLoading ? (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="relative">
-                <div className="w-16 h-16 border-4 border-purple-300/20 border-t-purple-500 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 border-4 border-blue-300/20 border-t-blue-500 rounded-full animate-spin"></div>
-                </div>
-              </div>
+              <div className="w-16 h-16 border-4 border-t-purple-500 border-purple-300/20 rounded-full animate-spin"></div>
             </div>
-          )}
-
-          {error && (
+          ) : error ? (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center p-8 max-w-md bg-gray-900/90 rounded-xl shadow-xl border border-red-500/20">
-                <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-red-500/10">
-                  <X className="w-10 h-10 text-red-500" />
-                </div>
-                <p className="text-red-400 mb-6 text-lg">{error}</p>
-                <button
-                  onClick={onClose}
-                  className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-md hover:from-red-500 hover:to-red-400 transition-colors shadow-lg"
-                >
+              <div className="text-center p-6 max-w-md bg-gray-900/90 rounded-xl border border-red-500/20">
+                <X className="w-10 h-10 text-red-500 mx-auto mb-4" />
+                <p className="text-red-400 mb-4">{error}</p>
+                <button onClick={onClose} className="px-5 py-2 bg-red-500 text-white rounded-md hover:bg-red-400">
                   Đóng
                 </button>
               </div>
             </div>
-          )}
-
-          {!isLoading && !error && streamUrl && (
+          ) : (
             <iframe
-              src={streamUrl}
+              src={driveUrl}
               className="w-full h-full"
               frameBorder="0"
               allowFullScreen
