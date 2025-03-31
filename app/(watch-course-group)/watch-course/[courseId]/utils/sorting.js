@@ -27,6 +27,15 @@ export const getNumberFromTitle = (text = "") => {
     return addMagnitudePrefix(buoiNumber);
   }
 
+  // 0AA. Xử lý đặc biệt cho "Bài Tập Từ Vựng X Y" - sắp xếp theo số X
+  const baiTapMatch = normalizedText.match(/^bài\s+tập\s+từ\s+vựng\s+(\d+)\s+(\d+)(?:(?:\s+|\.).*)?$/i);
+  if (baiTapMatch) {
+    const firstNumber = parseInt(baiTapMatch[1]);
+    const secondNumber = parseInt(baiTapMatch[2]);
+    // Kết hợp hai số thành một số duy nhất để sắp xếp, ưu tiên số đầu tiên (X)
+    return addMagnitudePrefix(firstNumber * 1000 + secondNumber % 1000);
+  }
+
   // 0A. Xử lý định dạng "Bài X" - tương tự như Buổi X
   const baiMatch = normalizedText.match(/^bài\s+(\d+)/i);
   if (baiMatch) {
