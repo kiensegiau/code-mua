@@ -54,6 +54,7 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_ACCESS_TOKEN_SECRET,
     NEXT_PUBLIC_REFRESH_TOKEN_SECRET:
       process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET,
+    MONGODB_URI: process.env.MONGODB_URI,
   },
 };
 

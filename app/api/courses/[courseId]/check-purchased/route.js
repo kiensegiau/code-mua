@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/app/_utils/firebase";
 import { getServerSession } from "next-auth";
+import connectToDatabase from "@/app/_utils/mongodb";
+import Purchase from "@/app/_utils/models/Purchase";
 
 export async function GET(request, { params }) {
   const session = await getServerSession();
@@ -12,14 +13,19 @@ export async function GET(request, { params }) {
   const { courseId } = params;
   const userId = session.user.id;
 
-  const purchaseSnapshot = await db
-    .collection("purchases")
-    .where("userId", "==", userId)
-    .where("courseId", "==", courseId)
-    .limit(1)
-    .get();
+  try {
+    await connectToDatabase();
+    
+    const purchase = await Purchase.findOne({
+      userId: userId,
+      courseId: courseId
+    });
 
-  const purchased = !purchaseSnapshot.empty;
+    const purchased = !!purchase;
 
-  return NextResponse.json({ purchased });
+    return NextResponse.json({ purchased });
+  } catch (error) {
+    console.error("Lỗi khi kiểm tra trạng thái mua khóa học:", error);
+    return NextResponse.json({ purchased: false, error: "Lỗi máy chủ" }, { status: 500 });
+  }
 }

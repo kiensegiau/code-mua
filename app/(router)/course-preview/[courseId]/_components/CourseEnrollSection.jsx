@@ -5,16 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  doc,
-  updateDoc,
-  arrayUnion,
-  getDoc,
-  runTransaction,
-  collection,
-} from "firebase/firestore";
-import { db } from "@/app/_utils/firebase";
+import axios from "axios";
 import ConfirmEnrollModal from "../../../courses/_components/ConfirmEnrollModal";
+import GlobalMongoApi from "@/app/_utils/GlobalMongoApi";
 
 function CourseEnrollSection({ courseInfo, isEnrolling }) {
   const { user, profile } = useAuth();
@@ -132,77 +125,28 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       const isVerified = await verifyEnrollment();
       if (!isVerified) return;
 
-      // Lưu courseId thay vì object phức tạp
-      const courseId = courseInfo.id;
-
-      const userDocRef = doc(db, "users", profile.id);
-      const courseRef = doc(db, "courses", courseInfo.id);
-
-      // Thực hiện transaction để đảm bảo tính nhất quán
-      await runTransaction(db, async (transaction) => {
-        // 1. Đọc tất cả dữ liệu cần thiết
-        const userDoc = await transaction.get(userDocRef);
-        const courseDoc = await transaction.get(courseRef);
-
-        if (!userDoc.exists()) {
-          throw new Error("Không tìm thấy thông tin người dùng");
-        }
-
-        if (!courseDoc.exists()) {
-          throw new Error("Không tìm thấy thông tin khóa học");
-        }
-
-        const userData = userDoc.data();
-        const courseData = courseDoc.data();
-        const currentBalance = userData.balance || 0;
-
-        // 2. Kiểm tra điều kiện
-        if (coursePrice > currentBalance) {
-          throw new Error("Số dư không đủ");
-        }
-
-        if (userData.enrolledCourses?.includes(courseId)) {
-          throw new Error("Đã đăng ký khóa học này");
-        }
-
-        // 3. Thực hiện tất cả các thao tác ghi
-        transaction.update(userDocRef, {
-          balance: currentBalance - coursePrice,
-          enrolledCourses: arrayUnion(courseId), // Lưu courseId thay vì object
-        });
-
-        transaction.update(courseRef, {
-          totalStudents: (courseData.totalStudents || 0) + 1,
-          updatedAt: new Date().toISOString(),
-          enrolledUsers: arrayUnion(user.uid), // Thêm user vào danh sách học viên
-        });
-
-        // 4. Lưu thông tin chi tiết vào collection riêng
-        const enrollmentRef = doc(collection(db, "enrollments"));
-        transaction.set(enrollmentRef, {
-          userId: user.uid,
-          courseId: courseId,
-          enrolledAt: new Date().toISOString(),
-          price: coursePrice,
-          title: courseInfo.title || "",
-          coverImage: courseInfo.coverImage || "",
-          progress: 0,
-          lastAccessed: null,
-        });
-      });
-
-      toast.success("Đăng ký khóa học thành công!");
-
-      // Đóng modal trước khi chuyển trang
-      setShowConfirmModal(false);
-
-      // Thêm setTimeout để đảm bảo toast message hiển thị trước khi chuyển trang
-      setTimeout(() => {
-        router.push(`/watch-course/${courseInfo.id}`);
-      }, 1000);
+      // Gọi API để đăng ký khóa học qua MongoDB
+      const response = await axios.post(`/api/courses/${courseInfo.id}/purchase`);
+      
+      if (response.data.success) {
+        toast.success("Đăng ký khóa học thành công!");
+        
+        // Đóng modal trước khi chuyển trang
+        setShowConfirmModal(false);
+        
+        // Cập nhật profile từ MongoDB
+        const updatedProfile = await GlobalMongoApi.getUserProfile(user.uid);
+        
+        // Thêm setTimeout để đảm bảo toast message hiển thị trước khi chuyển trang
+        setTimeout(() => {
+          router.push(`/watch-course/${courseInfo.id}`);
+        }, 1000);
+      } else {
+        toast.error(response.data.message || "Không thể đăng ký khóa học, vui lòng thử lại sau");
+      }
     } catch (error) {
-      console.error("Error enrolling course:", error);
-      toast.error(error.message || "Có lỗi xảy ra khi đăng ký khóa học");
+      console.error("Lỗi khi đăng ký khóa học:", error);
+      toast.error(error.response?.data?.message || error.message || "Có lỗi xảy ra khi đăng ký khóa học");
     } finally {
       setEnrolling(false);
     }

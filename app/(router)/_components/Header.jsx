@@ -18,10 +18,9 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useTheme } from "@/app/_context/ThemeContext";
-import { auth, db } from "@/app/_utils/firebase";
+import { auth } from "@/app/_utils/firebase";
 import { useRouter } from "next/navigation";
 import SideNav from "./SideNav";
-import { doc, onSnapshot } from "firebase/firestore";
 import { useMobileMenu } from "@/app/_context/MobileMenuContext";
 
 function Header() {

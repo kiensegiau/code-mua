@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, memo } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/app/_utils/firebase";
+import axios from "axios";
 
 function CourseContentSection({
   courseInfo,
@@ -27,18 +26,13 @@ function CourseContentSection({
   // Sử dụng useCallback để tối ưu hóa hàm
   const getLessonData = useCallback(async (courseId, chapterId, lessonId) => {
     try {
-      const lessonRef = doc(
-        db,
-        "courses",
-        courseId,
-        "chapters",
-        chapterId,
-        "lessons",
-        lessonId
+      // Sử dụng API endpoint thay vì truy cập Firebase trực tiếp
+      const response = await axios.get(
+        `/api/courses/${courseId}/chapters/${chapterId}/lessons/${lessonId}`
       );
-      const lessonSnap = await getDoc(lessonRef);
-      if (lessonSnap.exists()) {
-        return lessonSnap.data();
+      
+      if (response.data) {
+        return response.data;
       } else {
         return null;
       }

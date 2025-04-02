@@ -1,62 +1,104 @@
 import { NextResponse } from "next/server";
-import { db } from "@/app/_utils/firebase";
 import { getServerSession } from "next-auth";
+import connectToDatabase from "@/app/_utils/mongodb";
+import User from "@/app/_utils/models/User";
+import Course from "@/app/_utils/models/Course";
+import Purchase from "@/app/_utils/models/Purchase";
+import mongoose from "mongoose";
 
 export async function POST(request, { params }) {
-  const session = await getServerSession();
+  try {
+    const session = await getServerSession();
 
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { message: "Bạn cần đăng nhập để thực hiện tính năng này" },
+        { status: 401 }
+      );
+    }
 
-  const { courseId } = params;
-  const userId = session.user.id;
+    const { courseId } = params;
+    const userId = session.user.id;
 
-  // Check if user has already purchased the course
-  const purchaseSnapshot = await db
-    .collection("purchases")
-    .where("userId", "==", userId)
-    .where("courseId", "==", courseId)
-    .limit(1)
-    .get();
+    await connectToDatabase();
+    
+    // Bắt đầu transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-  if (!purchaseSnapshot.empty) {
+    try {
+      // Tìm thông tin người dùng
+      const user = await User.findOne({ uid: userId }).session(session);
+      
+      if (!user) {
+        throw new Error("Không tìm thấy thông tin người dùng");
+      }
+
+      // Tìm thông tin khóa học
+      const course = await Course.findById(courseId).session(session);
+      
+      if (!course) {
+        throw new Error("Không tìm thấy thông tin khóa học");
+      }
+
+      const userBalance = user.balance || 0;
+      const coursePrice = course.price || 0;
+
+      // Kiểm tra số dư
+      if (userBalance < coursePrice) {
+        throw new Error("Số dư không đủ để mua khóa học này");
+      }
+
+      // Kiểm tra đã mua chưa
+      const existingPurchase = await Purchase.findOne({
+        userId: userId,
+        courseId: courseId
+      }).session(session);
+      
+      if (existingPurchase) {
+        throw new Error("Bạn đã mua khóa học này rồi");
+      }
+
+      // Trừ tiền người dùng
+      await User.updateOne(
+        { uid: userId },
+        { 
+          $set: { balance: userBalance - coursePrice },
+          $addToSet: { enrolledCourses: courseId }
+        }
+      ).session(session);
+      
+      // Tạo bản ghi mua hàng
+      await Purchase.create([{
+        userId,
+        courseId,
+        amount: coursePrice,
+        purchasedAt: new Date()
+      }], { session });
+      
+      // Cập nhật thông tin khóa học
+      await Course.updateOne(
+        { _id: courseId },
+        { 
+          $addToSet: { enrolledUsers: userId },
+          $inc: { enrollments: 1 }
+        }
+      ).session(session);
+
+      await session.commitTransaction();
+      
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  } catch (error) {
+    console.error("Lỗi khi mua khóa học:", error);
     return NextResponse.json(
-      { error: "Course already purchased" },
-      { status: 400 }
+      { message: error.message || "Lỗi trong quá trình mua khóa học" },
+      { status: 500 }
     );
   }
-
-  // Get user's wallet balance
-  const userSnapshot = await db.collection("users").doc(userId).get();
-  const userBalance = userSnapshot.data().balance || 0;
-
-  // Get course price
-  const courseSnapshot = await db.collection("courses").doc(courseId).get();
-  const coursePrice = courseSnapshot.data().price || 0;
-
-  if (userBalance < coursePrice) {
-    return NextResponse.json(
-      { error: "Insufficient balance" },
-      { status: 400 }
-    );
-  }
-
-  // Deduct balance and update user's wallet
-  await db
-    .collection("users")
-    .doc(userId)
-    .update({
-      balance: userBalance - coursePrice,
-    });
-
-  // Save purchase to database
-  await db.collection("purchases").add({
-    userId,
-    courseId,
-    amount: coursePrice,
-    purchasedAt: new Date(),
-  });
-
-  return NextResponse.json({ success: true });
 }

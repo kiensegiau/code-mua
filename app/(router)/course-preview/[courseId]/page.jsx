@@ -11,13 +11,12 @@ import {
 import Header from "../../_components/Header";
 import Sidebar from "../../_components/SideNav";
 import { useAuth } from "@/app/_context/AuthContext";
-import GlobalApi from "@/app/_utils/GlobalApi";
+import GlobalMongoApi from "@/app/_utils/GlobalMongoApi";
 import { toast } from "sonner";
 import CourseEnrollSection from "./_components/CourseEnrollSection";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
-import { db } from "@/app/_utils/firebase";
+import axios from "axios";
 import CourseContentSection from "./_components/CourseContentSection";
 
 function CoursePreview({ params }) {
@@ -33,7 +32,7 @@ function CoursePreview({ params }) {
   const getCourseById = useCallback(async () => {
     try {
       setLoading(true);
-      const resp = await GlobalApi.getCourseById(params.courseId);
+      const resp = await GlobalMongoApi.getCourseById(params.courseId);
       setCourse(resp);
     } catch (error) {
       toast.error("Không thể tải thông tin khóa học");
@@ -75,42 +74,30 @@ function CoursePreview({ params }) {
         return;
       }
 
-      // Cập nhật số dư của user
-      const newBalance = profile.balance - course.price;
-      const userDocRef = doc(db, "users", profile.id);
-
       // Kiểm tra xem khóa học đã được mua chưa
-      if (profile?.enrolledCourses?.some((c) => c.courseId === course.id)) {
+      if (profile?.enrolledCourses?.some((c) => 
+        typeof c === "string" ? c === course.id : c.courseId === course.id
+      )) {
         toast.error("Bạn đã đăng ký khóa học này rồi");
         return;
       }
 
-      await updateDoc(userDocRef, {
-        balance: newBalance,
-        enrolledCourses: arrayUnion({
-          courseId: course.id,
-          enrolledAt: new Date().toISOString(),
-          price: course.price,
-          title: course.title,
-          coverImage: course.coverImage,
-        }),
-      });
-
-      // Cập nhật số lượng học viên của khóa học
-      const courseDocRef = doc(db, "courses", course.id);
-      const courseDoc = await getDoc(courseDocRef);
-      if (courseDoc.exists()) {
-        await updateDoc(courseDocRef, {
-          totalStudents: (courseDoc.data().totalStudents || 0) + 1,
-          updatedAt: new Date().toISOString(),
-        });
+      // Gọi API để đăng ký khóa học qua MongoDB
+      const response = await axios.post(`/api/courses/${course.id}/purchase`);
+      
+      if (response.data.success) {
+        toast.success("Đăng ký khóa học thành công!");
+        
+        // Cập nhật profile từ MongoDB
+        await GlobalMongoApi.getUserProfile(user.uid);
+        
+        router.push(`/watch-course/${course.id}`);
+      } else {
+        toast.error(response.data.message || "Không thể đăng ký khóa học, vui lòng thử lại sau");
       }
-
-      toast.success("Đăng ký khóa học thành công!");
-      router.push(`/watch-course/${course.id}`);
     } catch (error) {
-      console.error("Error enrolling course:", error);
-      toast.error("Có lỗi xảy ra khi đăng ký khóa học");
+      console.error("Lỗi khi đăng ký khóa học:", error);
+      toast.error(error.response?.data?.message || error.message || "Có lỗi xảy ra khi đăng ký khóa học");
     } finally {
       setEnrolling(false);
     }

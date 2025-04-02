@@ -8,9 +8,9 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import { auth, db } from "../_utils/firebase";
-import { onAuthStateChanged, signInWithCustomToken } from "firebase/auth";
-import GlobalApi from "../_utils/GlobalApi";
+import { auth } from "../_utils/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import GlobalMongoApi from "../_utils/GlobalMongoApi";
 import { verifyJwtToken } from "../_utils/jwt";
 
 const AuthContext = createContext({});
@@ -23,14 +23,14 @@ export function AuthProvider({ children }) {
   // Sử dụng useCallback để tránh tạo lại hàm mỗi khi component re-render
   const fetchUserProfile = useCallback(async (userId) => {
     try {
-      const userProfile = await GlobalApi.getUserProfile(userId);
+      const userProfile = await GlobalMongoApi.getUserProfile(userId);
       if (userProfile) {
         setProfile(userProfile);
         return true;
       }
       return false;
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      console.error("Lỗi khi lấy thông tin người dùng:", error);
       return false;
     }
   }, []);
