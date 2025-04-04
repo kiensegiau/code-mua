@@ -8,8 +8,6 @@ import {
   Target,
   CheckCircle,
 } from "lucide-react";
-import Header from "../../_components/Header";
-import Sidebar from "../../_components/SideNav";
 import { useAuth } from "@/app/_context/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { toast } from "sonner";
@@ -343,148 +341,138 @@ function CoursePreview({ params }) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Header />
-      <div className="flex flex-1">
-        <div className="hidden  w-64">
-          <Sidebar />
-        </div>
-        <div className="flex-1">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-            <div className="grid lg:grid-cols-12 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-8">
-                {/* Course Title & Stats */}
-                <div className="mb-6">
-                  <h1 className="text-2xl font-bold text-gray-200 mb-4">
-                    {course.title}
-                  </h1>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-1">
-                        <Target className="w-4 h-4" />
-                        <span>Mức độ: {course.level}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4" />
-                      <span>Thời lượng: {course.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4" />
-                      <span>Số lượng: {course.totalLessons} video</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4" />
-                      <span>Lượt xem: {course.enrollments || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tabs Navigation */}
-                <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 overflow-hidden">
-                  <div className="flex border-b border-gray-800">
-                    <button
-                      onClick={() => handleTabChange("overview")}
-                      className={`
-                        py-2 px-6 font-medium text-sm transition-colors relative
-                        ${
-                          activeTab === "overview"
-                            ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
-                            : "text-gray-400 hover:text-gray-200"
-                        }
-                      `}
-                    >
-                      Tổng quan
-                    </button>
-                    <button
-                      onClick={() => handleTabChange("content")}
-                      className={`
-                        py-2 px-6 font-medium text-sm transition-colors relative
-                        ${
-                          activeTab === "content"
-                            ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
-                            : "text-gray-400 hover:text-gray-200"
-                        }
-                      `}
-                    >
-                      Nội dung
-                    </button>
-                    <button
-                      onClick={() => handleTabChange("instructor")}
-                      className={`
-                        py-2 px-6 font-medium text-sm transition-colors relative
-                        ${
-                          activeTab === "instructor"
-                            ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
-                            : "text-gray-400 hover:text-gray-200"
-                        }
-                      `}
-                    >
-                      Giảng viên
-                    </button>
-                    <button
-                      onClick={() => handleTabChange("reviews")}
-                      className={`
-                        py-2 px-6 font-medium text-sm transition-colors relative
-                        ${
-                          activeTab === "reviews"
-                            ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
-                            : "text-gray-400 hover:text-gray-200"
-                        }
-                      `}
-                    >
-                      Đánh giá
-                    </button>
-                  </div>
-
-                  {/* Tab Content */}
-                  <div className="p-6">{renderTabContent()}</div>
+    <div className="container mx-auto px-4 py-6">
+      <div className="grid lg:grid-cols-12 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-8">
+          {/* Course Title & Stats */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-200 mb-4">
+              {course.title}
+            </h1>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
+                  <Target className="w-4 h-4" />
+                  <span>Mức độ: {course.level}</span>
                 </div>
               </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                <span>Thời lượng: {course.duration}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4" />
+                <span>Số lượng: {course.totalLessons} video</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
+                <span>Lượt xem: {course.enrollments || 0}</span>
+              </div>
+            </div>
+          </div>
 
-              {/* Sidebar */}
-              <div className="lg:col-span-4 lg:sticky lg:top-[80px] h-fit">
-                <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 overflow-hidden">
-                  {/* Course Preview Image */}
-                  <div className="relative aspect-video overflow-hidden">
-                    <Image
-                      src={
-                        course.previewImageUrl || "/default-course-preview.jpg"
-                      }
-                      alt={course.title}
-                      layout="fill"
-                      objectFit="cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <div className="w-16 h-16 bg-[#1f1f1f] rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-[#ff4d4f]/10 transition-colors">
-                        <PlayCircle className="w-8 h-8 text-[#ff4d4f]" />
-                      </div>
-                    </div>
-                  </div>
+          {/* Tabs Navigation */}
+          <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 overflow-hidden">
+            <div className="flex border-b border-gray-800">
+              <button
+                onClick={() => handleTabChange("overview")}
+                className={`
+                  py-2 px-6 font-medium text-sm transition-colors relative
+                  ${
+                    activeTab === "overview"
+                      ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
+                      : "text-gray-400 hover:text-gray-200"
+                  }
+                `}
+              >
+                Tổng quan
+              </button>
+              <button
+                onClick={() => handleTabChange("content")}
+                className={`
+                  py-2 px-6 font-medium text-sm transition-colors relative
+                  ${
+                    activeTab === "content"
+                      ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
+                      : "text-gray-400 hover:text-gray-200"
+                  }
+                `}
+              >
+                Nội dung
+              </button>
+              <button
+                onClick={() => handleTabChange("instructor")}
+                className={`
+                  py-2 px-6 font-medium text-sm transition-colors relative
+                  ${
+                    activeTab === "instructor"
+                      ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
+                      : "text-gray-400 hover:text-gray-200"
+                  }
+                `}
+              >
+                Giảng viên
+              </button>
+              <button
+                onClick={() => handleTabChange("reviews")}
+                className={`
+                  py-2 px-6 font-medium text-sm transition-colors relative
+                  ${
+                    activeTab === "reviews"
+                      ? "text-[#ff4d4f] bg-[#ff4d4f]/10"
+                      : "text-gray-400 hover:text-gray-200"
+                  }
+                `}
+              >
+                Đánh giá
+              </button>
+            </div>
 
-                  <div className="p-6">
-                    <CourseEnrollSection courseInfo={course} />
+            {/* Tab Content */}
+            <div className="p-6">{renderTabContent()}</div>
+          </div>
+        </div>
 
-                    <div className="mt-6 space-y-4">
-                      <div className="flex items-center gap-3 text-gray-400">
-                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
-                        <span>Truy cập trọn đời</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-400">
-                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
-                        <span>Giáo trình chi tiết</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-400">
-                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
-                        <span>Bài tập thực hành</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-gray-400">
-                        <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
-                        <span>Chứng chỉ hoàn thành</span>
-                      </div>
-                    </div>
-                  </div>
+        {/* Sidebar */}
+        <div className="lg:col-span-4 lg:sticky lg:top-[80px] h-fit">
+          <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 overflow-hidden">
+            {/* Course Preview Image */}
+            <div className="relative aspect-video overflow-hidden">
+              <Image
+                src={
+                  course.previewImageUrl || "/default-course-preview.jpg"
+                }
+                alt={course.title}
+                layout="fill"
+                objectFit="cover"
+              />
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="w-16 h-16 bg-[#1f1f1f] rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:bg-[#ff4d4f]/10 transition-colors">
+                  <PlayCircle className="w-8 h-8 text-[#ff4d4f]" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <CourseEnrollSection courseInfo={course} />
+
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center gap-3 text-gray-400">
+                  <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                  <span>Truy cập trọn đời</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-400">
+                  <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                  <span>Giáo trình chi tiết</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-400">
+                  <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                  <span>Bài tập thực hành</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-400">
+                  <CheckCircle className="w-5 h-5 text-[#ff4d4f]" />
+                  <span>Chứng chỉ hoàn thành</span>
                 </div>
               </div>
             </div>
