@@ -346,7 +346,7 @@ function CoursePreview({ params }) {
     <div className="container mx-auto px-4 py-8">
       <Header />
       <div className="flex flex-1">
-        <div className="hidden md:block w-64">
+        <div className="hidden  w-64">
           <Sidebar />
         </div>
         <div className="flex-1">
