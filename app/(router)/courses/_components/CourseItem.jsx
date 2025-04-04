@@ -4,7 +4,6 @@ import React, { useState, useCallback, useMemo, memo } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useRouter } from "next/navigation";
-import GlobalMongoApi from "@/app/_utils/GlobalMongoApi";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -65,18 +64,21 @@ const TooltipPortal = dynamic(
 
 // Tối ưu hóa component với React.memo
 const CourseItem = memo(function CourseItem({ course }) {
-  const { user, profile } = useAuth();
+  const { user, profile, setProfile } = useAuth();
   const router = useRouter();
   const [enrolling, setEnrolling] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [notEnoughBalanceModalOpen, setNotEnoughBalanceModalOpen] = useState(false);
 
   const coursePrice = course?.price || 0;
   const userBalance = profile?.balance || 0;
 
   // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
-  const isEnrolled = useMemo(() => {
+  const isEnrolledMemo = useMemo(() => {
     if (!profile?.enrolledCourses || !course?.id) {
       return false;
     }
@@ -93,18 +95,18 @@ const CourseItem = memo(function CourseItem({ course }) {
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
     if (!user || !profile || !course) return false;
-    if (isEnrolled) return false;
+    if (isEnrolledMemo) return false;
     if (coursePrice > userBalance) return false;
     return true;
-  }, [user, profile, course, isEnrolled, coursePrice, userBalance]);
+  }, [user, profile, course, isEnrolledMemo, coursePrice, userBalance]);
 
   const handleCourseClick = useCallback(() => {
-    if (isEnrolled) {
+    if (isEnrolledMemo) {
       router.push(`/watch-course/${course.id}`);
     } else {
       router.push(`/course-preview/${course.id}`);
     }
-  }, [course?.id, isEnrolled, router]);
+  }, [course?.id, isEnrolledMemo, router]);
 
   const verifyEnrollment = useCallback(async () => {
     try {
@@ -124,7 +126,12 @@ const CourseItem = memo(function CourseItem({ course }) {
       }
 
       // Kiểm tra lại số dư
-      const latestProfile = await GlobalMongoApi.getUserProfile(user.uid);
+      const response = await fetch(`/api/users/${user.uid}`);
+      if (!response.ok) {
+        toast.error("Không thể lấy thông tin người dùng");
+        return false;
+      }
+      const latestProfile = await response.json();
 
       if (!latestProfile) {
         toast.error("Không thể lấy thông tin người dùng");
@@ -172,7 +179,7 @@ const CourseItem = memo(function CourseItem({ course }) {
       if (!canEnroll) {
         if (coursePrice > userBalance) {
           toast.error("Số dư không đủ để mua khóa học này");
-        } else if (isEnrolled) {
+        } else if (isEnrolledMemo) {
           toast.error("Bạn đã đăng ký khóa học này rồi");
         } else {
           toast.error("Không thể đăng ký khóa học lúc này");
@@ -182,7 +189,7 @@ const CourseItem = memo(function CourseItem({ course }) {
 
       setShowConfirmModal(true);
     },
-    [user, canEnroll, coursePrice, userBalance, isEnrolled, router]
+    [user, canEnroll, coursePrice, userBalance, isEnrolledMemo, router]
   );
 
   const handleConfirmEnroll = useCallback(async () => {
@@ -193,22 +200,42 @@ const CourseItem = memo(function CourseItem({ course }) {
       const isVerified = await verifyEnrollment();
       if (!isVerified) return;
 
-      // Gọi API sử dụng MongoDB để đăng ký khóa học
-      const result = await GlobalMongoApi.enrollCourse(user.uid, course.id);
+      // Gọi API để đăng ký khóa học
+      const enrollResponse = await fetch(`/api/courses/${course.id}/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.uid }),
+      });
+
+      if (!enrollResponse.ok) {
+        throw new Error("Không thể đăng ký khóa học");
+      }
+
+      const result = await enrollResponse.json();
       
-      if (result) {
+      if (result.success) {
         toast.success("Đăng ký khóa học thành công!");
         
-        // Cập nhật UI, có thể cần reload profile
-        const updatedProfile = await GlobalMongoApi.getUserProfile(user.uid);
+        // Cập nhật UI, reload profile
+        const profileResponse = await fetch(`/api/users/${user.uid}`);
+        if (!profileResponse.ok) {
+          throw new Error("Không thể cập nhật thông tin người dùng");
+        }
+        const updatedProfile = await profileResponse.json();
+        
         if (updatedProfile) {
-          // Cập nhật context hoặc state của ứng dụng nếu cần
+          // Cập nhật context hoặc state của ứng dụng
+          setProfile(updatedProfile);
+          setIsEnrolled(true);
+          setSuccessModalOpen(true);
         }
         
         // Chuyển hướng đến trang khóa học
         router.push(`/watch-course/${course.id}`);
       } else {
-        toast.error("Không thể đăng ký khóa học, vui lòng thử lại sau");
+        toast.error(result.message || "Không thể đăng ký khóa học, vui lòng thử lại sau");
       }
     } catch (error) {
       console.error("Lỗi khi đăng ký khóa học:", error);
@@ -217,7 +244,66 @@ const CourseItem = memo(function CourseItem({ course }) {
       setEnrolling(false);
       setShowConfirmModal(false);
     }
-  }, [user, course.id, verifyEnrollment, router]);
+  }, [user, course.id, verifyEnrollment, router, setProfile, setIsEnrolled, setSuccessModalOpen]);
+
+  const enrollInCourse = async () => {
+    try {
+      setEnrolling(true);
+
+      if (!user) {
+        // Chuyển hướng đến trang đăng nhập nếu người dùng chưa đăng nhập
+        router.push("/login");
+        return;
+      }
+
+      // Kiểm tra số dư
+      const response = await fetch(`/api/users/${user.uid}`);
+      if (!response.ok) {
+        throw new Error("Không thể tải thông tin người dùng");
+      }
+      const latestProfile = await response.json();
+
+      if (course.price > 0 && (latestProfile?.balance || 0) < course.price) {
+        setNotEnoughBalanceModalOpen(true);
+        return;
+      }
+
+      // Gửi request đăng ký khóa học
+      const enrollResponse = await fetch(`/api/courses/${course.id}/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.uid }),
+      });
+
+      if (!enrollResponse.ok) {
+        throw new Error("Không thể đăng ký khóa học");
+      }
+
+      const result = await enrollResponse.json();
+
+      if (result.success) {
+        // Cập nhật thông tin người dùng sau khi đăng ký thành công
+        const profileResponse = await fetch(`/api/users/${user.uid}`);
+        if (!profileResponse.ok) {
+          throw new Error("Không thể cập nhật thông tin người dùng");
+        }
+        const updatedProfile = await profileResponse.json();
+        
+        setProfile(updatedProfile);
+        setIsEnrolled(true);
+        setSuccessModalOpen(true);
+      } else {
+        throw new Error(result.message || "Đăng ký khóa học thất bại");
+      }
+    } catch (error) {
+      console.error("Lỗi khi đăng ký khóa học:", error);
+      toast.error(error.message || "Đăng ký khóa học thất bại. Vui lòng thử lại.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   // Sử dụng CSS thuần thay vì Framer Motion
   const placeholderStyles = {
@@ -295,7 +381,7 @@ const CourseItem = memo(function CourseItem({ course }) {
               )}
 
               {/* Show enrolled badge if enrolled - tối ưu hóa animation */}
-              {isEnrolled && (
+              {isEnrolledMemo && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <div className="bg-[#ff4d4f] rounded-full p-2 animate-fadeInScale">
                     <CheckCircle className="w-6 h-6 text-white" />
@@ -386,16 +472,16 @@ const CourseItem = memo(function CourseItem({ course }) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isEnrolled) {
+                  if (isEnrolledMemo) {
                     router.push(`/watch-course/${course.id}`);
                   } else {
                     handleEnrollClick(e);
                   }
                 }}
-                disabled={!isEnrolled && (enrolling || verifying || !canEnroll)}
+                disabled={!isEnrolledMemo && (enrolling || verifying || !canEnroll)}
                 className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 hover-scale
                   ${
-                    isEnrolled
+                    isEnrolledMemo
                       ? "bg-green-600 text-white hover:bg-green-700"
                       : enrolling || verifying
                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
@@ -405,7 +491,7 @@ const CourseItem = memo(function CourseItem({ course }) {
                   }
                 `}
               >
-                {isEnrolled
+                {isEnrolledMemo
                   ? "Vào học ngay"
                   : enrolling
                   ? "Đang xử lý..."
@@ -414,7 +500,7 @@ const CourseItem = memo(function CourseItem({ course }) {
                   : !canEnroll
                   ? coursePrice > userBalance
                     ? "Số dư không đủ"
-                    : isEnrolled
+                    : isEnrolledMemo
                     ? "Đã đăng ký"
                     : "Không thể đăng ký"
                   : "Đăng ký ngay"}

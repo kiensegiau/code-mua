@@ -1,7 +1,37 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
-import GlobalApi from "@/app/_utils/GlobalApi";
 import { toast } from "sonner";
+
+// Hàm gọi API lấy danh sách khóa học đã đăng ký
+const fetchEnrolledCoursesAPI = async (userId) => {
+  try {
+    // Lấy token từ localStorage nếu có
+    const accessToken = localStorage.getItem("accessToken");
+    
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Thêm token vào header nếu có
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
+    const response = await fetch(`/api/courses/enrolled?userId=${userId}`, {
+      method: 'GET',
+      headers: headers,
+      credentials: 'include' // Gửi cookie
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Lỗi API: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Lỗi khi gọi API lấy khóa học đã đăng ký:", error);
+    throw error;
+  }
+};
 
 /**
  * Custom hook để quản lý danh sách khóa học đã đăng ký
@@ -38,7 +68,7 @@ export default function useEnrolledCourses(options = {}) {
       setLoading(true);
       setError(null);
 
-      const courses = await GlobalApi.getEnrolledCourses(userId);
+      const courses = await fetchEnrolledCoursesAPI(userId);
 
       setEnrolledCourses(courses || []);
 

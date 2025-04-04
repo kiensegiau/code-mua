@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/app/_context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/_context/AuthContext";
 import { toast } from "sonner";
-import axios from "axios";
 import ConfirmEnrollModal from "../../../courses/_components/ConfirmEnrollModal";
-import GlobalMongoApi from "@/app/_utils/GlobalMongoApi";
 
 function CourseEnrollSection({ courseInfo, isEnrolling }) {
   const { user, profile } = useAuth();
@@ -126,23 +124,29 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       if (!isVerified) return;
 
       // Gọi API để đăng ký khóa học qua MongoDB
-      const response = await axios.post(`/api/courses/${courseInfo.id}/purchase`);
+      const response = await fetch(`/api/courses/${courseInfo.id}/purchase`);
       
-      if (response.data.success) {
+      if (response.ok) {
         toast.success("Đăng ký khóa học thành công!");
         
         // Đóng modal trước khi chuyển trang
         setShowConfirmModal(false);
         
-        // Cập nhật profile từ MongoDB
-        const updatedProfile = await GlobalMongoApi.getUserProfile(user.uid);
+        // Cập nhật profile từ API thay vì GlobalMongoApi
+        const profileResponse = await fetch(`/api/users/${user.uid}`);
+        if (!profileResponse.ok) {
+          console.error("Không thể lấy thông tin người dùng");
+        } else {
+          const updatedProfile = await profileResponse.json();
+          // Cập nhật context nếu cần
+        }
         
         // Thêm setTimeout để đảm bảo toast message hiển thị trước khi chuyển trang
         setTimeout(() => {
           router.push(`/watch-course/${courseInfo.id}`);
         }, 1000);
       } else {
-        toast.error(response.data.message || "Không thể đăng ký khóa học, vui lòng thử lại sau");
+        toast.error("Không thể đăng ký khóa học, vui lòng thử lại sau");
       }
     } catch (error) {
       console.error("Lỗi khi đăng ký khóa học:", error);

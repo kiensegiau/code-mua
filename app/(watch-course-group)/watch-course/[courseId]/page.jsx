@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { Collapse, List, Spin } from "antd";
 import {
   PlayCircle,
@@ -14,9 +14,23 @@ import {
   File,
   ArrowLeftCircle,
   LogOut,
+  ChevronsLeft,
+  ChevronsRight,
+  Settings,
+  Volume2,
+  VolumeX,
+  ChevronUp,
+  DownloadCloud,
+  AlertTriangle,
+  Clock,
+  Square,
+  RotateCcw,
+  FastForward,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
-import GlobalApi from "../../../_utils/GlobalApi";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -303,7 +317,12 @@ export default function WatchCourse({ params }) {
   const fetchCourseInfo = useCallback(async () => {
     try {
       setLoading(true);
-      const course = await GlobalApi.getCourseById(params.courseId);
+      
+      const response = await fetch(`/api/courses/${params.courseId}`);
+      if (!response.ok) {
+        throw new Error('Không thể tải thông tin khóa học');
+      }
+      const course = await response.json();
 
       // Sắp xếp chapters ngay khi nhận dữ liệu
       if (course && course.chapters && course.chapters.length > 0) {

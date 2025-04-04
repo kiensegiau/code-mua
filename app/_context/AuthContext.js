@@ -10,10 +10,40 @@ import {
 } from "react";
 import { auth } from "../_utils/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import GlobalMongoApi from "../_utils/GlobalMongoApi";
 import { verifyJwtToken } from "../_utils/jwt";
 
 const AuthContext = createContext({});
+
+// Thay đổi cách lấy thông tin người dùng, sử dụng API route
+const fetchUserProfileFromAPI = async (userId) => {
+  try {
+    // Lấy token từ localStorage nếu có
+    const accessToken = localStorage.getItem("accessToken");
+    
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Thêm token vào header nếu có
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'GET',
+      headers: headers,
+      credentials: 'include' // Gửi cookie
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Lỗi API: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Lỗi khi gọi API lấy thông tin người dùng:", error);
+    return null;
+  }
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -23,7 +53,7 @@ export function AuthProvider({ children }) {
   // Sử dụng useCallback để tránh tạo lại hàm mỗi khi component re-render
   const fetchUserProfile = useCallback(async (userId) => {
     try {
-      const userProfile = await GlobalMongoApi.getUserProfile(userId);
+      const userProfile = await fetchUserProfileFromAPI(userId);
       if (userProfile) {
         setProfile(userProfile);
         return true;

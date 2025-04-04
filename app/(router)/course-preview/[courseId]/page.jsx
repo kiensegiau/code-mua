@@ -11,7 +11,6 @@ import {
 import Header from "../../_components/Header";
 import Sidebar from "../../_components/SideNav";
 import { useAuth } from "@/app/_context/AuthContext";
-import GlobalMongoApi from "@/app/_utils/GlobalMongoApi";
 import { toast } from "sonner";
 import CourseEnrollSection from "./_components/CourseEnrollSection";
 import Image from "next/image";
@@ -32,7 +31,11 @@ function CoursePreview({ params }) {
   const getCourseById = useCallback(async () => {
     try {
       setLoading(true);
-      const resp = await GlobalMongoApi.getCourseById(params.courseId);
+      const response = await fetch(`/api/courses/${params.courseId}`);
+      if (!response.ok) {
+        throw new Error('Không thể tải thông tin khóa học');
+      }
+      const resp = await response.json();
       setCourse(resp);
     } catch (error) {
       toast.error("Không thể tải thông tin khóa học");
@@ -88,8 +91,14 @@ function CoursePreview({ params }) {
       if (response.data.success) {
         toast.success("Đăng ký khóa học thành công!");
         
-        // Cập nhật profile từ MongoDB
-        await GlobalMongoApi.getUserProfile(user.uid);
+        // Cập nhật profile từ API
+        const profileResponse = await fetch(`/api/users/${user.uid}`);
+        if (!profileResponse.ok) {
+          console.error("Không thể lấy thông tin người dùng");
+        } else {
+          const updatedProfile = await profileResponse.json();
+          // Cập nhật context nếu cần
+        }
         
         router.push(`/watch-course/${course.id}`);
       } else {

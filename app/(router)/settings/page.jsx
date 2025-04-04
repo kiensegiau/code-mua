@@ -10,7 +10,6 @@ import {
 import { auth } from "@/app/_utils/firebase";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import GlobalApi from "@/app/_utils/GlobalApi";
 import Image from "next/image";
 import {
   Loader2,
@@ -64,6 +63,28 @@ const PasswordInput = memo(
 );
 
 PasswordInput.displayName = "PasswordInput";
+
+// Hàm API để cập nhật thông tin người dùng
+const updateUserProfileAPI = async (userId, updatedData) => {
+  try {
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Lỗi API: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Lỗi khi gọi API cập nhật thông tin người dùng:", error);
+    throw error;
+  }
+};
 
 export default function SettingsPage() {
   const { user, profile, setProfile } = useAuth();
@@ -159,7 +180,7 @@ export default function SettingsPage() {
       setIsSaving(true);
       setError("");
 
-      const updatedUser = await GlobalApi.updateUserProfile(
+      const updatedUser = await updateUserProfileAPI(
         user.uid,
         editedProfile
       );

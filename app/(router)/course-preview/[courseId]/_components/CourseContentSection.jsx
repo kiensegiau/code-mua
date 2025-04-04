@@ -1,5 +1,10 @@
+"use client";
+
 import React, { useState, useEffect, useCallback, memo } from "react";
-import axios from "axios";
+import { ChevronDown, Lock, PlayCircle, CheckCircle, FileText } from "lucide-react";
+import Markdown from "markdown-to-jsx";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function CourseContentSection({
   courseInfo,
