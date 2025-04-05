@@ -7,6 +7,7 @@ import PageTransition from "./(router)/_components/PageTransition";
 import dynamic from "next/dynamic";
 import { ThemeProvider } from "./_context/ThemeContext";
 import QueryProvider from "./_providers/QueryProvider";
+import ErrorBoundary from "./_components/ErrorBoundary";
 
 // Tối ưu font loading với display swap
 const outfit = Outfit({
@@ -38,8 +39,10 @@ export default function RootLayout({ children }) {
         <QueryProvider>
           <AuthProvider>
             <ThemeProvider>
-              {/* Bỏ qua AuthWrapper */}
-              <PageTransition>{children}</PageTransition>
+              {/* Bọc toàn bộ ứng dụng trong ErrorBoundary để xử lý lỗi client-side */}
+              <ErrorBoundary>
+                <PageTransition>{children}</PageTransition>
+              </ErrorBoundary>
             </ThemeProvider>
           </AuthProvider>
         </QueryProvider>
