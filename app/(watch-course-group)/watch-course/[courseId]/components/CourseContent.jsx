@@ -858,6 +858,184 @@ const ChapterItem = memo(function ChapterItem({
   );
 });
 
+// Hàm helper để lấy tất cả video từ một lesson
+const getAllVideosFromLesson = (lesson) => {
+  let videos = [];
+
+  // Lấy video từ files trực tiếp của lesson
+  if (lesson.files) {
+    videos.push(...lesson.files.filter(f => f.type?.includes("video")).map(file => ({
+      ...file,
+      source: { type: 'lesson', lessonId: lesson.id }
+    })));
+  }
+
+  // Lấy video từ các subfolder
+  if (lesson.subfolders) {
+    lesson.subfolders.forEach(subfolder => {
+      // Lấy video từ files trực tiếp của subfolder
+      if (subfolder.files) {
+        videos.push(...subfolder.files.filter(f => f.type?.includes("video")).map(file => ({
+          ...file,
+          source: { type: 'subfolder', lessonId: lesson.id, subfolderId: subfolder.id }
+        })));
+      }
+
+      // Lấy video từ các subsubfolder
+      if (subfolder.subfolders) {
+        subfolder.subfolders.forEach(subsubfolder => {
+          if (subsubfolder.files) {
+            videos.push(...subsubfolder.files.filter(f => f.type?.includes("video")).map(file => ({
+              ...file,
+              source: { type: 'subsubfolder', lessonId: lesson.id, subfolderId: subfolder.id, subsubfolderId: subsubfolder.id }
+            })));
+          }
+        });
+      }
+    });
+  }
+
+  return videos;
+};
+
+// Hàm helper để tìm folder chứa video
+const findFolderContainingVideo = (lesson, videoId) => {
+  // Kiểm tra trong files trực tiếp của lesson
+  if (lesson.files?.some(f => f.id === videoId)) {
+    return { subfolderId: null, subsubfolderId: null };
+  }
+
+  // Kiểm tra trong các subfolder
+  for (const subfolder of lesson.subfolders || []) {
+    // Kiểm tra trong files của subfolder
+    if (subfolder.files?.some(f => f.id === videoId)) {
+      return { subfolderId: subfolder.id, subsubfolderId: null };
+    }
+
+    // Kiểm tra trong các subsubfolder
+    for (const subsubfolder of subfolder.subfolders || []) {
+      if (subsubfolder.files?.some(f => f.id === videoId)) {
+        return { subfolderId: subfolder.id, subsubfolderId: subsubfolder.id };
+      }
+    }
+  }
+
+  return { subfolderId: null, subsubfolderId: null };
+};
+
+// Hàm helper để tìm video tiếp theo
+const findNextVideo = (currentVideo, currentLesson, currentChapter, chapters) => {
+  // Lấy tất cả video từ lesson hiện tại
+  const currentLessonVideos = getAllVideosFromLesson(currentLesson);
+  currentLessonVideos.sort(sortFiles);
+
+  // Tìm vị trí của video hiện tại
+  const currentIndex = currentLessonVideos.findIndex(v => v.id === currentVideo.id);
+
+  // Nếu có video tiếp theo trong lesson hiện tại
+  if (currentIndex < currentLessonVideos.length - 1) {
+    return {
+      video: currentLessonVideos[currentIndex + 1],
+      lesson: currentLesson,
+      chapter: currentChapter
+    };
+  }
+
+  // Nếu không có video tiếp theo trong lesson hiện tại, tìm lesson tiếp theo
+  const currentChapterLessons = [...currentChapter.lessons].sort(sortByNumber);
+  const currentLessonIndex = currentChapterLessons.findIndex(l => l.id === currentLesson.id);
+
+  // Tìm trong các lesson còn lại của chapter hiện tại
+  for (let i = currentLessonIndex + 1; i < currentChapterLessons.length; i++) {
+    const nextLesson = currentChapterLessons[i];
+    const nextLessonVideos = getAllVideosFromLesson(nextLesson);
+    if (nextLessonVideos.length > 0) {
+      return {
+        video: nextLessonVideos[0],
+        lesson: nextLesson,
+        chapter: currentChapter
+      };
+    }
+  }
+
+  // Nếu không có lesson tiếp theo trong chapter hiện tại, tìm chapter tiếp theo
+  const currentChapterIndex = chapters.findIndex(c => c.id === currentChapter.id);
+  for (let i = currentChapterIndex + 1; i < chapters.length; i++) {
+    const nextChapter = chapters[i];
+    const nextChapterLessons = [...nextChapter.lessons].sort(sortByNumber);
+    
+    for (const nextLesson of nextChapterLessons) {
+      const nextLessonVideos = getAllVideosFromLesson(nextLesson);
+      if (nextLessonVideos.length > 0) {
+        return {
+          video: nextLessonVideos[0],
+          lesson: nextLesson,
+          chapter: nextChapter
+        };
+      }
+    }
+  }
+
+  return null;
+};
+
+// Hàm helper để tìm video trước đó
+const findPreviousVideo = (currentVideo, currentLesson, currentChapter, chapters) => {
+  // Lấy tất cả video từ lesson hiện tại
+  const currentLessonVideos = getAllVideosFromLesson(currentLesson);
+  currentLessonVideos.sort(sortFiles);
+
+  // Tìm vị trí của video hiện tại
+  const currentIndex = currentLessonVideos.findIndex(v => v.id === currentVideo.id);
+
+  // Nếu có video trước đó trong lesson hiện tại
+  if (currentIndex > 0) {
+    return {
+      video: currentLessonVideos[currentIndex - 1],
+      lesson: currentLesson,
+      chapter: currentChapter
+    };
+  }
+
+  // Nếu không có video trước đó trong lesson hiện tại, tìm lesson trước đó
+  const currentChapterLessons = [...currentChapter.lessons].sort(sortByNumber);
+  const currentLessonIndex = currentChapterLessons.findIndex(l => l.id === currentLesson.id);
+
+  // Tìm trong các lesson trước đó của chapter hiện tại
+  for (let i = currentLessonIndex - 1; i >= 0; i--) {
+    const prevLesson = currentChapterLessons[i];
+    const prevLessonVideos = getAllVideosFromLesson(prevLesson);
+    if (prevLessonVideos.length > 0) {
+      return {
+        video: prevLessonVideos[prevLessonVideos.length - 1],
+        lesson: prevLesson,
+        chapter: currentChapter
+      };
+    }
+  }
+
+  // Nếu không có lesson trước đó trong chapter hiện tại, tìm chapter trước đó
+  const currentChapterIndex = chapters.findIndex(c => c.id === currentChapter.id);
+  for (let i = currentChapterIndex - 1; i >= 0; i--) {
+    const prevChapter = chapters[i];
+    const prevChapterLessons = [...prevChapter.lessons].sort(sortByNumber);
+    
+    for (let j = prevChapterLessons.length - 1; j >= 0; j--) {
+      const prevLesson = prevChapterLessons[j];
+      const prevLessonVideos = getAllVideosFromLesson(prevLesson);
+      if (prevLessonVideos.length > 0) {
+        return {
+          video: prevLessonVideos[prevLessonVideos.length - 1],
+          lesson: prevLesson,
+          chapter: prevChapter
+        };
+      }
+    }
+  }
+
+  return null;
+};
+
 const CourseContent = forwardRef(
   (
     {
@@ -978,175 +1156,187 @@ const CourseContent = forwardRef(
         return;
       }
 
-      // 1. Thu thập tất cả video trong bài học hiện tại (từ cả files trực tiếp, subfolders và subsubfolders)
-      let allVideos = [];
-
-      // Lấy videos từ files trực tiếp
-      if (activeLesson.files) {
-        allVideos.push(
-          ...activeLesson.files.filter((f) => f.type?.includes("video"))
-        );
-      }
-
-      // Lấy videos từ subfolders và subsubfolders
-      if (activeLesson.subfolders) {
-        for (const subfolder of activeLesson.subfolders) {
-          if (subfolder.files) {
-            allVideos.push(
-              ...subfolder.files.filter((f) => f.type?.includes("video"))
-            );
+      const nextVideo = findNextVideo(activeVideo, activeLesson, activeChapter, chapters);
+      
+      if (nextVideo) {
+        // Lấy thông tin source của video tiếp theo
+        const { source } = nextVideo.video;
+        let subfolderId = null;
+        let subsubfolderId = null;
+        
+        // Dựa vào source để xác định subfolderId và subsubfolderId
+        if (source) {
+          if (source.type === 'subfolder') {
+            subfolderId = source.subfolderId;
+          } else if (source.type === 'subsubfolder') {
+            subfolderId = source.subfolderId;
+            subsubfolderId = source.subsubfolderId;
+          }
+        }
+        
+        // Cập nhật trạng thái mở chapter và lesson
+        const chapterIndex = chapters.findIndex(c => c.id === nextVideo.chapter.id);
+        setExpandedChapterIndex(chapterIndex);
+        setExpandedLessonId(nextVideo.lesson.id);
+        
+        // Lưu trạng thái vào localStorage
+        try {
+          localStorage.setItem("lastWatchedChapterId", nextVideo.chapter.id);
+          localStorage.setItem("lastWatchedLessonId", nextVideo.lesson.id);
+          localStorage.setItem("lastWatchedVideoId", nextVideo.video.id);
+          
+          // Lưu trạng thái subfolder và subsubfolder
+          if (subfolderId) {
+            localStorage.setItem("lastWatchedSubfolderId", subfolderId);
+          }
+          if (subsubfolderId) {
+            localStorage.setItem("lastWatchedSubSubfolderId", subsubfolderId);
           }
           
-          // Lấy videos từ subsubfolders
-          if (subfolder.subsubfolders) {
-            for (const subsubfolder of subfolder.subsubfolders) {
-              if (subsubfolder.files) {
-                allVideos.push(
-                  ...subsubfolder.files.filter((f) => f.type?.includes("video"))
-                );
-              }
-            }
+          // Xử lý trạng thái mở của subfolder
+          if (subfolderId) {
+            const subfoldersState = { [subfolderId]: true };
+            localStorage.setItem(`expanded_subfolders_${nextVideo.lesson.id}`, JSON.stringify(subfoldersState));
           }
-        }
-      }
-
-      // Sắp xếp tất cả video theo tên
-      allVideos.sort(sortFiles);
-
-      // 2. Tìm vị trí video hiện tại trong danh sách đã sắp xếp
-      const currentVideoIndex = allVideos.findIndex(
-        (f) => f.id === activeVideo.id
-      );
-
-      // 3. Lấy video tiếp theo trong lesson hiện tại
-      const nextVideo = allVideos[currentVideoIndex + 1];
-
-      if (nextVideo) {
-        onLessonClick(activeLesson, activeChapter, nextVideo);
-        return;
-      }
-
-      // 4. Nếu không có video tiếp theo trong lesson hiện tại, tìm lesson kế tiếp
-      const sortedLessons = [...activeChapter.lessons].sort(sortByNumber);
-      const currentLessonIndex = sortedLessons.findIndex(
-        (l) => l.id === activeLesson.id
-      );
-
-      const nextLesson = sortedLessons[currentLessonIndex + 1];
-
-      if (nextLesson) {
-        // 5. Tìm tất cả video trong lesson mới (từ cả files trực tiếp, subfolders và subsubfolders)
-        let nextLessonVideos = [];
-
-        // Lấy videos từ files trực tiếp
-        if (nextLesson.files) {
-          nextLessonVideos.push(
-            ...nextLesson.files.filter((f) => f.type?.includes("video"))
-          );
-        }
-
-        // Lấy videos từ subfolders và subsubfolders
-        if (nextLesson.subfolders) {
-          for (const subfolder of nextLesson.subfolders) {
-            if (subfolder.files) {
-              nextLessonVideos.push(
-                ...subfolder.files.filter((f) => f.type?.includes("video"))
-              );
-            }
-            
-            // Lấy videos từ subsubfolders
-            if (subfolder.subsubfolders) {
-              for (const subsubfolder of subfolder.subsubfolders) {
-                if (subsubfolder.files) {
-                  nextLessonVideos.push(
-                    ...subsubfolder.files.filter((f) => f.type?.includes("video"))
-                  );
-                }
-              }
-            }
+          
+          // Xử lý trạng thái mở của subsubfolder
+          if (subfolderId && subsubfolderId) {
+            const subsubfoldersState = { [subsubfolderId]: true };
+            localStorage.setItem(`expanded_subsubfolders_${subfolderId}`, JSON.stringify(subsubfoldersState));
           }
+        } catch (e) {
+          console.error("Lỗi khi lưu trạng thái:", e);
         }
 
-        // Sắp xếp tất cả video theo tên
-        nextLessonVideos.sort(sortFiles);
-
-        if (nextLessonVideos.length > 0) {
-          const firstVideo = nextLessonVideos[0];
-          setExpandedLessonId(nextLesson.id);
-          onLessonClick(nextLesson, activeChapter, firstVideo);
-          return;
-        }
+        // Chuyển đến video tiếp theo
+        onLessonClick(nextVideo.lesson, nextVideo.chapter, nextVideo.video);
       } else {
-        // Tìm chapter tiếp theo
-        const sortedChapters = [...chapters].sort(sortByNumber);
-        const currentChapterIndex = sortedChapters.findIndex(
-          (c) => c.id === activeChapter.id
-        );
-
-        const nextChapter = sortedChapters[currentChapterIndex + 1];
-        if (nextChapter) {
-          const firstLesson = nextChapter.lessons.sort(sortByNumber)[0];
-          if (firstLesson) {
-            // Tìm tất cả video trong lesson mới (từ cả files trực tiếp, subfolders và subsubfolders)
-            let firstLessonVideos = [];
-
-            // Lấy videos từ files trực tiếp
-            if (firstLesson.files) {
-              firstLessonVideos.push(
-                ...firstLesson.files.filter((f) => f.type?.includes("video"))
-              );
-            }
-
-            // Lấy videos từ subfolders và subsubfolders
-            if (firstLesson.subfolders) {
-              for (const subfolder of firstLesson.subfolders) {
-                if (subfolder.files) {
-                  firstLessonVideos.push(
-                    ...subfolder.files.filter((f) => f.type?.includes("video"))
-                  );
-                }
-                
-                // Lấy videos từ subsubfolders
-                if (subfolder.subsubfolders) {
-                  for (const subsubfolder of subfolder.subsubfolders) {
-                    if (subsubfolder.files) {
-                      firstLessonVideos.push(
-                        ...subsubfolder.files.filter((f) => f.type?.includes("video"))
-                      );
-                    }
-                  }
-                }
-              }
-            }
-
-            // Sắp xếp tất cả video theo tên
-            firstLessonVideos.sort(sortFiles);
-
-            if (firstLessonVideos.length > 0) {
-              const firstVideo = firstLessonVideos[0];
-              setExpandedChapterIndex(currentChapterIndex + 1);
-              setExpandedLessonId(firstLesson.id);
-              onLessonClick(firstLesson, nextChapter, firstVideo);
-              return;
-            }
-          }
-        }
         toast.success("Đã hoàn thành khóa học!");
       }
-    }, [
-      activeLesson,
-      activeChapter,
-      activeVideo,
-      chapters,
-      onLessonClick,
-      setExpandedChapterIndex,
-      setExpandedLessonId,
-      sortByNumber,
-      sortFiles,
-    ]);
+    }, [activeLesson, activeChapter, activeVideo, chapters, onLessonClick, setExpandedChapterIndex, setExpandedLessonId]);
 
+    // Thêm hàm xử lý next video
+    const handleNextVideo = useCallback(() => {
+      if (!activeLesson || !activeChapter || !activeVideo) return;
+      
+      const nextVideo = findNextVideo(activeVideo, activeLesson, activeChapter, chapters);
+      if (nextVideo) {
+        // Lấy thông tin source của video tiếp theo
+        const { source } = nextVideo.video;
+        let subfolderId = null;
+        let subsubfolderId = null;
+        
+        // Dựa vào source để xác định subfolderId và subsubfolderId
+        if (source) {
+          if (source.type === 'subfolder') {
+            subfolderId = source.subfolderId;
+          } else if (source.type === 'subsubfolder') {
+            subfolderId = source.subfolderId;
+            subsubfolderId = source.subsubfolderId;
+          }
+        }
+        
+        // Cập nhật trạng thái mở chapter và lesson
+        const chapterIndex = chapters.findIndex(c => c.id === nextVideo.chapter.id);
+        setExpandedChapterIndex(chapterIndex);
+        setExpandedLessonId(nextVideo.lesson.id);
+        
+        // Lưu trạng thái vào localStorage
+        try {
+          localStorage.setItem("lastWatchedChapterId", nextVideo.chapter.id);
+          localStorage.setItem("lastWatchedLessonId", nextVideo.lesson.id);
+          localStorage.setItem("lastWatchedVideoId", nextVideo.video.id);
+          
+          // Lưu trạng thái subfolder và subsubfolder
+          if (subfolderId) {
+            localStorage.setItem("lastWatchedSubfolderId", subfolderId);
+          }
+          if (subsubfolderId) {
+            localStorage.setItem("lastWatchedSubSubfolderId", subsubfolderId);
+          }
+          
+          // Xử lý trạng thái mở của subfolder
+          if (subfolderId) {
+            const subfoldersState = { [subfolderId]: true };
+            localStorage.setItem(`expanded_subfolders_${nextVideo.lesson.id}`, JSON.stringify(subfoldersState));
+          }
+          
+          // Xử lý trạng thái mở của subsubfolder
+          if (subfolderId && subsubfolderId) {
+            const subsubfoldersState = { [subsubfolderId]: true };
+            localStorage.setItem(`expanded_subsubfolders_${subfolderId}`, JSON.stringify(subsubfoldersState));
+          }
+        } catch (e) {
+          console.error("Lỗi khi lưu trạng thái:", e);
+        }
+        
+        onLessonClick(nextVideo.lesson, nextVideo.chapter, nextVideo.video);
+      }
+    }, [activeLesson, activeChapter, activeVideo, chapters, onLessonClick, setExpandedChapterIndex, setExpandedLessonId]);
+
+    const handlePreviousVideo = useCallback(() => {
+      if (!activeLesson || !activeChapter || !activeVideo) return;
+      
+      const prevVideo = findPreviousVideo(activeVideo, activeLesson, activeChapter, chapters);
+      if (prevVideo) {
+        // Lấy thông tin source của video trước đó
+        const { source } = prevVideo.video;
+        let subfolderId = null;
+        let subsubfolderId = null;
+        
+        // Dựa vào source để xác định subfolderId và subsubfolderId
+        if (source) {
+          if (source.type === 'subfolder') {
+            subfolderId = source.subfolderId;
+          } else if (source.type === 'subsubfolder') {
+            subfolderId = source.subfolderId;
+            subsubfolderId = source.subsubfolderId;
+          }
+        }
+        
+        // Cập nhật trạng thái mở chapter và lesson
+        const chapterIndex = chapters.findIndex(c => c.id === prevVideo.chapter.id);
+        setExpandedChapterIndex(chapterIndex);
+        setExpandedLessonId(prevVideo.lesson.id);
+        
+        // Lưu trạng thái vào localStorage
+        try {
+          localStorage.setItem("lastWatchedChapterId", prevVideo.chapter.id);
+          localStorage.setItem("lastWatchedLessonId", prevVideo.lesson.id);
+          localStorage.setItem("lastWatchedVideoId", prevVideo.video.id);
+          
+          // Lưu trạng thái subfolder và subsubfolder
+          if (subfolderId) {
+            localStorage.setItem("lastWatchedSubfolderId", subfolderId);
+          }
+          if (subsubfolderId) {
+            localStorage.setItem("lastWatchedSubSubfolderId", subsubfolderId);
+          }
+          
+          // Xử lý trạng thái mở của subfolder
+          if (subfolderId) {
+            const subfoldersState = { [subfolderId]: true };
+            localStorage.setItem(`expanded_subfolders_${prevVideo.lesson.id}`, JSON.stringify(subfoldersState));
+          }
+          
+          // Xử lý trạng thái mở của subsubfolder
+          if (subfolderId && subsubfolderId) {
+            const subsubfoldersState = { [subsubfolderId]: true };
+            localStorage.setItem(`expanded_subsubfolders_${subfolderId}`, JSON.stringify(subsubfoldersState));
+          }
+        } catch (e) {
+          console.error("Lỗi khi lưu trạng thái:", e);
+        }
+        
+        onLessonClick(prevVideo.lesson, prevVideo.chapter, prevVideo.video);
+      }
+    }, [activeLesson, activeChapter, activeVideo, chapters, onLessonClick, setExpandedChapterIndex, setExpandedLessonId]);
+
+    // Expose các hàm cho component cha
     useImperativeHandle(ref, () => ({
       handleVideoEnd,
+      handleNextVideo,
+      handlePreviousVideo
     }));
 
     const handleChapterClick = useCallback(
