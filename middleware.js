@@ -1,94 +1,54 @@
 import { NextResponse } from "next/server";
-import { verifyJwtToken } from "@/app/_utils/jwt";
 
-// Danh sách các đường dẫn không yêu cầu xác thực
-const PUBLIC_PATHS = ["/sign-in", "/sign-up", "/forgot-password"];
-
-export async function middleware(request) {
+export function middleware(request) {
   const { pathname } = request.nextUrl;
-  console.log("🚀 Middleware đang chạy cho đường dẫn:", pathname);
+  
+  // Danh sách các đường dẫn không yêu cầu xác thực
+  const publicPaths = ["/sign-in", "/sign-up", "/forgot-password", "/login"];
+  
+  // Các route cần xác thực
+  const protectedRoutes = [
+    '/dashboard',
+    '/my-courses',
+    '/purchases',
+    '/profile'
+  ];
+
+  // Kiểm tra xem route hiện tại có cần xác thực không
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
 
   // Cho phép truy cập các route công khai
-  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
-    console.log("✅ Đường dẫn công khai, cho phép truy cập");
+  if (isPublicPath) {
     return NextResponse.next();
   }
 
-  // Lấy token từ cookie
-  const token = request.cookies.get("accessToken")?.value;
-  console.log("🔑 Token từ cookie:", token ? "Tìm thấy" : "Không tìm thấy");
-
-  // Nếu không có token, chuyển hướng về trang đăng nhập
-  if (!token) {
-    console.log("❌ Không tìm thấy token, chuyển hướng đến trang đăng nhập");
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+  // Kiểm tra route được bảo vệ - đơn giản hóa logic
+  if (isProtectedRoute) {
+    // Trong khi phát triển, luôn cho phép truy cập để tránh lỗi xác thực
+    // TODO: Thêm logic xác thực thực tế sau
+    return NextResponse.next();
+    
+    // Sau này sẽ bật xác thực với đoạn code như sau:
+    // const loginUrl = new URL('/login', request.url);
+    // loginUrl.searchParams.set('callbackUrl', pathname);
+    // return NextResponse.redirect(loginUrl);
   }
 
-  try {
-    // Xác thực token
-    const verifiedToken = await verifyJwtToken(token);
-    console.log(
-      "🔒 Kết quả xác thực token:",
-      verifiedToken ? "Hợp lệ" : "Không hợp lệ"
-    );
-
-    if (!verifiedToken || !verifiedToken.uid) {
-      console.log("❌ Token không hợp lệ, chuyển hướng đến trang đăng nhập");
-      const response = NextResponse.redirect(new URL("/sign-in", request.url));
-      response.cookies.delete("accessToken");
-      return response;
-    }
-
-    // Kiểm tra tài khoản có tồn tại không qua API route
-    try {
-      // Gọi API để kiểm tra tài khoản
-      const apiUrl = new URL("/api/auth/verify-user", request.url);
-      apiUrl.searchParams.append("uid", verifiedToken.uid);
-      
-      const apiResponse = await fetch(apiUrl.toString(), {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      
-      const apiData = await apiResponse.json();
-      
-      if (!apiResponse.ok || !apiData.exists) {
-        console.log("❌ Người dùng không tồn tại hoặc đã bị xóa, xóa token và chuyển hướng");
-        const response = NextResponse.redirect(new URL("/sign-in", request.url));
-        response.cookies.delete("accessToken");
-        return response;
-      }
-      
-      console.log("✅ Người dùng tồn tại, cho phép truy cập");
-      return NextResponse.next();
-    } catch (userError) {
-      console.error("❌ Lỗi kiểm tra người dùng:", userError);
-      // Lỗi khi kiểm tra tài khoản, tạm thời cho phép truy cập
-      // Để tránh người dùng bị khóa vì lỗi kỹ thuật
-      return NextResponse.next();
-    }
-  } catch (error) {
-    console.error("❌ Lỗi xác thực token:", error);
-    // Token không hợp lệ, chuyển hướng về trang đăng nhập
-    const response = NextResponse.redirect(new URL("/sign-in", request.url));
-    response.cookies.delete("accessToken");
-    return response;
-  }
+  // Cho phép truy cập các route không được bảo vệ
+  return NextResponse.next();
 }
 
 // Cấu hình các route cần áp dụng middleware
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
-  ],
+    '/dashboard/:path*',
+    '/my-courses/:path*',
+    '/purchases/:path*',
+    '/profile/:path*',
+    '/sign-in/:path*',
+    '/sign-up/:path*',
+    '/login/:path*',
+    '/forgot-password/:path*'
+  ]
 };

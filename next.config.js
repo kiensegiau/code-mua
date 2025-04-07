@@ -2,6 +2,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 /** @type {import('next').NextConfig} */
+const DotenvWebpackPlugin = require('dotenv-webpack');
+
 const nextConfig = {
   reactStrictMode: false,
   swcMinify: true,
@@ -24,8 +26,18 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
-        port: "",
-        pathname: "/v0/b/hocmai-1d38d.appspot.com/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "dummyimage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "randomuser.me",
       },
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -37,6 +49,10 @@ const nextConfig = {
     scrollRestoration: true,
   },
   compress: true,
+  webpack: (config) => {
+    config.plugins.push(new DotenvWebpackPlugin());
+    return config;
+  },
   env: {
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:
@@ -54,6 +70,7 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_ACCESS_TOKEN_SECRET,
     NEXT_PUBLIC_REFRESH_TOKEN_SECRET:
       process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET,
+    MONGODB_URI: process.env.MONGODB_URI,
   },
 };
 

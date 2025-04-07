@@ -1,52 +1,74 @@
-import {
-  doc,
-  getDoc,
-  runTransaction,
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  arrayUnion,
-  setDoc,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-import { db } from "./firebase";
+import connectToDatabase from './mongodb';
+import { initModel as initUserModel } from '../_models/user';
+import { initModel as initCourseModel } from '../_models/course';
+import { initModel as initCourseContentModel } from '../_models/courseContent';
+import { initModel as initPurchaseModel } from '../_models/purchase';
+import mongoose from 'mongoose';
+
+// Khởi tạo các model
+let User;
+let Course;
+let CourseContent;
+let Purchase;
+
+// Chủ động kết nối database trước khi khởi tạo models
+const initDb = async () => {
+  try {
+    await connectToDatabase();
+    console.log('Đã kết nối đến database');
+    
+    // Khởi tạo các model sau khi đã kết nối database
+    const [userModel, courseModel, courseContentModel, purchaseModel] = await Promise.all([
+      initUserModel(),
+      initCourseModel(),
+      initCourseContentModel(),
+      initPurchaseModel()
+    ]);
+    
+    User = userModel;
+    Course = courseModel;
+    CourseContent = courseContentModel;
+    Purchase = purchaseModel;
+    
+    console.log('Đã khởi tạo xong các model');
+    return true;
+  } catch (error) {
+    console.error('Lỗi khi khởi tạo database và models:', error);
+    return false;
+  }
+};
+
+// Khởi tạo database khi import file này
+initDb();
 
 const GlobalApi = {
   getAllCourseList: async (options = {}) => {
     const { grade, subject, limit: limitCount = 50, page = 1 } = options;
 
     try {
-      // console.log("Bắt đầu lấy danh sách khóa học với options:", options);
-
-      let coursesQuery = collection(db, "courses");
-      let queryConstraints = [];
-
+      await connectToDatabase();
+      
+      let query = {};
+      
       // Thêm các điều kiện lọc
       if (grade) {
-        queryConstraints.push(where("grade", "==", grade));
+        query.grade = grade;
       }
 
       if (subject) {
-        queryConstraints.push(where("subject", "==", subject));
+        query.subject = subject;
       }
 
-      // Thêm sắp xếp và giới hạn
-      queryConstraints.push(orderBy("updatedAt", "desc"));
-      queryConstraints.push(limit(limitCount));
+      const courses = await Course.find(query)
+        .sort({ updatedAt: -1 })
+        .limit(limitCount)
+        .skip((page - 1) * limitCount)
+        .lean();
 
-      // Áp dụng tất cả các ràng buộc
-      if (queryConstraints.length > 0) {
-        coursesQuery = query(coursesQuery, ...queryConstraints);
-      }
-
-      // console.log("Đang thực hiện truy vấn với các ràng buộc");
-      const snapshot = await getDocs(coursesQuery);
-
-      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      return courses.map(course => ({
+        ...course,
+        id: course._id.toString()
+      }));
     } catch (error) {
       console.error("Lỗi khi lấy danh sách khóa học:", error);
       throw error;
@@ -55,24 +77,18 @@ const GlobalApi = {
 
   getUserProfile: async (UserId) => {
     try {
-      // console.log("Bắt đầu lấy thông tin người dùng");
+      await connectToDatabase();
+      
+      const user = await User.findOne({ uid: UserId }).lean();
 
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", UserId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        // console.log("Không tìm thấy người dùng với email:", UserId);
+      if (!user) {
         return null;
       }
 
-      const users = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // console.log("Đã tìm thấy người dùng với email:", users);
-      return users[0];
+      return {
+        ...user,
+        id: user._id.toString()
+      };
     } catch (error) {
       console.error("Lỗi khi tìm kiếm người dùng:", error);
       throw error;
@@ -81,29 +97,21 @@ const GlobalApi = {
 
   updateUserProfile: async (UserId, updatedData) => {
     try {
-      // console.log("Bắt đầu cập nhật thông tin người dùng");
+      await connectToDatabase();
+      
+      const user = await User.findOneAndUpdate(
+        { uid: UserId },
+        { $set: updatedData },
+        { new: true }
+      ).lean();
 
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", UserId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        // console.log("Không tìm thấy người dùng với ID:", UserId);
+      if (!user) {
         return null;
       }
 
-      const userDoc = querySnapshot.docs[0];
-      const userRef = doc(db, "users", userDoc.id);
-
-      await updateDoc(userRef, updatedData);
-
-      // console.log("Đã cập nhật thông tin người dùng thành công");
-
-      // Lấy thông tin người dùng sau khi cập nhật
-      const updatedUserDoc = await getDoc(userRef);
       return {
-        id: updatedUserDoc.id,
-        ...updatedUserDoc.data(),
+        ...user,
+        id: user._id.toString()
       };
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin người dùng:", error);
@@ -113,26 +121,22 @@ const GlobalApi = {
 
   purchaseCourse: async (userId, courseId) => {
     try {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", userId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
+      await connectToDatabase();
+      
+      // Tìm người dùng
+      const user = await User.findOne({ uid: userId });
+      if (!user) {
         throw new Error("Không tìm thấy thông tin người dùng");
       }
 
-      const userDoc = querySnapshot.docs[0];
-      const courseRef = doc(db, "courses", courseId);
-      const courseDoc = await getDoc(courseRef);
-
-      if (!courseDoc.exists()) {
+      // Tìm khóa học
+      const course = await Course.findById(courseId);
+      if (!course) {
         throw new Error("Không tìm thấy thông tin khóa học");
       }
 
-      const userData = userDoc.data();
-      const courseData = courseDoc.data();
-      const userBalance = userData.balance || 0;
-      const coursePrice = courseData.price || 0;
+      const userBalance = user.balance || 0;
+      const coursePrice = course.price || 0;
 
       // Kiểm tra số dư
       if (userBalance < coursePrice) {
@@ -140,46 +144,69 @@ const GlobalApi = {
       }
 
       // Kiểm tra đã mua chưa
-      const purchaseSnapshot = await db
-        .collection("purchases")
-        .where("userId", "==", userId)
-        .where("courseId", "==", courseId)
-        .limit(1)
-        .get();
-
-      if (!purchaseSnapshot.empty) {
+      const existingPurchase = await Purchase.findOne({ userId, courseId });
+      if (existingPurchase) {
         throw new Error("Course already purchased");
       }
 
-      // Thực hiện giao dịch
-      await runTransaction(db, async (transaction) => {
-        // Trừ tiền
-        transaction.update(doc(db, "users", userDoc.id), {
-          balance: userBalance - coursePrice,
-        });
+      // Sử dụng MongoDB session để đảm bảo tính nhất quán
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
+      try {
+        // Trừ tiền
+        user.balance = userBalance - coursePrice;
+        
         // Lưu lịch sử mua
-        const purchaseRef = doc(collection(db, "purchases"));
-        transaction.set(purchaseRef, {
+        const purchase = new Purchase({
           userId,
           courseId,
           amount: coursePrice,
-          purchasedAt: new Date(),
+          purchasedAt: new Date()
         });
-
-        // Thêm vào danh sách khóa học đã đăng ký
-        transaction.update(doc(db, "users", userDoc.id), {
-          enrolledCourses: arrayUnion(courseId),
-        });
-
-        // Cập nhật số người đăng ký của khóa học
-        transaction.update(courseRef, {
-          enrolledUsers: arrayUnion(userId),
-          enrollments: (courseData.enrollments || 0) + 1,
-        });
-      });
-
-      return true;
+        
+        // Thêm khóa học vào danh sách đã đăng ký
+        const courseEnrollment = {
+          courseId,
+          enrolledAt: new Date(),
+          progress: 0,
+          lastAccessed: null
+        };
+        
+        if (!user.enrolledCourses) {
+          user.enrolledCourses = [courseEnrollment];
+        } else {
+          user.enrolledCourses.push(courseEnrollment);
+        }
+        
+        // Cập nhật số người đăng ký khóa học
+        if (!course.enrolledUsers) {
+          course.enrolledUsers = [userId];
+          course.enrollments = 1;
+        } else {
+          if (!course.enrolledUsers.includes(userId)) {
+            course.enrolledUsers.push(userId);
+            course.enrollments = (course.enrollments || 0) + 1;
+          }
+        }
+        
+        // Lưu các thay đổi
+        await Promise.all([
+          user.save({ session }),
+          purchase.save({ session }),
+          course.save({ session })
+        ]);
+        
+        await session.commitTransaction();
+        session.endSession();
+        
+        return true;
+      } catch (error) {
+        // Rollback nếu có lỗi
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+      }
     } catch (error) {
       console.error("Lỗi khi mua khóa học:", error);
       throw error;
@@ -188,63 +215,78 @@ const GlobalApi = {
 
   enrollCourse: async (userId, courseId) => {
     try {
-      const courseRef = doc(db, "courses", courseId);
-      const courseDoc = await getDoc(courseRef);
-
-      if (!courseDoc.exists()) {
+      await connectToDatabase();
+      
+      // Tìm khóa học
+      const course = await Course.findById(courseId);
+      if (!course) {
         throw new Error("Không tìm thấy thông tin khóa học");
       }
 
-      const courseData = courseDoc.data();
-
       // Nếu là khóa học có phí, chuyển sang flow mua khóa học
-      if (courseData.price > 0) {
+      if (course.price > 0) {
         return await GlobalApi.purchaseCourse(userId, courseId);
       }
 
-      // Lấy document ID của user
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", userId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
+      // Tìm người dùng
+      const user = await User.findOne({ uid: userId });
+      if (!user) {
         throw new Error("Không tìm thấy thông tin người dùng");
       }
 
-      const userDocId = querySnapshot.docs[0].id;
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
+      // Sử dụng MongoDB session để đảm bảo tính nhất quán
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-      // Nếu là khóa học miễn phí, chỉ cần đăng ký
-      await runTransaction(db, async (transaction) => {
-        const userRef = doc(db, "users", userDocId);
-
-        // Nếu chưa có mảng enrolledCourses, tạo mới với khóa học hiện tại
-        if (!userData.enrolledCourses) {
-          transaction.update(userRef, {
-            enrolledCourses: [courseId],
-          });
+      try {
+        // Thêm khóa học vào danh sách đã đăng ký
+        const courseEnrollment = {
+          courseId,
+          enrolledAt: new Date(),
+          progress: 0,
+          lastAccessed: null
+        };
+        
+        if (!user.enrolledCourses) {
+          user.enrolledCourses = [courseEnrollment];
         } else {
-          transaction.update(userRef, {
-            enrolledCourses: arrayUnion(courseId),
-          });
+          // Kiểm tra xem đã đăng ký chưa
+          const alreadyEnrolled = user.enrolledCourses.some(
+            c => c.courseId === courseId || c.courseId.toString() === courseId
+          );
+          
+          if (!alreadyEnrolled) {
+            user.enrolledCourses.push(courseEnrollment);
+          }
         }
-
-        // Tương tự với enrolledUsers của khóa học
-        if (!courseData.enrolledUsers) {
-          transaction.update(courseRef, {
-            enrolledUsers: [userId],
-            enrollments: 1,
-          });
+        
+        // Cập nhật số người đăng ký khóa học
+        if (!course.enrolledUsers) {
+          course.enrolledUsers = [userId];
+          course.enrollments = 1;
         } else {
-          transaction.update(courseRef, {
-            enrolledUsers: arrayUnion(userId),
-            enrollments: (courseData.enrollments || 0) + 1,
-          });
+          if (!course.enrolledUsers.includes(userId)) {
+            course.enrolledUsers.push(userId);
+            course.enrollments = (course.enrollments || 0) + 1;
+          }
         }
-      });
-
-      return true;
+        
+        // Lưu các thay đổi
+        await Promise.all([
+          user.save({ session }),
+          course.save({ session })
+        ]);
+        
+        await session.commitTransaction();
+        session.endSession();
+        
+        return true;
+      } catch (error) {
+        // Rollback nếu có lỗi
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+      }
     } catch (error) {
       console.error("Lỗi khi đăng ký khóa học:", error);
       throw error;
@@ -253,20 +295,18 @@ const GlobalApi = {
 
   isUserEnrolled: async (userId, courseId) => {
     try {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", userId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        console.error("Không tìm thấy người dùng với UID:", userId);
+      await connectToDatabase();
+      
+      const user = await User.findOne({ uid: userId }).lean();
+      if (!user) {
         return false;
       }
-
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      const enrolledCourses = userData.enrolledCourses || [];
-
-      return enrolledCourses.includes(courseId);
+      
+      const enrolledCourses = user.enrolledCourses || [];
+      return enrolledCourses.some(course => {
+        const courseIdStr = typeof course === 'string' ? course : course.courseId.toString();
+        return courseIdStr === courseId;
+      });
     } catch (error) {
       console.error("Lỗi khi kiểm tra đăng ký khóa học:", error);
       throw error;
@@ -275,14 +315,22 @@ const GlobalApi = {
 
   getCourseById: async (courseId) => {
     try {
-      const courseRef = doc(db, "courses", courseId);
-      const courseSnap = await getDoc(courseRef);
-      if (courseSnap.exists()) {
-        return { id: courseSnap.id, ...courseSnap.data() };
-      } else {
-        // console.log("Không tìm thấy khóa học");
+      await connectToDatabase();
+      
+      // Lấy thông tin khóa học từ collection courses
+      const course = await Course.findById(courseId).lean();
+      if (!course) {
         return null;
       }
+      
+      // Lấy nội dung chi tiết từ collection courseContents
+      const courseContent = await CourseContent.findOne({ courseId }).lean();
+      
+      return {
+        ...course,
+        id: course._id.toString(),
+        chapters: courseContent ? courseContent.chapters : []
+      };
     } catch (error) {
       console.error("Lỗi khi lấy thông tin khóa học:", error);
       throw error;
@@ -291,54 +339,47 @@ const GlobalApi = {
 
   getEnrolledCourses: async (userId) => {
     try {
-      // Lấy thông tin người dùng - sử dụng collection query như cũ
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", userId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
+      await connectToDatabase();
+      
+      const user = await User.findOne({ uid: userId }).lean();
+      if (!user) {
         return [];
       }
-
-      const userData = querySnapshot.docs[0].data();
-      const enrolledCourses = userData.enrolledCourses || [];
-
+      
+      const enrolledCourses = user.enrolledCourses || [];
       if (!enrolledCourses.length) {
         return [];
       }
-
-      // Lấy thông tin chi tiết của từng khóa học - giữ mô hình batch nhưng đơn giản hơn
-      const coursePromises = enrolledCourses.map(async (courseInfo) => {
-        const courseId =
-          typeof courseInfo === "string" ? courseInfo : courseInfo.courseId;
-
-        const courseRef = doc(db, "courses", courseId);
-        const courseSnap = await getDoc(courseRef);
-
-        if (courseSnap.exists()) {
-          const courseData = courseSnap.data();
-          const courseInfoObj =
-            typeof courseInfo === "string"
-              ? { courseId: courseInfo }
-              : courseInfo;
-
-          return {
-            id: courseSnap.id,
-            ...courseData,
-            enrolledAt: courseInfoObj.enrolledAt || new Date().toISOString(),
-            progress: courseInfoObj.progress || 0,
-            lastAccessed: courseInfoObj.lastAccessed || null,
-            coverImage: courseInfoObj.coverImage || courseData.coverImage,
-            title: courseInfoObj.title || courseData.title,
-          };
-        }
-        return null;
+      
+      // Lấy ID của các khóa học đã đăng ký
+      const courseIds = enrolledCourses.map(course => 
+        typeof course === 'string' ? course : course.courseId
+      );
+      
+      // Lấy thông tin chi tiết của các khóa học
+      const courses = await Course.find({
+        _id: { $in: courseIds }
+      }).lean();
+      
+      // Kết hợp thông tin khóa học với thông tin đăng ký
+      return courses.map(course => {
+        const courseInfo = enrolledCourses.find(c => {
+          const enrolledId = typeof c === 'string' ? c : c.courseId.toString();
+          return enrolledId === course._id.toString();
+        });
+        
+        const courseInfoObj = typeof courseInfo === 'string' 
+          ? { courseId: courseInfo } 
+          : courseInfo;
+          
+        return {
+          ...course,
+          id: course._id.toString(),
+          enrolledAt: courseInfoObj.enrolledAt || new Date().toISOString(),
+          progress: courseInfoObj.progress || 0,
+          lastAccessed: courseInfoObj.lastAccessed || null
+        };
       });
-
-      const courses = await Promise.all(coursePromises);
-      const validCourses = courses.filter(Boolean);
-
-      return validCourses;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách khóa học đã đăng ký:", error);
       throw error;
@@ -346,32 +387,31 @@ const GlobalApi = {
   },
 
   getLessonData: async (courseId, chapterId, lessonId) => {
-    // console.log("Bắt đầu lấy dữ liệu bài học:", {
-    //   courseId,
-    //   chapterId,
-    //   lessonId,
-    // });
     try {
-      const lessonRef = doc(
-        db,
-        "courses",
-        courseId,
-        "chapters",
-        chapterId,
-        "lessons",
-        lessonId
-      );
-      // console.log("Tham chiếu đến bài học:", lessonRef);
-      const lessonSnap = await getDoc(lessonRef);
-      // console.log("Đã lấy snapshot của bài học");
-      if (lessonSnap.exists()) {
-        const lessonData = { id: lessonSnap.id, ...lessonSnap.data() };
-        // console.log("Dữ liệu bài học:", lessonData);
-        return lessonData;
-      } else {
-        console.error("Không tìm thấy dữ liệu bài học");
+      await connectToDatabase();
+      
+      // Lấy nội dung chi tiết của khóa học
+      const courseContent = await CourseContent.findOne({ courseId }).lean();
+      if (!courseContent) {
         return null;
       }
+      
+      // Tìm chapter theo ID
+      const chapter = courseContent.chapters.find(c => c._id.toString() === chapterId);
+      if (!chapter) {
+        return null;
+      }
+      
+      // Tìm lesson theo ID
+      const lesson = chapter.lessons.find(l => l._id.toString() === lessonId);
+      if (!lesson) {
+        return null;
+      }
+      
+      return {
+        ...lesson,
+        id: lesson._id.toString()
+      };
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu bài học:", error);
       throw error;
@@ -380,38 +420,29 @@ const GlobalApi = {
 
   getChapterLessons: async (courseId, chapterId) => {
     try {
-      const lessonsRef = collection(
-        db,
-        "courses",
-        courseId,
-        "chapters",
-        chapterId,
-        "lessons"
-      );
-      const lessonsSnap = await getDocs(lessonsRef);
-      return lessonsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      await connectToDatabase();
+      
+      // Lấy nội dung chi tiết của khóa học
+      const courseContent = await CourseContent.findOne({ courseId }).lean();
+      if (!courseContent) {
+        return [];
+      }
+      
+      // Tìm chapter theo ID
+      const chapter = courseContent.chapters.find(c => c._id.toString() === chapterId);
+      if (!chapter) {
+        return [];
+      }
+      
+      return chapter.lessons.map(lesson => ({
+        ...lesson,
+        id: lesson._id.toString()
+      }));
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu bài học của chương:", error);
       throw error;
     }
-  },
-  getChapterLessons: async (courseId, chapterId) => {
-    try {
-      const lessonsRef = collection(
-        db,
-        "courses",
-        courseId,
-        "chapters",
-        chapterId,
-        "lessons"
-      );
-      const lessonsSnap = await getDocs(lessonsRef);
-      return lessonsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu bài học của chương:", error);
-      throw error;
-    }
-  },
+  }
 };
 
 export default GlobalApi;
