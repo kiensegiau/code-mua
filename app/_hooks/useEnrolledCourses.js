@@ -40,13 +40,30 @@ export default function useEnrolledCourses(options = {}) {
 
       const courses = await GlobalApi.getEnrolledCourses(userId);
 
-      setEnrolledCourses(courses || []);
+      // Chuẩn hóa dữ liệu và xử lý các trường bị thiếu
+      const normalizedCourses = courses.map(course => {
+        return {
+          id: course.id || course.courseId || course._id,
+          title: course.title || "Không có tiêu đề",
+          description: course.description || "",
+          imageUrl: course.imageUrl || course.coverImage || "/images/course-default.jpg",
+          subject: course.subject || "Khác",
+          grade: course.grade || "Khác",
+          enrolledAt: course.enrolledAt ? new Date(course.enrolledAt) : new Date(),
+          lastAccessed: course.lastAccessed ? new Date(course.lastAccessed) : new Date(),
+          progress: course.progress || 0,
+          type: course.type || "free",
+          source: course.source || "hocmai"
+        };
+      });
 
-      if (courses && courses.length > 0) {
+      setEnrolledCourses(normalizedCourses || []);
+
+      if (normalizedCourses && normalizedCourses.length > 0) {
         toast.success("Đã tải danh sách khóa học");
       }
 
-      return courses || [];
+      return normalizedCourses || [];
     } catch (error) {
       setError(error.message || "Không thể tải danh sách khóa học");
       toast.error("Không thể tải danh sách khóa học");

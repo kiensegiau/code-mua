@@ -224,7 +224,7 @@ const GlobalApi = {
       if (isClient) {
         if (!userId) {
           console.warn('userId không được cung cấp khi gọi getEnrolledCourses');
-          return { enrolledCourses: [] };
+          return [];
         }
         
         console.log('Gọi API lấy khóa học đã đăng ký:', userId);
@@ -235,10 +235,11 @@ const GlobalApi = {
           throw new Error('Lỗi khi lấy danh sách khóa học đã đăng ký');
         }
         
-        return await response.json();
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
       } else {
         console.warn('getEnrolledCourses đang được gọi từ server, hãy sử dụng API route');
-        return { enrolledCourses: [] };
+        return [];
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách khóa học đã đăng ký:", error);

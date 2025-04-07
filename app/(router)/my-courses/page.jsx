@@ -261,183 +261,129 @@ function MyCourses() {
                 </button>
               </div>
 
-              {/* Sort Options */}
-              <div className="w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-initial">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm khóa học..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-full rounded-lg bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
+                  />
+                </div>
+
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium bg-[#1f1f1f] text-gray-400 border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20"
+                  className="py-2 px-3 rounded-lg bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200"
                 >
-                  <option value="lastAccessed">Học gần đây nhất</option>
-                  <option value="progress">Tiến độ</option>
-                  <option value="title">Tên khóa học (A-Z)</option>
-                  <option value="enrolledAt">Thời gian đăng ký</option>
+                  <option value="lastAccessed">Gần đây</option>
+                  <option value="enrolledAt">Mới đăng ký</option>
+                  <option value="progress">Theo tiến độ</option>
+                  <option value="title">Tên A-Z</option>
                 </select>
               </div>
             </div>
-            
-            {/* Search Bar for desktop */}
-            <div className="hidden md:block mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm khóa học..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full rounded-lg bg-[#1f1f1f] border border-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-gray-200 placeholder:text-gray-500"
-                />
-              </div>
-            </div>
 
-            {/* Course Grid */}
-            <div id="courses-grid">
+            {/* Courses grid */}
+            <div id="courses-grid" className="mb-6">
               {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-                  {[...Array(12)].map((_, index) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 6 }).map((_, index) => (
                     <div
-                      key={index}
-                      className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800"
+                      key={`skeleton-${index}`}
+                      className="bg-[#1f1f1f] rounded-xl overflow-hidden border border-gray-800 min-h-[340px]"
                     >
                       <div className="aspect-video bg-gray-800 animate-pulse" />
-                      <div className="p-2 md:p-3">
-                        <div className="h-4 bg-gray-800 rounded animate-pulse mb-2" />
-                        <div className="h-3 bg-gray-800 rounded animate-pulse w-2/3 mb-2" />
-                        <div className="flex justify-between mt-3">
-                          <div className="h-3 bg-gray-800 rounded animate-pulse w-1/4" />
-                          <div className="h-3 bg-gray-800 rounded animate-pulse w-1/4" />
+                      <div className="p-3 md:p-4">
+                        <div className="h-5 bg-gray-800 rounded animate-pulse mb-3" />
+                        <div className="h-4 bg-gray-800 rounded animate-pulse w-2/3 mb-3" />
+                        <div className="flex justify-between mt-4">
+                          <div className="h-4 bg-gray-800 rounded animate-pulse w-1/4" />
+                          <div className="h-4 bg-gray-800 rounded animate-pulse w-1/4" />
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : error ? (
-                <div className="text-center py-12">
-                  <div className="mb-4 text-red-500">
-                    <div className="p-4 bg-red-500/10 rounded-full mx-auto w-16 h-16 flex items-center justify-center">
-                      <span className="text-2xl">⚠️</span>
-                    </div>
+              ) : currentCourses.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-[#1f1f1f] flex items-center justify-center mb-4">
+                    <BookOpen className="w-8 h-8 text-gray-500" />
                   </div>
-                  <h3 className="text-gray-300 text-lg font-medium mb-2">
-                    Không thể tải danh sách khóa học
+                  <h3 className="text-gray-200 font-medium text-lg mb-2">
+                    {searchQuery
+                      ? "Không tìm thấy khóa học nào"
+                      : "Chưa có khóa học nào"}
                   </h3>
-                  <p className="text-gray-400 mb-4">
-                    {error ||
-                      "Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau."}
+                  <p className="text-gray-400 text-sm mb-6 text-center">
+                    {searchQuery
+                      ? "Thử tìm kiếm với từ khóa khác hoặc bỏ bộ lọc"
+                      : "Hãy khám phá các khóa học và đăng ký ngay"}
                   </p>
-                  <button
-                    onClick={() => refresh()}
-                    className="px-6 py-2 bg-[#ff4d4f] text-white rounded-full hover:bg-[#ff4d4f]/90 transition-colors text-sm md:text-base"
+                  <Link
+                    href="/courses"
+                    className="px-4 py-2 bg-[#ff4d4f] text-white rounded-lg text-sm font-medium hover:bg-[#ff4d4f]/90 transition-colors"
                   >
-                    Thử lại
-                  </button>
-                </div>
-              ) : filteredAndSortedCourses &&
-                filteredAndSortedCourses.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-                    {currentCourses &&
-                      currentCourses.map((course) => {
-                        // Chuẩn bị dữ liệu cho CourseItem
-                        const courseData = {
-                          id: course.id,
-                          title: course.title,
-                          subname: "", // Bỏ mô tả ngắn
-                          description: "", // Bỏ mô tả chi tiết
-                          thumbnailUrl: course.thumbnailUrl,
-                          price: 0, // Đã mua rồi
-                          level: course.progress === 100 ? "Đã hoàn thành" : "Đang học",
-                          totalLessons: course.lessons?.length || 0,
-                          totalStudents: 0,
-                          duration: course.duration || "99+",
-                          teacher: course.teacher || "Hoc Mai",
-                          progress: course.progress || 0,
-                        };
-                        
-                        return (
-                          <div 
-                            key={course.id}
-                            className="course-item-container enrolled-course"
-                          >
-                            <CourseItem course={courseData} />
-                          </div>
-                        );
-                      })}
-                  </div>
-
-                  {/* Phân trang */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center space-x-2 mt-8">
-                      <button
-                        onClick={() =>
-                          handlePageChange(Math.max(1, currentPage - 1))
-                        }
-                        disabled={currentPage === 1}
-                        className={`p-2 rounded-lg ${
-                          currentPage === 1
-                            ? "text-gray-600 bg-gray-800/30 cursor-not-allowed"
-                            : "text-gray-400 bg-[#1f1f1f] hover:text-gray-200 border border-gray-800"
-                        }`}
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-
-                      {[...Array(totalPages)].map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handlePageChange(index + 1)}
-                          className={`px-3 py-1 rounded-lg text-sm ${
-                            currentPage === index + 1
-                              ? "bg-[#ff4d4f] text-white"
-                              : "bg-[#1f1f1f] text-gray-400 hover:text-gray-200 border border-gray-800"
-                          }`}
-                        >
-                          {index + 1}
-                        </button>
-                      ))}
-
-                      <button
-                        onClick={() =>
-                          handlePageChange(
-                            Math.min(totalPages, currentPage + 1)
-                          )
-                        }
-                        disabled={currentPage === totalPages}
-                        className={`p-2 rounded-lg ${
-                          currentPage === totalPages
-                            ? "text-gray-600 bg-gray-800/30 cursor-not-allowed"
-                            : "text-gray-400 bg-[#1f1f1f] hover:text-gray-200 border border-gray-800"
-                        }`}
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="mb-4">
-                    <Image
-                      src="/empty-courses.png"
-                      alt="No courses"
-                      width={200}
-                      height={200}
-                      className="mx-auto"
-                    />
-                  </div>
-                  <h3 className="text-gray-400 mb-4">
-                    {searchQuery || selectedFilter !== "all"
-                      ? "Không tìm thấy khóa học nào phù hợp"
-                      : "Bạn chưa đăng ký khóa học nào"}
-                  </h3>
-                  <Link href="/courses">
-                    <button className="px-6 py-2 bg-[#ff4d4f] text-white rounded-full hover:bg-[#ff4d4f]/90 transition-colors text-sm md:text-base">
-                      Khám phá khóa học
-                    </button>
+                    Khám phá khóa học
                   </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {currentCourses.map((course) => (
+                    <CourseItem
+                      key={course.id || course._id}
+                      data={course}
+                      type="my-courses"
+                    />
+                  ))}
                 </div>
               )}
             </div>
+
+            {/* Pagination */}
+            {!loading && currentCourses.length > 0 && totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`p-2 rounded-lg ${
+                      currentPage === 1
+                        ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                        : "bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#ff4d4f]/80 transition-colors"
+                    }`}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={`page-${index + 1}`}
+                      onClick={() => handlePageChange(index + 1)}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === index + 1
+                          ? "bg-[#ff4d4f] text-white"
+                          : "bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#ff4d4f]/80"
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 rounded-lg ${
+                      currentPage === totalPages
+                        ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                        : "bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#ff4d4f]/80 transition-colors"
+                    }`}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

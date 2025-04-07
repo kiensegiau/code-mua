@@ -72,62 +72,141 @@ const TooltipPortal = dynamic(
   { ssr: false }
 );
 
-// Tối ưu hóa component với React.memo
-const CourseItem = memo(function CourseItem({ course }) {
-  const { user, profile } = useAuth();
+// Hàm định dạng thời gian tương đối
+const formatTimeToNow = (date) => {
+  if (!date) return "Chưa học";
+  
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) return 'vừa xong';
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) return `${diffInDays} ngày trước`;
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) return `${diffInMonths} tháng trước`;
+  
+  const diffInYears = Math.floor(diffInMonths / 12);
+  return `${diffInYears} năm trước`;
+};
+
+const CourseItem = ({
+  data,
+  type = "browse",
+  progress = 0,
+  onCourseClick,
+  restrictAccess = false,
+  onEnrollClick,
+  onPurchaseClick,
+  isEnrolled = false,
+  isPurchased = false,
+  onResumeClick,
+  source,
+}) => {
+  // Check if data has the correct structure
+  const isMyCoursesView = type === "my-courses";
+  
+  // Extract course information based on the data structure
+  const courseId = data?.id || data?._id || "";
+  const title = data?.title || "Không có tiêu đề";
+  const description = data?.description || "";
+  const imageUrl = data?.imageUrl || data?.coverImage || "/images/course-default.jpg";
+  const grade = data?.grade || "Chưa phân loại";
+  const subject = data?.subject || "Chưa phân loại";
+  const price = data?.price || 0;
+  const discount = data?.discount || 0;
+  const enrolledProgress = isMyCoursesView ? (data?.progress || 0) : progress;
+  const lastAccessed = data?.lastAccessed ? new Date(data.lastAccessed) : null;
+  const courseSource = data?.source || source || "hocmai";
+  
+  // Formatted price with Vietnamese currency
+  const formattedPrice = price === 0 
+    ? "Miễn phí" 
+    : new Intl.NumberFormat('vi-VN', { 
+        style: 'currency', 
+        currency: 'VND',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(price);
+      
+  // Calculate sale price if discount is available
+  const salePrice = discount > 0 ? Math.floor(price * (1 - discount / 100)) : price;
+  const formattedSalePrice = new Intl.NumberFormat('vi-VN', { 
+    style: 'currency', 
+    currency: 'VND',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(salePrice);
+  
+  // Check if the course has a discount
+  const hasDiscount = discount > 0;
+  
+  // User state
+  const { user } = useAuth();
+
+  // Format last accessed date
+  const formattedLastAccessed = formatTimeToNow(lastAccessed);
+
   const router = useRouter();
   const [enrolling, setEnrolling] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const coursePrice = course?.price || 0;
-  const userBalance = profile?.balance || 0;
+  const coursePrice = price || 0;
+  const userBalance = user?.profile?.balance || 0;
 
   // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
-  const isEnrolled = useMemo(() => {
-    if (!profile?.enrolledCourses || !course?.id) {
+  const isEnrolledMemo = useMemo(() => {
+    if (!user?.profile?.enrolledCourses || !courseId) {
       return false;
     }
 
     // Kiểm tra trong mảng enrolledCourses
-    return profile.enrolledCourses.some((c) => {
+    return user.profile.enrolledCourses.some((c) => {
       // Kiểm tra cả hai trường hợp:
       // 1. c là string (courseId)
       // 2. c là object (có courseId)
-      return typeof c === "string" ? c === course.id : c.courseId === course.id;
+      return typeof c === "string" ? c === courseId : c.courseId === courseId;
     });
-  }, [profile?.enrolledCourses, course?.id]);
+  }, [user?.profile?.enrolledCourses, courseId]);
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
-    if (!user || !profile || !course) return false;
-    if (isEnrolled) return false;
+    if (!user || !user.profile || !data) return false;
+    if (isEnrolledMemo) return false;
     if (coursePrice > userBalance) return false;
     return true;
-  }, [user, profile, course, isEnrolled, coursePrice, userBalance]);
+  }, [user, user.profile, data, isEnrolledMemo, coursePrice, userBalance]);
 
   const handleCourseClick = useCallback(() => {
-    if (isEnrolled) {
-      router.push(`/watch-course/${course.id}`);
+    if (isEnrolledMemo) {
+      router.push(`/watch-course/${courseId}`);
     } else {
-      router.push(`/course-preview/${course.id}`);
+      router.push(`/course-preview/${courseId}`);
     }
-  }, [course?.id, isEnrolled, router]);
+  }, [courseId, isEnrolledMemo, router]);
 
   const verifyEnrollment = useCallback(async () => {
     try {
       setVerifying(true);
 
       // Kiểm tra lại user và profile
-      if (!user || !profile) {
+      if (!user || !user.profile) {
         toast.error("Vui lòng đăng nhập để đăng ký khóa học");
         router.push("/sign-in");
         return false;
       }
 
       // Kiểm tra khóa học tồn tại
-      if (!course?.id) {
+      if (!courseId) {
         toast.error("Không tìm thấy thông tin khóa học");
         return false;
       }
@@ -149,8 +228,8 @@ const CourseItem = memo(function CourseItem({ course }) {
       // Kiểm tra lại trạng thái đăng ký
       const isAlreadyEnrolled = latestProfile.enrolledCourses?.some((c) => {
         return typeof c === "string"
-          ? c === course.id
-          : c.courseId === course.id;
+          ? c === courseId
+          : c.courseId === courseId;
       });
 
       if (isAlreadyEnrolled) {
@@ -166,7 +245,7 @@ const CourseItem = memo(function CourseItem({ course }) {
     } finally {
       setVerifying(false);
     }
-  }, [user, profile, course, coursePrice, router]);
+  }, [user, user.profile, courseId, coursePrice, router]);
 
   const handleEnrollClick = useCallback(
     (e) => {
@@ -181,7 +260,7 @@ const CourseItem = memo(function CourseItem({ course }) {
       if (!canEnroll) {
         if (coursePrice > userBalance) {
           toast.error("Số dư không đủ để mua khóa học này");
-        } else if (isEnrolled) {
+        } else if (isEnrolledMemo) {
           toast.error("Bạn đã đăng ký khóa học này rồi");
         } else {
           toast.error("Không thể đăng ký khóa học lúc này");
@@ -191,7 +270,7 @@ const CourseItem = memo(function CourseItem({ course }) {
 
       setShowConfirmModal(true);
     },
-    [user, canEnroll, coursePrice, userBalance, isEnrolled, router]
+    [user, canEnroll, coursePrice, userBalance, isEnrolledMemo, router]
   );
 
   const handleConfirmEnroll = useCallback(async () => {
@@ -203,7 +282,7 @@ const CourseItem = memo(function CourseItem({ course }) {
       if (!isVerified) return;
 
       // Xác định courseId đúng - hỗ trợ cả id và _id
-      const courseId = course.id || course._id;
+      const courseId = data.id || data._id;
       
       // Xác định userId đúng - hỗ trợ cả uid và id
       const userId = user.uid || user.id;
@@ -212,7 +291,7 @@ const CourseItem = memo(function CourseItem({ course }) {
         courseId,
         userId,
         courseInfo: {
-          title: course.title,
+          title: data.title,
           price: coursePrice
         }
       });
@@ -236,7 +315,7 @@ const CourseItem = memo(function CourseItem({ course }) {
     } finally {
       setEnrolling(false);
     }
-  }, [course, coursePrice, user, router, verifyEnrollment]);
+  }, [data, coursePrice, user, router, verifyEnrollment]);
 
   // Sử dụng CSS thuần thay vì Framer Motion
   const placeholderStyles = {
@@ -252,7 +331,7 @@ const CourseItem = memo(function CourseItem({ course }) {
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
               {/* Placeholder với gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#1f1f1f] to-[#191919] flex items-center justify-center">
-                {!course.thumbnailUrl && (
+                {!data.imageUrl && (
                   <div className="text-center relative">
                     {/* Hiệu ứng glow phía sau - tối ưu hóa */}
                     <div className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl animate-pulse-custom"></div>
@@ -279,7 +358,7 @@ const CourseItem = memo(function CourseItem({ course }) {
               </div>
 
               {/* Hiệu ứng dạng lưới - static */}
-              {!course.thumbnailUrl && (
+              {!data.imageUrl && (
                 <div
                   className="absolute inset-0 opacity-20"
                   style={{
@@ -291,15 +370,15 @@ const CourseItem = memo(function CourseItem({ course }) {
               )}
 
               {/* Lazy loading cho hình ảnh */}
-              {course.thumbnailUrl && (
+              {data.imageUrl && (
                 <div
                   className={`absolute inset-0 transition-opacity duration-300 ${
                     imageLoaded ? "opacity-100" : "opacity-0"
                   }`}
                 >
                   <Image
-                    src={course.thumbnailUrl}
-                    alt={course.title || "Khóa học"}
+                    src={data.imageUrl}
+                    alt={data.title || "Khóa học"}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
@@ -314,7 +393,7 @@ const CourseItem = memo(function CourseItem({ course }) {
               )}
 
               {/* Show enrolled badge if enrolled - tối ưu hóa animation */}
-              {isEnrolled && (
+              {isEnrolledMemo && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <div className="bg-[#ff4d4f] rounded-full p-2 animate-fadeInScale">
                     <CheckCircle className="w-6 h-6 text-white" />
@@ -324,15 +403,15 @@ const CourseItem = memo(function CourseItem({ course }) {
 
               {/* Price tag - static thay vì animation */}
               <div className="absolute top-3 right-3 bg-[#ff4d4f] text-white text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm">
-                {course.price > 0
-                  ? `${course.price.toLocaleString("vi-VN")} VND`
+                {coursePrice > 0
+                  ? `${formattedPrice}`
                   : "Miễn phí"}
               </div>
 
               {/* Level badge - static thay vì animation */}
               <div className="absolute top-3 left-3 bg-gray-800/90 text-gray-200 text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
-                <span>{course.level}</span>
+                <span>{grade}</span>
               </div>
             </div>
 
@@ -341,7 +420,7 @@ const CourseItem = memo(function CourseItem({ course }) {
               <TooltipRoot>
                 <TooltipTrigger asChild>
                   <h2 className="font-semibold text-gray-200 text-base mb-1 line-clamp-2 group-hover:text-[#ff4d4f] transition-colors">
-                    {course.title}
+                    {title}
                   </h2>
                 </TooltipTrigger>
                 <TooltipPortal>
@@ -349,7 +428,7 @@ const CourseItem = memo(function CourseItem({ course }) {
                     className="bg-gray-900 text-white p-2 rounded-md text-sm shadow-lg max-w-[300px]"
                     sideOffset={5}
                   >
-                    {course.title}
+                    {title}
                     <TooltipArrow className="fill-gray-900" />
                   </TooltipContent>
                 </TooltipPortal>
@@ -358,7 +437,7 @@ const CourseItem = memo(function CourseItem({ course }) {
               <TooltipRoot>
                 <TooltipTrigger asChild>
                   <p className="text-xs text-gray-400 mb-2 line-clamp-1">
-                    {course.subname || "Khóa học online"}
+                    {subject}
                   </p>
                 </TooltipTrigger>
                 <TooltipPortal>
@@ -366,7 +445,7 @@ const CourseItem = memo(function CourseItem({ course }) {
                     className="bg-gray-900 text-white p-2 rounded-md text-sm shadow-lg max-w-[300px]"
                     sideOffset={5}
                   >
-                    {course.subname || "Khóa học online"}
+                    {subject}
                     <TooltipArrow className="fill-gray-900" />
                   </TooltipContent>
                 </TooltipPortal>
@@ -379,7 +458,7 @@ const CourseItem = memo(function CourseItem({ course }) {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-300">
-                    {course.teacher}
+                    {data.teacher}
                   </p>
                   <p className="text-[10px] text-gray-400">Giảng viên</p>
                 </div>
@@ -390,13 +469,13 @@ const CourseItem = memo(function CourseItem({ course }) {
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-xs text-gray-400 whitespace-nowrap">
-                    {course.duration || "100+"} giờ
+                    {formattedLastAccessed}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-xs text-gray-400 whitespace-nowrap">
-                    {course.totalLessons || "100+"} bài học
+                    {data.totalLessons || "100+"} bài học
                   </span>
                 </div>
               </div>
@@ -405,16 +484,16 @@ const CourseItem = memo(function CourseItem({ course }) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isEnrolled) {
-                    router.push(`/watch-course/${course.id}`);
+                  if (isEnrolledMemo) {
+                    router.push(`/watch-course/${courseId}`);
                   } else {
                     handleEnrollClick(e);
                   }
                 }}
-                disabled={!isEnrolled && (enrolling || verifying || !canEnroll)}
+                disabled={!isEnrolledMemo && (enrolling || verifying || !canEnroll)}
                 className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 hover-scale
                   ${
-                    isEnrolled
+                    isEnrolledMemo
                       ? "bg-green-600 text-white hover:bg-green-700"
                       : enrolling || verifying
                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
@@ -424,19 +503,15 @@ const CourseItem = memo(function CourseItem({ course }) {
                   }
                 `}
               >
-                {isEnrolled
-                  ? "Vào học ngay"
-                  : enrolling
-                  ? "Đang xử lý..."
-                  : verifying
-                  ? "Đang xác minh..."
-                  : !canEnroll
-                  ? coursePrice > userBalance
-                    ? "Số dư không đủ"
-                    : isEnrolled
-                    ? "Đã đăng ký"
-                    : "Không thể đăng ký"
-                  : "Đăng ký ngay"}
+                {(() => {
+                  if (isEnrolledMemo) return "Vào học ngay";
+                  if (enrolling) return "Đang xử lý...";
+                  if (verifying) return "Đang xác minh...";
+                  if (!canEnroll) {
+                    return coursePrice > userBalance ? "Số dư không đủ" : "Không thể đăng ký";
+                  }
+                  return "Đăng ký ngay";
+                })()}
               </button>
             </div>
           </div>
@@ -448,13 +523,13 @@ const CourseItem = memo(function CourseItem({ course }) {
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
           onConfirm={handleConfirmEnroll}
-          course={course}
+          course={data}
           userBalance={userBalance}
           loading={enrolling || verifying}
         />
       )}
     </>
   );
-});
+};
 
 export default CourseItem;
