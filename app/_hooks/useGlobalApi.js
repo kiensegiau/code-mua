@@ -41,14 +41,31 @@ export function useEnrollCourse() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, courseId }) =>
-      GlobalApi.enrollCourse(userId, courseId),
+    mutationFn: ({ userId, courseId }) => {
+      console.log("useEnrollCourse được gọi với:", { userId, courseId });
+      
+      if (!userId) {
+        console.error("userId không được cung cấp cho enrollCourse");
+        throw new Error("userId là bắt buộc");
+      }
+      
+      if (!courseId) {
+        console.error("courseId không được cung cấp cho enrollCourse");
+        throw new Error("courseId là bắt buộc");
+      }
+      
+      return GlobalApi.enrollCourse(userId, courseId);
+    },
     onSuccess: (data, variables) => {
+      console.log("Đăng ký khóa học thành công:", data);
       // Invalidate các query liên quan để fetch dữ liệu mới
       queryClient.invalidateQueries(["enrolledCourses", variables.userId]);
       queryClient.invalidateQueries(["userProfile", variables.userId]);
       queryClient.invalidateQueries(["course", variables.courseId]);
     },
+    onError: (error, variables) => {
+      console.error("Lỗi khi đăng ký khóa học:", error, variables);
+    }
   });
 }
 

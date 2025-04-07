@@ -202,64 +202,24 @@ const CourseItem = memo(function CourseItem({ course }) {
       const isVerified = await verifyEnrollment();
       if (!isVerified) return;
 
-      // Lưu courseId thay vì object phức tạp
-      const courseId = course.id;
-
-      const userDocRef = doc(db, "users", profile.id);
-      const courseRef = doc(db, "courses", course.id);
-
-      // Thực hiện transaction để đảm bảo tính nhất quán
-      await runTransaction(db, async (transaction) => {
-        // 1. Đọc tất cả dữ liệu cần thiết
-        const userDoc = await transaction.get(userDocRef);
-        const courseDoc = await transaction.get(courseRef);
-
-        if (!userDoc.exists()) {
-          throw new Error("Không tìm thấy thông tin người dùng");
+      // Xác định courseId đúng - hỗ trợ cả id và _id
+      const courseId = course.id || course._id;
+      
+      // Xác định userId đúng - hỗ trợ cả uid và id
+      const userId = user.uid || user.id;
+      
+      console.log("Đăng ký khóa học với thông tin:", {
+        courseId,
+        userId,
+        courseInfo: {
+          title: course.title,
+          price: coursePrice
         }
-
-        if (!courseDoc.exists()) {
-          throw new Error("Không tìm thấy thông tin khóa học");
-        }
-
-        const userData = userDoc.data();
-        const courseData = courseDoc.data();
-        const currentBalance = userData.balance || 0;
-
-        // 2. Kiểm tra điều kiện
-        if (coursePrice > currentBalance) {
-          throw new Error("Số dư không đủ");
-        }
-
-        if (userData.enrolledCourses?.includes(courseId)) {
-          throw new Error("Đã đăng ký khóa học này");
-        }
-
-        // 3. Thực hiện tất cả các thao tác ghi
-        transaction.update(userDocRef, {
-          balance: currentBalance - coursePrice,
-          enrolledCourses: arrayUnion(courseId), // Lưu courseId thay vì object
-        });
-
-        transaction.update(courseRef, {
-          totalStudents: (courseData.totalStudents || 0) + 1,
-          updatedAt: new Date().toISOString(),
-          enrolledUsers: arrayUnion(user.uid), // Thêm user vào danh sách học viên
-        });
-
-        // 4. Lưu thông tin chi tiết vào collection riêng
-        const enrollmentRef = doc(collection(db, "enrollments"));
-        transaction.set(enrollmentRef, {
-          userId: user.uid,
-          courseId: courseId,
-          enrolledAt: new Date().toISOString(),
-          price: coursePrice,
-          title: course.title || "",
-          coverImage: course.coverImage || "",
-          progress: 0,
-          lastAccessed: null,
-        });
       });
+      
+      // Gọi API đăng ký khóa học thay vì sử dụng transaction Firebase trực tiếp
+      const response = await GlobalApi.enrollCourse(userId, courseId);
+      console.log("Phản hồi API đăng ký khóa học:", response);
 
       toast.success("Đăng ký khóa học thành công!");
 
@@ -268,7 +228,7 @@ const CourseItem = memo(function CourseItem({ course }) {
 
       // Thêm setTimeout để đảm bảo toast message hiển thị trước khi chuyển trang
       setTimeout(() => {
-        router.push(`/watch-course/${course.id}`);
+        router.push(`/watch-course/${courseId}`);
       }, 1000);
     } catch (error) {
       console.error("Error enrolling course:", error);
@@ -276,7 +236,7 @@ const CourseItem = memo(function CourseItem({ course }) {
     } finally {
       setEnrolling(false);
     }
-  }, [course, coursePrice, profile, user, router, verifyEnrollment]);
+  }, [course, coursePrice, user, router, verifyEnrollment]);
 
   // Sử dụng CSS thuần thay vì Framer Motion
   const placeholderStyles = {

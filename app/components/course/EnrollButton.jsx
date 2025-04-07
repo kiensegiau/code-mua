@@ -19,16 +19,24 @@ const EnrollButton = ({ course, onSuccess }) => {
     try {
       setLoading(true);
       
-      // Thêm log để xác định courseId và userId
+      // Xác định courseId đúng
+      const courseId = course.id || course._id;
+      
+      // Xác định userId đúng
+      const userId = user.uid || user.id;
+      
+      // Thêm log chi tiết
       console.log("Đăng ký khóa học với dữ liệu:", { 
-        courseId: course._id,
-        userId: user.id 
+        courseId,
+        course: course,
+        userId,
+        user: user
       });
       
       // Gọi API đăng ký khóa học
       await enrollCourseMutation.mutateAsync({
-        courseId: course._id,
-        userId: user.id
+        courseId: courseId,
+        userId: userId
       });
       
       toast.success("Đăng ký khóa học thành công!");
