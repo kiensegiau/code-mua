@@ -17,6 +17,7 @@ import {
   IoFolderOutline,
   IoSchoolOutline,
   IoListOutline,
+  IoFileTrayFullOutline,
 } from "react-icons/io5";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -105,6 +106,110 @@ const FileItem = memo(function FileItem({ file, isActive, onClick }) {
   );
 });
 
+// Component thư mục con của thư mục con (subsubfolder)
+const SubSubfolderItem = memo(function SubSubfolderItem({
+  subsubfolder,
+  isExpanded,
+  toggleSubSubfolder,
+  activeVideoId,
+  onFileClick,
+  sortFiles,
+  getNumberFromTitle,
+}) {
+  // Sắp xếp files trong subsubfolder
+  const sortedFiles = useMemo(() => {
+    return subsubfolder.files ? [...subsubfolder.files].sort(sortFiles) : [];
+  }, [subsubfolder.files, sortFiles]);
+
+  // Kiểm tra xem có file nào trong subsubfolder đang active không
+  const hasActiveFile = useMemo(() => {
+    return (
+      subsubfolder.files &&
+      subsubfolder.files.some((file) => file.id === activeVideoId)
+    );
+  }, [subsubfolder.files, activeVideoId]);
+
+  return (
+    <div className="my-0.5 border-b border-gray-700/30">
+      <div
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSubSubfolder(subsubfolder.id);
+        }}
+        className={`flex items-center h-[45px] px-14 cursor-pointer transition-all duration-200 ease-in-out group
+          ${
+            isExpanded || hasActiveFile
+              ? "border-l-2 border-amber-400"
+              : "hover:bg-gray-800/50 border-l-2 border-transparent hover:border-gray-600/50"
+          }`}
+      >
+        <div className="flex items-center w-full min-w-0">
+          <div
+            className={`flex items-center justify-center w-5 h-5 rounded-lg flex-shrink-0 mr-3 
+              ${
+                isExpanded || hasActiveFile
+                  ? "bg-amber-600/10"
+                  : "bg-gray-800 group-hover:bg-gray-700/70"
+              }`}
+          >
+            <IoFileTrayFullOutline
+              className={`w-3 h-3 
+                ${
+                  isExpanded || hasActiveFile
+                    ? "text-amber-300"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
+            />
+          </div>
+          <span
+            className={`text-sm truncate transition-colors duration-200
+                ${
+                  isExpanded || hasActiveFile
+                    ? "text-white font-medium"
+                    : "text-gray-400 group-hover:text-gray-300"
+                }`}
+            title={subsubfolder.name}
+          >
+            {subsubfolder.name}
+          </span>
+          <div className="ml-auto flex-shrink-0">
+            {isExpanded ? (
+              <IoChevronUp
+                className={`w-4 h-4 ${
+                  isExpanded || hasActiveFile
+                    ? "text-amber-300"
+                    : "text-gray-400"
+                }`}
+              />
+            ) : (
+              <IoChevronDown
+                className={`w-4 h-4 ${
+                  isExpanded || hasActiveFile
+                    ? "text-amber-300"
+                    : "text-gray-400"
+                }`}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+      {isExpanded && (
+        <div className="bg-gray-800/10 py-1">
+          {sortedFiles.map((file) => (
+            <FileItem
+              key={`subsubfolder-file-${file.id || file._id || Date.now()}`}
+              file={file}
+              isActive={activeVideoId === file.id}
+              onClick={onFileClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
 // Component thư mục con (subfolder)
 const SubfolderItem = memo(function SubfolderItem({
   subfolder,
@@ -120,13 +225,185 @@ const SubfolderItem = memo(function SubfolderItem({
     return subfolder.files ? [...subfolder.files].sort(sortFiles) : [];
   }, [subfolder.files, sortFiles]);
 
+  // Thêm state để quản lý việc mở/đóng các subsubfolder
+  const [expandedSubSubfolders, setExpandedSubSubfolders] = useState(() => {
+    try {
+      // Khôi phục trạng thái đã lưu nếu có
+      const savedStateStr = localStorage.getItem(
+        `expanded_subsubfolders_${subfolder.id}`
+      );
+      const savedState = savedStateStr ? JSON.parse(savedStateStr) : {};
+
+      // Kiểm tra xem video hiện tại có trong subsubfolder nào không
+      const lastWatchedSubSubfolderId = localStorage.getItem(
+        "lastWatchedSubSubfolderId"
+      );
+
+      if (lastWatchedSubSubfolderId && subfolder.subsubfolders) {
+        const hasSubSubfolder = subfolder.subsubfolders.some(
+          (ssf) => ssf.id === lastWatchedSubSubfolderId
+        );
+
+        if (hasSubSubfolder) {
+          // Đảm bảo CHỈ mở subsubfolder chứa video đang xem, đóng tất cả subsubfolder khác
+          return { [lastWatchedSubSubfolderId]: true };
+        }
+      }
+
+      // Nếu không có subsubfolder nào chứa video đang xem, giữ một subsubfolder mở (nếu có)
+      const openedSubSubfolderIds = Object.entries(savedState)
+        .filter(([_, isOpen]) => isOpen)
+        .map(([id]) => id);
+
+      if (openedSubSubfolderIds.length > 1) {
+        // Chỉ giữ một subsubfolder mở (cái đầu tiên)
+        return { [openedSubSubfolderIds[0]]: true };
+      }
+
+      return savedState;
+    } catch (e) {
+      return {};
+    }
+  });
+
+  // Tự động mở subsubfolder chứa video đang active
+  useEffect(() => {
+    if (
+      isExpanded &&
+      activeVideoId &&
+      subfolder.subsubfolders &&
+      subfolder.subsubfolders.length > 0
+    ) {
+      // Tìm subsubfolder chứa video đang active
+      let activeSubSubfolderId = null;
+
+      for (const subsubfolder of subfolder.subsubfolders) {
+        if (
+          subsubfolder.files &&
+          subsubfolder.files.some((file) => file.id === activeVideoId)
+        ) {
+          activeSubSubfolderId = subsubfolder.id;
+          break;
+        }
+      }
+
+      // Nếu tìm thấy subsubfolder chứa video đang active
+      if (activeSubSubfolderId) {
+        // Đóng tất cả các subsubfolder và chỉ mở subsubfolder chứa video đang active
+        const newState = {
+          [activeSubSubfolderId]: true,
+        };
+
+        setExpandedSubSubfolders(newState);
+
+        // Lưu trạng thái
+        try {
+          localStorage.setItem(
+            `expanded_subsubfolders_${subfolder.id}`,
+            JSON.stringify(newState)
+          );
+          localStorage.setItem("lastWatchedSubSubfolderId", activeSubSubfolderId);
+        } catch (e) {
+          // console.error("Lỗi khi lưu trạng thái subsubfolder:", e);
+        }
+      }
+    }
+  }, [isExpanded, activeVideoId, subfolder.subsubfolders, subfolder.id]);
+
+  // Lưu trạng thái khi expandedSubSubfolders thay đổi
+  useEffect(() => {
+    if (Object.keys(expandedSubSubfolders).length > 0) {
+      try {
+        localStorage.setItem(
+          `expanded_subsubfolders_${subfolder.id}`,
+          JSON.stringify(expandedSubSubfolders)
+        );
+      } catch (e) {
+        // console.error("Lỗi khi lưu trạng thái subsubfolder:", e);
+      }
+    }
+  }, [expandedSubSubfolders, subfolder.id]);
+
+  // Hàm toggle subsubfolder
+  const toggleSubSubfolder = useCallback(
+    (subsubfolderId) => {
+      setExpandedSubSubfolders((prev) => {
+        // Kiểm tra xem subsubfolder hiện tại đã được mở chưa
+        const isCurrentlyOpen = prev[subsubfolderId];
+
+        // Nếu subsubfolder hiện tại đang đóng, thì mở nó và đóng tất cả các subsubfolder khác
+        if (!isCurrentlyOpen) {
+          // Đóng tất cả subsubfolder và chỉ mở subsubfolder được chọn
+          const newState = {
+            [subsubfolderId]: true,
+          };
+
+          // Lưu trạng thái
+          try {
+            localStorage.setItem(
+              `expanded_subsubfolders_${subfolder.id}`,
+              JSON.stringify(newState)
+            );
+          } catch (e) {
+            // console.error("Lỗi khi lưu trạng thái subsubfolder:", e);
+          }
+
+          return newState;
+        } else {
+          // Nếu subsubfolder đang mở, thì chỉ đóng nó
+          const newState = {
+            ...prev,
+            [subsubfolderId]: false,
+          };
+
+          // Lưu trạng thái
+          try {
+            localStorage.setItem(
+              `expanded_subsubfolders_${subfolder.id}`,
+              JSON.stringify(newState)
+            );
+          } catch (e) {
+            // console.error("Lỗi khi lưu trạng thái subsubfolder:", e);
+          }
+
+          return newState;
+        }
+      });
+    },
+    [subfolder.id]
+  );
+
+  // Sắp xếp subsubfolders theo tên
+  const sortedSubSubfolders = useMemo(() => {
+    return subfolder.subsubfolders
+      ? [...subfolder.subsubfolders].sort((a, b) => {
+          const numA = getNumberFromTitle(a.name);
+          const numB = getNumberFromTitle(b.name);
+          return numA - numB;
+        })
+      : [];
+  }, [subfolder.subsubfolders, getNumberFromTitle]);
+
   // Kiểm tra xem có file nào trong subfolder đang active không
   const hasActiveFile = useMemo(() => {
-    return (
-      subfolder.files &&
-      subfolder.files.some((file) => file.id === activeVideoId)
-    );
-  }, [subfolder.files, activeVideoId]);
+    if (subfolder.files && subfolder.files.some((file) => file.id === activeVideoId)) {
+      return true;
+    }
+    
+    // Kiểm tra trong các subsubfolder
+    if (subfolder.subsubfolders) {
+      for (const subsubfolder of subfolder.subsubfolders) {
+        if (
+          subsubfolder.files &&
+          subsubfolder.files.some((file) => file.id === activeVideoId)
+        ) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }, [subfolder.files, subfolder.subsubfolders, activeVideoId]);
 
   return (
     <div className="my-0.5 border-b border-gray-700/30">
@@ -195,14 +472,31 @@ const SubfolderItem = memo(function SubfolderItem({
       </div>
       {isExpanded && (
         <div className="bg-gray-800/10 py-1">
-          {sortedFiles.map((file) => (
-            <FileItem
-              key={`file-${file.id || file._id || Date.now()}`}
-              file={file}
-              isActive={activeVideoId === file.id}
-              onClick={onFileClick}
-            />
-          ))}
+          {/* Hiển thị files trực tiếp của subfolder (nếu có) */}
+          {sortedFiles.length > 0 &&
+            sortedFiles.map((file) => (
+              <FileItem
+                key={`subfolder-file-${file.id || file._id || Date.now()}`}
+                file={file}
+                isActive={activeVideoId === file.id}
+                onClick={onFileClick}
+              />
+            ))}
+
+          {/* Hiển thị subsubfolders (nếu có) */}
+          {sortedSubSubfolders.length > 0 &&
+            sortedSubSubfolders.map((subsubfolder) => (
+              <SubSubfolderItem
+                key={`subsubfolder-${subsubfolder.id || Date.now()}`}
+                subsubfolder={subsubfolder}
+                isExpanded={!!expandedSubSubfolders[subsubfolder.id]}
+                toggleSubSubfolder={toggleSubSubfolder}
+                activeVideoId={activeVideoId}
+                onFileClick={onFileClick}
+                sortFiles={sortFiles}
+                getNumberFromTitle={getNumberFromTitle}
+              />
+            ))}
         </div>
       )}
     </div>
@@ -335,7 +629,7 @@ const LessonItem = memo(function LessonItem({
             [subfolderId]: true,
           };
 
-          // Lưu trạng thái mỗi khi toggle
+          // Lưu trạng thái
           try {
             localStorage.setItem(
               `expanded_subfolders_${lesson.id}`,
@@ -353,7 +647,7 @@ const LessonItem = memo(function LessonItem({
             [subfolderId]: false,
           };
 
-          // Lưu trạng thái mỗi khi toggle
+          // Lưu trạng thái
           try {
             localStorage.setItem(
               `expanded_subfolders_${lesson.id}`,
@@ -688,7 +982,7 @@ const CourseContent = forwardRef(
         return;
       }
 
-      // 1. Thu thập tất cả video trong bài học hiện tại (từ cả files trực tiếp và subfolders)
+      // 1. Thu thập tất cả video trong bài học hiện tại (từ cả files trực tiếp, subfolders và subsubfolders)
       let allVideos = [];
 
       // Lấy videos từ files trực tiếp
@@ -698,13 +992,24 @@ const CourseContent = forwardRef(
         );
       }
 
-      // Lấy videos từ subfolders
+      // Lấy videos từ subfolders và subsubfolders
       if (activeLesson.subfolders) {
         for (const subfolder of activeLesson.subfolders) {
           if (subfolder.files) {
             allVideos.push(
               ...subfolder.files.filter((f) => f.type?.includes("video"))
             );
+          }
+          
+          // Lấy videos từ subsubfolders
+          if (subfolder.subsubfolders) {
+            for (const subsubfolder of subfolder.subsubfolders) {
+              if (subsubfolder.files) {
+                allVideos.push(
+                  ...subsubfolder.files.filter((f) => f.type?.includes("video"))
+                );
+              }
+            }
           }
         }
       }
@@ -734,7 +1039,7 @@ const CourseContent = forwardRef(
       const nextLesson = sortedLessons[currentLessonIndex + 1];
 
       if (nextLesson) {
-        // 5. Tìm tất cả video trong lesson mới (từ cả files trực tiếp và subfolders)
+        // 5. Tìm tất cả video trong lesson mới (từ cả files trực tiếp, subfolders và subsubfolders)
         let nextLessonVideos = [];
 
         // Lấy videos từ files trực tiếp
@@ -744,13 +1049,24 @@ const CourseContent = forwardRef(
           );
         }
 
-        // Lấy videos từ subfolders
+        // Lấy videos từ subfolders và subsubfolders
         if (nextLesson.subfolders) {
           for (const subfolder of nextLesson.subfolders) {
             if (subfolder.files) {
               nextLessonVideos.push(
                 ...subfolder.files.filter((f) => f.type?.includes("video"))
               );
+            }
+            
+            // Lấy videos từ subsubfolders
+            if (subfolder.subsubfolders) {
+              for (const subsubfolder of subfolder.subsubfolders) {
+                if (subsubfolder.files) {
+                  nextLessonVideos.push(
+                    ...subsubfolder.files.filter((f) => f.type?.includes("video"))
+                  );
+                }
+              }
             }
           }
         }
@@ -775,7 +1091,7 @@ const CourseContent = forwardRef(
         if (nextChapter) {
           const firstLesson = nextChapter.lessons.sort(sortByNumber)[0];
           if (firstLesson) {
-            // Tìm tất cả video trong lesson mới (từ cả files trực tiếp và subfolders)
+            // Tìm tất cả video trong lesson mới (từ cả files trực tiếp, subfolders và subsubfolders)
             let firstLessonVideos = [];
 
             // Lấy videos từ files trực tiếp
@@ -785,13 +1101,24 @@ const CourseContent = forwardRef(
               );
             }
 
-            // Lấy videos từ subfolders
+            // Lấy videos từ subfolders và subsubfolders
             if (firstLesson.subfolders) {
               for (const subfolder of firstLesson.subfolders) {
                 if (subfolder.files) {
                   firstLessonVideos.push(
                     ...subfolder.files.filter((f) => f.type?.includes("video"))
                   );
+                }
+                
+                // Lấy videos từ subsubfolders
+                if (subfolder.subsubfolders) {
+                  for (const subsubfolder of subfolder.subsubfolders) {
+                    if (subsubfolder.files) {
+                      firstLessonVideos.push(
+                        ...subsubfolder.files.filter((f) => f.type?.includes("video"))
+                      );
+                    }
+                  }
                 }
               }
             }
