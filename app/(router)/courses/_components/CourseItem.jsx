@@ -165,6 +165,12 @@ const CourseItem = ({
 
   // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
   const isEnrolledMemo = useMemo(() => {
+    // Nếu đang ở trang my-courses, mặc định coi như đã đăng ký
+    if (isMyCoursesView) return true;
+    
+    // Nếu prop isEnrolled được truyền vào, sử dụng giá trị này
+    if (isEnrolled !== undefined) return isEnrolled;
+    
     if (!user?.profile?.enrolledCourses || !courseId) {
       return false;
     }
@@ -176,7 +182,7 @@ const CourseItem = ({
       // 2. c là object (có courseId)
       return typeof c === "string" ? c === courseId : c.courseId === courseId;
     });
-  }, [user?.profile?.enrolledCourses, courseId]);
+  }, [user?.profile?.enrolledCourses, courseId, isMyCoursesView, isEnrolled]);
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
@@ -504,12 +510,20 @@ const CourseItem = ({
                 `}
               >
                 {(() => {
+                  // Nếu đã đăng ký khóa học
                   if (isEnrolledMemo) return "Vào học ngay";
+                  
+                  // Đang xử lý
                   if (enrolling) return "Đang xử lý...";
                   if (verifying) return "Đang xác minh...";
+                  
+                  // Không thể đăng ký
                   if (!canEnroll) {
-                    return coursePrice > userBalance ? "Số dư không đủ" : "Không thể đăng ký";
+                    if (coursePrice > userBalance) return "Số dư không đủ";
+                    return "Không thể đăng ký";
                   }
+                  
+                  // Mặc định
                   return "Đăng ký ngay";
                 })()}
               </button>
