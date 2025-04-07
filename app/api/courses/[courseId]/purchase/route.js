@@ -1,83 +1,153 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/app/_utils/mongodb";
-import User from "@/app/_models/user";
-import Course from "@/app/_models/course";
-import Purchase from "@/app/_models/purchase";
-import { getServerSession } from "next-auth";
 import mongoose from "mongoose";
 
 export async function POST(request, { params }) {
   try {
-    const session = await getServerSession();
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    console.log("API mua khóa học được gọi");
     const { courseId } = params;
-    const userId = session.user.id;
+    console.log("courseId:", courseId);
+    
+    // Lấy dữ liệu từ request body
+    const requestData = await request.json();
+    const userId = requestData.userId;
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: "userId là bắt buộc" },
+        { status: 400 }
+      );
+    }
+    
+    console.log("userId từ request:", userId);
 
+    // Kết nối đến database
     await connectToDatabase();
-
-    // Kiểm tra xem đã mua khóa học chưa
-    const existingPurchase = await Purchase.findOne({
-      userId,
-      courseId,
-    });
-
-    if (existingPurchase) {
-      return NextResponse.json(
-        { error: "Course already purchased" },
-        { status: 400 }
-      );
-    }
-
-    // Lấy thông tin số dư của người dùng
-    const user = await User.findOne({ uid: userId });
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-    const userBalance = user.balance || 0;
-
-    // Lấy giá của khóa học
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return NextResponse.json(
-        { error: "Course not found" },
-        { status: 404 }
-      );
-    }
-    const coursePrice = course.price || 0;
-
-    if (userBalance < coursePrice) {
-      return NextResponse.json(
-        { error: "Insufficient balance" },
-        { status: 400 }
-      );
-    }
-
-    // Sử dụng MongoDB session để đảm bảo tính nhất quán của dữ liệu
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+    console.log("Đã kết nối database");
+    
+    // Kết nối đến database hocmai
+    const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
+    console.log("Đã kết nối đến database hocmai");
+    
+    // Truy cập các collections
+    const usersCollection = hocmaiDb.collection('users');
+    const coursesCollection = hocmaiDb.collection('courses');
+    const enrollmentsCollection = hocmaiDb.collection('enrollments');
+    const purchasesCollection = hocmaiDb.collection('purchases');
+    const transactionsCollection = hocmaiDb.collection('transactions');
+    
     try {
-      // Trừ tiền và cập nhật ví người dùng
-      user.balance = userBalance - coursePrice;
-      await user.save({ session });
+      // Convert courseId sang ObjectId
+      const courseObjectId = new mongoose.Types.ObjectId(courseId);
+      console.log("courseObjectId:", courseObjectId);
 
-      // Lưu thông tin mua khóa học
-      const purchase = new Purchase({
-        userId,
-        courseId,
+      // Kiểm tra xem đã mua khóa học chưa
+      const existingPurchase = await purchasesCollection.findOne({
+        userId: userId,
+        courseId: courseId,
+        status: { $in: ['completed', 'pending'] }
+      });
+
+      if (existingPurchase) {
+        console.log("Người dùng đã mua khóa học này rồi");
+        return NextResponse.json(
+          { error: "Khóa học này đã được mua trước đó" },
+          { status: 400 }
+        );
+      }
+
+      // Lấy thông tin số dư của người dùng
+      const user = await usersCollection.findOne({ uid: userId });
+      if (!user) {
+        console.log("Không tìm thấy người dùng với ID:", userId);
+        return NextResponse.json(
+          { error: "Không tìm thấy thông tin người dùng" },
+          { status: 404 }
+        );
+      }
+      
+      console.log("Đã tìm thấy người dùng:", user.email || user.uid);
+      const userBalance = user.balance || 0;
+      console.log("Số dư người dùng:", userBalance);
+
+      // Lấy giá của khóa học
+      const course = await coursesCollection.findOne({ _id: courseObjectId });
+      if (!course) {
+        console.log("Không tìm thấy khóa học với ID:", courseId);
+        return NextResponse.json(
+          { error: "Không tìm thấy khóa học" },
+          { status: 404 }
+        );
+      }
+      
+      console.log("Đã tìm thấy khóa học:", course.title);
+      const coursePrice = course.price || 0;
+      console.log("Giá khóa học:", coursePrice);
+
+      if (userBalance < coursePrice) {
+        console.log("Số dư không đủ. Cần:", coursePrice, "Hiện có:", userBalance);
+        return NextResponse.json(
+          { error: "Số dư không đủ để mua khóa học này" },
+          { status: 400 }
+        );
+      }
+
+      console.log("Bắt đầu mua khóa học - không dùng transaction");
+      
+      // 1. Trừ tiền và cập nhật ví người dùng
+      const userUpdateResult = await usersCollection.updateOne(
+        { uid: userId },
+        { $set: { balance: userBalance - coursePrice } }
+      );
+      console.log("Đã cập nhật số dư người dùng:", userUpdateResult.acknowledged);
+
+      // 2. Lưu thông tin mua khóa học
+      const purchaseData = {
+        userId: userId,
+        courseId: courseId,
         amount: coursePrice,
         purchasedAt: new Date(),
-      });
-      await purchase.save({ session });
+        status: 'completed',
+        paymentMethod: 'wallet',
+        transactionId: new mongoose.Types.ObjectId().toString()
+      };
+      
+      const purchaseResult = await purchasesCollection.insertOne(purchaseData);
+      console.log("Đã lưu thông tin mua khóa học:", purchaseResult.acknowledged);
+      
+      // 3. Lưu lịch sử giao dịch
+      const transactionData = {
+        userId: userId,
+        type: 'purchase',
+        amount: -coursePrice,
+        balance: userBalance - coursePrice,
+        description: `Mua khóa học: ${course.title}`,
+        reference: {
+          type: 'course',
+          id: courseId
+        },
+        createdAt: new Date()
+      };
+      
+      const transactionResult = await transactionsCollection.insertOne(transactionData);
+      console.log("Đã lưu lịch sử giao dịch:", transactionResult.acknowledged);
 
-      // Thêm khóa học vào danh sách đã đăng ký của người dùng
+      // 4. Thêm khóa học vào danh sách đã đăng ký của người dùng
+      const enrollmentData = {
+        userId: userId,
+        courseId: courseId,
+        enrolledAt: new Date(),
+        progress: 0,
+        lastAccessed: null,
+        status: 'active',
+        paymentStatus: 'paid',
+        paymentAmount: coursePrice
+      };
+      
+      const enrollmentResult = await enrollmentsCollection.insertOne(enrollmentData);
+      console.log("Đã thêm dữ liệu vào collection enrollments:", enrollmentResult.acknowledged);
+      
+      // 5. Cập nhật enrolledCourses trong user (cho backwards compatibility)
       const courseEnrollment = {
         courseId,
         enrolledAt: new Date(),
@@ -85,41 +155,37 @@ export async function POST(request, { params }) {
         lastAccessed: null
       };
       
-      if (!user.enrolledCourses) {
-        user.enrolledCourses = [courseEnrollment];
-      } else {
-        user.enrolledCourses.push(courseEnrollment);
-      }
-      await user.save({ session });
-
-      // Cập nhật số người đăng ký của khóa học
-      if (!course.enrolledUsers) {
-        course.enrolledUsers = [userId];
-        course.enrollments = 1;
-      } else {
-        if (!course.enrolledUsers.includes(userId)) {
-          course.enrolledUsers.push(userId);
-          course.enrollments = (course.enrollments || 0) + 1;
-        }
-      }
-      await course.save({ session });
-
-      await session.commitTransaction();
-      return NextResponse.json({ success: true });
-    } catch (error) {
-      await session.abortTransaction();
-      console.error("Lỗi khi thực hiện giao dịch:", error);
-      return NextResponse.json(
-        { error: "Transaction failed" },
-        { status: 500 }
+      const enrolledResult = await usersCollection.updateOne(
+        { uid: userId },
+        { $push: { enrolledCourses: courseEnrollment } }
       );
-    } finally {
-      session.endSession();
+      console.log("Đã cập nhật enrolledCourses trong user:", enrolledResult.acknowledged);
+
+      // 6. Cập nhật số người đăng ký của khóa học
+      const courseUpdateResult = await coursesCollection.updateOne(
+        { _id: courseObjectId },
+        { 
+          $addToSet: { enrolledUsers: userId },
+          $inc: { enrollments: 1 }
+        }
+      );
+      console.log("Đã cập nhật enrolledUsers và enrollments trong course:", courseUpdateResult.acknowledged);
+
+      return NextResponse.json({ 
+        success: true,
+        message: "Mua khóa học thành công"
+      });
+    } catch (idError) {
+      console.error("Lỗi khi xử lý ID:", idError);
+      return NextResponse.json(
+        { error: "ID không hợp lệ", details: idError.message },
+        { status: 400 }
+      );
     }
   } catch (error) {
-    console.error("Lỗi khi xử lý yêu cầu:", error);
+    console.error("Lỗi xử lý yêu cầu:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Lỗi server", details: error.message },
       { status: 500 }
     );
   }

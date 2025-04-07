@@ -55,20 +55,36 @@ let User;
 // Hàm khởi tạo model
 const initModel = async () => {
   try {
+    console.log('Bắt đầu khởi tạo model User...');
+    
     // Kiểm tra kết nối
     if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+      console.error('Lỗi: mongoose.connection chưa sẵn sàng, readyState =', 
+        mongoose.connection ? mongoose.connection.readyState : 'undefined');
       throw new Error('MongoDB chưa kết nối');
     }
     
+    console.log('Kết nối mongoose OK, readyState =', mongoose.connection.readyState);
+    
     // Kết nối đến database hocmai
-    const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    
-    // Kiểm tra model đã tồn tại chưa
-    if (!User) {
-      User = hocmaiDb.model('User', userSchema);
+    try {
+      const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
+      console.log('Đã kết nối đến database hocmai thành công');
+      
+      // Kiểm tra model đã tồn tại chưa
+      if (!User) {
+        console.log('Tạo model User mới...');
+        User = hocmaiDb.model('User', userSchema);
+        console.log('Đã tạo model User thành công');
+      } else {
+        console.log('Model User đã tồn tại, sử dụng lại');
+      }
+      
+      return User;
+    } catch (dbError) {
+      console.error('Lỗi khi kết nối đến database hocmai:', dbError);
+      throw dbError;
     }
-    
-    return User;
   } catch (error) {
     console.error('Lỗi khi khởi tạo model User:', error);
     throw error;

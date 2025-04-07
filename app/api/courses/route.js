@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/app/_utils/mongodb";
 import mongoose from 'mongoose';
-import { initModel as initCourseModel } from '@/app/_models/course';
 
-// Import trực tiếp từ schema thay vì model để kiểm tra
 export async function GET(request) {
   try {
     console.log("API courses được gọi");
+    
+    // Kết nối đến database
     await connectToDatabase();
     console.log("Đã kết nối database");
     
-    // Khởi tạo model Course
-    const Course = await initCourseModel();
-    
+    // Lấy các tham số query
     const { searchParams } = new URL(request.url);
     const grade = searchParams.get("grade");
     const subject = searchParams.get("subject");
@@ -21,6 +19,7 @@ export async function GET(request) {
     
     console.log("MongoDB query params:", { grade, subject, limit, page });
     
+    // Xây dựng query
     let query = {};
     
     if (grade) {
@@ -45,11 +44,11 @@ export async function GET(request) {
     console.log(`Collection courses có ${count} documents`);
     
     // Lấy các documents
-    const courses = await Course.find(query)
+    const courses = await coursesCollection.find(query)
       .sort({ updatedAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
-      .lean();
+      .toArray();
     
     console.log(`Lấy được ${courses.length} khóa học`);
     
@@ -57,6 +56,7 @@ export async function GET(request) {
       console.log("Khóa học đầu tiên:", JSON.stringify(courses[0], null, 2));
     }
     
+    // Định dạng dữ liệu trả về
     const formattedCourses = courses.map(course => ({
       ...course,
       id: course._id.toString(),
@@ -67,7 +67,7 @@ export async function GET(request) {
   } catch (error) {
     console.error("API Error /courses:", error);
     return NextResponse.json(
-      { error: 'Lỗi khi lấy danh sách khóa học' },
+      { error: 'Lỗi khi lấy danh sách khóa học', details: error.message },
       { status: 500 }
     );
   }
