@@ -39,8 +39,8 @@ const TippyStyles = () => {
 
 // Component hiển thị file trong bài học
 const FileItem = memo(function FileItem({ file, isActive, onClick }) {
-  const isVideo = file.type?.includes("video");
-  const isDocument = file.type?.includes("document");
+  const isVideo = file.type === "video";
+  const isDocument = file.type === "document";
 
   return (
     <div
@@ -114,7 +114,6 @@ const SubSubfolderItem = memo(function SubSubfolderItem({
   activeVideoId,
   onFileClick,
   sortFiles,
-  getNumberFromTitle,
 }) {
   // Sắp xếp files trong subsubfolder
   const sortedFiles = useMemo(() => {
@@ -218,7 +217,6 @@ const SubfolderItem = memo(function SubfolderItem({
   activeVideoId,
   onFileClick,
   sortFiles,
-  getNumberFromTitle,
 }) {
   // Sắp xếp files trong subfolder
   const sortedFiles = useMemo(() => {
@@ -239,8 +237,8 @@ const SubfolderItem = memo(function SubfolderItem({
         "lastWatchedSubSubfolderId"
       );
 
-      if (lastWatchedSubSubfolderId && subfolder.subsubfolders) {
-        const hasSubSubfolder = subfolder.subsubfolders.some(
+      if (lastWatchedSubSubfolderId && subfolder.subfolders) {
+        const hasSubSubfolder = subfolder.subfolders.some(
           (ssf) => ssf.id === lastWatchedSubSubfolderId
         );
 
@@ -271,13 +269,13 @@ const SubfolderItem = memo(function SubfolderItem({
     if (
       isExpanded &&
       activeVideoId &&
-      subfolder.subsubfolders &&
-      subfolder.subsubfolders.length > 0
+      subfolder.subfolders &&
+      subfolder.subfolders.length > 0
     ) {
       // Tìm subsubfolder chứa video đang active
       let activeSubSubfolderId = null;
 
-      for (const subsubfolder of subfolder.subsubfolders) {
+      for (const subsubfolder of subfolder.subfolders) {
         if (
           subsubfolder.files &&
           subsubfolder.files.some((file) => file.id === activeVideoId)
@@ -308,7 +306,7 @@ const SubfolderItem = memo(function SubfolderItem({
         }
       }
     }
-  }, [isExpanded, activeVideoId, subfolder.subsubfolders, subfolder.id]);
+  }, [isExpanded, activeVideoId, subfolder.subfolders, subfolder.id]);
 
   // Lưu trạng thái khi expandedSubSubfolders thay đổi
   useEffect(() => {
@@ -375,14 +373,14 @@ const SubfolderItem = memo(function SubfolderItem({
 
   // Sắp xếp subsubfolders theo tên
   const sortedSubSubfolders = useMemo(() => {
-    return subfolder.subsubfolders
-      ? [...subfolder.subsubfolders].sort((a, b) => {
+    return subfolder.subfolders
+      ? [...subfolder.subfolders].sort((a, b) => {
           const numA = getNumberFromTitle(a.name);
           const numB = getNumberFromTitle(b.name);
           return numA - numB;
         })
       : [];
-  }, [subfolder.subsubfolders, getNumberFromTitle]);
+  }, [subfolder.subfolders]);
 
   // Kiểm tra xem có file nào trong subfolder đang active không
   const hasActiveFile = useMemo(() => {
@@ -391,8 +389,8 @@ const SubfolderItem = memo(function SubfolderItem({
     }
     
     // Kiểm tra trong các subsubfolder
-    if (subfolder.subsubfolders) {
-      for (const subsubfolder of subfolder.subsubfolders) {
+    if (subfolder.subfolders) {
+      for (const subsubfolder of subfolder.subfolders) {
         if (
           subsubfolder.files &&
           subsubfolder.files.some((file) => file.id === activeVideoId)
@@ -403,7 +401,7 @@ const SubfolderItem = memo(function SubfolderItem({
     }
     
     return false;
-  }, [subfolder.files, subfolder.subsubfolders, activeVideoId]);
+  }, [subfolder.files, subfolder.subfolders, activeVideoId]);
 
   return (
     <div className="my-0.5 border-b border-gray-700/30">
@@ -494,7 +492,6 @@ const SubfolderItem = memo(function SubfolderItem({
                 activeVideoId={activeVideoId}
                 onFileClick={onFileClick}
                 sortFiles={sortFiles}
-                getNumberFromTitle={getNumberFromTitle}
               />
             ))}
         </div>
@@ -765,7 +762,6 @@ const LessonItem = memo(function LessonItem({
                 activeVideoId={activeVideoId}
                 onFileClick={onFileClick}
                 sortFiles={sortFiles}
-                getNumberFromTitle={getNumberFromTitle}
               />
             ))}
         </div>
