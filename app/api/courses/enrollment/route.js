@@ -9,13 +9,15 @@ export async function GET(request) {
     // Lấy userId từ query params
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const page = parseInt(searchParams.get('page') || '1');
     
     console.log("userId từ query params:", userId);
     
     if (!userId) {
       console.log("Lỗi: userId không được cung cấp");
       return NextResponse.json(
-        { error: 'userId là bắt buộc' },
+        { error: 'userId là bắt buộc', status: "error" },
         { status: 400 }
       );
     }
@@ -87,8 +89,12 @@ export async function GET(request) {
       const uniqueCourseIds = [...new Set(allEnrollmentIds.map(id => id.toString()))];
       console.log(`Số lượng khóa học đã đăng ký (đã loại bỏ trùng lặp): ${uniqueCourseIds.length}`);
       
+      // Phân trang dữ liệu
+      const totalEnrollments = uniqueCourseIds.length;
+      const paginatedCourseIds = uniqueCourseIds.slice((page - 1) * limit, page * limit);
+      
       // Chuyển các courseId thành ObjectId nếu có thể
-      const courseObjectIds = uniqueCourseIds.map(id => {
+      const courseObjectIds = paginatedCourseIds.map(id => {
         try {
           return new mongoose.Types.ObjectId(id);
         } catch (e) {
@@ -97,47 +103,42 @@ export async function GET(request) {
         }
       });
 
-      // 4. Lấy thông tin cơ bản của khóa học từ cả hai database
-      console.log("Lấy thông tin khóa học từ cả hai database");
-      const hocmaiCourses = await hocmaiCoursesCollection.find(
-        { _id: { $in: courseObjectIds } },
-        { 
-          projection: {
-            _id: 1,
-            title: 1,
-            description: 1,
-            imageUrl: 1,
-            coverImage: 1,
-            thumbnail: 1,
-            subject: 1,
-            grade: 1,
-            price: 1
-          }
-        }
-      ).toArray();
+      // 4. Lấy thông tin cơ bản của khóa học từ cả hai database song song
+      console.log("Lấy thông tin khóa học từ cả hai database song song");
+      const projection = {
+        _id: 1,
+        title: 1,
+        description: 1,
+        imageUrl: 1,
+        coverImage: 1,
+        thumbnail: 1,
+        subject: 1,
+        grade: 1,
+        price: 1,
+        updatedAt: 1,
+        createdAt: 1
+      };
       
-      const elearningCourses = await elearningCoursesCollection.find(
-        { _id: { $in: courseObjectIds } },
-        { 
-          projection: {
-            _id: 1,
-            title: 1,
-            description: 1,
-            imageUrl: 1,
-            coverImage: 1,
-            thumbnail: 1,
-            subject: 1,
-            grade: 1,
-            price: 1
-          }
-        }
-      ).toArray();
+      const [hocmaiCourses, elearningCourses] = await Promise.all([
+        hocmaiCoursesCollection.find(
+          { _id: { $in: courseObjectIds } },
+          { projection }
+        ).toArray(),
+        elearningCoursesCollection.find(
+          { _id: { $in: courseObjectIds } },
+          { projection }
+        ).toArray()
+      ]);
       
-      const allCourses = [...hocmaiCourses, ...elearningCourses];
+      const allCourses = [
+        ...hocmaiCourses.map(course => ({ ...course, source: 'hocmai' })),
+        ...elearningCourses.map(course => ({ ...course, source: 'elearning' }))
+      ];
+      
       console.log(`Tìm thấy ${allCourses.length} khóa học từ cả hai database`);
       
       // 5. Kết hợp thông tin đăng ký với thông tin khóa học
-      const enrolledCourses = uniqueCourseIds.map(courseId => {
+      const enrolledCourses = paginatedCourseIds.map(courseId => {
         // Tìm thông tin chi tiết khóa học (ưu tiên từ hocmai trước)
         const courseDetail = allCourses.find(c => 
           c._id.toString() === courseId.toString()
@@ -160,9 +161,7 @@ export async function GET(request) {
         };
 
         // Xác định xem khóa học thuộc database nào
-        const source = hocmaiCourses.find(c => c._id.toString() === courseId.toString())
-          ? 'hocmai'
-          : 'elearning';
+        const source = courseDetail ? courseDetail.source : 'unknown';
         
         // Nếu không tìm thấy thông tin khóa học
         if (!courseDetail) {
@@ -186,7 +185,8 @@ export async function GET(request) {
           _id: courseDetail._id.toString(),
           title: courseDetail.title || "Không có tiêu đề",
           description: courseDetail.description || "",
-          imageUrl: courseDetail.imageUrl || courseDetail.coverImage || "/images/course-default.jpg",
+          imageUrl: courseDetail.imageUrl || courseDetail.coverImage || courseDetail.thumbnail || "/images/course-default.jpg",
+          thumbnail: courseDetail.thumbnail || courseDetail.imageUrl || courseDetail.coverImage || "/images/course-default.jpg",
           subject: courseDetail.subject || "Khác",
           grade: courseDetail.grade || "Khác",
           enrolledAt: enrollmentData.enrolledAt,
@@ -196,7 +196,8 @@ export async function GET(request) {
           type: (enrollmentInfo && enrollmentInfo.paymentStatus === 'paid') ? 'purchased' : 'free',
           price: courseDetail.price || 0,
           source: source,
-          found: true
+          found: true,
+          updatedAt: courseDetail.updatedAt || courseDetail.createdAt || new Date()
         };
       });
       
@@ -206,18 +207,27 @@ export async function GET(request) {
       const validEnrolledCourses = enrolledCourses.filter(course => course.found);
       console.log(`Số lượng khóa học hợp lệ: ${validEnrolledCourses.length}`);
       
-      return NextResponse.json(validEnrolledCourses);
+      return NextResponse.json({
+        courses: validEnrolledCourses,
+        pagination: {
+          total: totalEnrollments,
+          page,
+          limit,
+          totalPages: Math.ceil(totalEnrollments / limit)
+        },
+        status: "success"
+      });
     } catch (dbError) {
       console.error("Lỗi khi truy vấn cơ sở dữ liệu:", dbError);
       return NextResponse.json(
-        { error: "Lỗi khi truy vấn cơ sở dữ liệu", details: dbError.message },
+        { error: "Lỗi khi truy vấn cơ sở dữ liệu", details: dbError.message, status: "error" },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error("Lỗi xử lý yêu cầu:", error);
     return NextResponse.json(
-      { error: "Lỗi server", details: error.message },
+      { error: "Lỗi server", details: error.message, status: "error" },
       { status: 500 }
     );
   }

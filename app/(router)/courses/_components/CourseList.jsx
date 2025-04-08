@@ -48,10 +48,31 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
   const [itemsPerPage, setItemsPerPage] = useState(4);
 
   // Sử dụng useCourseList hook để fetch và cache data
-  const { data: courses, isLoading, error } = useCourseList({ grade });
+  const { data, isLoading, error } = useCourseList({ grade });
+  
+  // Trích xuất courses từ data response
+  const courses = useMemo(() => {
+    if (!data) return [];
+    
+    // Kiểm tra nếu data là một đối tượng có thuộc tính courses
+    if (data.courses && Array.isArray(data.courses)) {
+      return data.courses;
+    }
+    
+    // Nếu data là mảng, sử dụng trực tiếp
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    console.error("Dữ liệu courses không đúng định dạng:", data);
+    return [];
+  }, [data]);
 
   // Thêm console.log để hiển thị dữ liệu khóa học
   useEffect(() => {
+    if (data) {
+      console.log("Response API khóa học:", data);
+    }
     if (courses) {
       console.log("Danh sách khóa học đã tải:", courses);
       console.log("Số lượng khóa học:", courses.length);
@@ -75,7 +96,7 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
     if (error) {
       console.error("Lỗi khi tải khóa học:", error);
     }
-  }, [courses, error]);
+  }, [data, courses, error]);
 
   const subjects = [
     { value: "math", label: "Toán học", icon: <Star className="w-4 h-4" /> },

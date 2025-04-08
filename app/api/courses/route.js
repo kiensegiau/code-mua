@@ -16,8 +16,9 @@ export async function GET(request) {
     const subject = searchParams.get("subject");
     const limit = parseInt(searchParams.get("limit") || "50");
     const page = parseInt(searchParams.get("page") || "1");
+    const search = searchParams.get("search");
     
-    console.log("MongoDB query params:", { grade, subject, limit, page });
+    console.log("MongoDB query params:", { grade, subject, limit, page, search });
     
     // Xây dựng query
     let query = {};
@@ -30,51 +31,90 @@ export async function GET(request) {
       query.subject = subject;
     }
     
-    console.log("MongoDB query:", JSON.stringify(query));
-    
-    // Kết nối đến database hocmai
-    const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    console.log("Đã kết nối đến database hocmai");
-    
-    // Truy cập collection courses trong database hocmai
-    const coursesCollection = hocmaiDb.collection('courses');
-    
-    // Kiểm tra số lượng documents trong collection
-    const count = await coursesCollection.countDocuments(query);
-    console.log(`Collection courses có ${count} documents`);
-    
-    // Lấy các documents
-    const courses = await coursesCollection.find(query)
-      .sort({ updatedAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .toArray();
-    
-    console.log(`Lấy được ${courses.length} khóa học`);
-    
-    if (courses.length > 0) {
-      console.log("Khóa học đầu tiên:", JSON.stringify(courses[0], null, 2));
-      // Log các trường quan trọng của tất cả khóa học
-      console.log("Tên của tất cả khóa học:");
-      courses.forEach((course, index) => {
-        console.log(`${index + 1}. ID: ${course._id}, Tên: ${course.title}, Môn học: ${course.subject}, Lớp: ${course.grade}`);
-      });
-    } else {
-      console.log("Không tìm thấy khóa học nào với query:", JSON.stringify(query));
+    // Thêm tìm kiếm theo từ khóa
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
     }
     
+    console.log("MongoDB query:", JSON.stringify(query));
+    
+    // Kết nối đến cả hai database
+    const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
+    const elearningDb = mongoose.connection.useDb('elearning', { useCache: true });
+    console.log("Đã kết nối đến cả hai database");
+    
+    // Truy cập collection courses trong cả hai database
+    const hocmaiCoursesCollection = hocmaiDb.collection('courses');
+    const elearningCoursesCollection = elearningDb.collection('courses');
+    
+    // Thực hiện truy vấn song song trên cả hai database
+    const [hocmaiCourses, elearningCourses] = await Promise.all([
+      hocmaiCoursesCollection.find(query)
+        .sort({ updatedAt: -1 })
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .toArray(),
+      elearningCoursesCollection.find(query)
+        .sort({ updatedAt: -1 })
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .toArray()
+    ]);
+    
+    // Đếm tổng số khóa học trong cả hai database
+    const [hocmaiCount, elearningCount] = await Promise.all([
+      hocmaiCoursesCollection.countDocuments(query),
+      elearningCoursesCollection.countDocuments(query)
+    ]);
+    
+    const totalCount = hocmaiCount + elearningCount;
+    console.log(`Tổng số khóa học: ${totalCount} (hocmai: ${hocmaiCount}, elearning: ${elearningCount})`);
+    
+    // Kết hợp kết quả từ cả hai database
+    const allCourses = [
+      ...hocmaiCourses.map(course => ({ ...course, source: 'hocmai' })),
+      ...elearningCourses.map(course => ({ ...course, source: 'elearning' }))
+    ];
+    
+    // Sắp xếp lại theo thời gian cập nhật
+    allCourses.sort((a, b) => {
+      const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+      const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
+      return dateB - dateA;
+    });
+    
     // Định dạng dữ liệu trả về
-    const formattedCourses = courses.map(course => ({
-      ...course,
+    const formattedCourses = allCourses.map(course => ({
       id: course._id.toString(),
-      _id: course._id.toString()
+      _id: course._id.toString(),
+      title: course.title || "Không có tiêu đề",
+      description: course.description || "",
+      imageUrl: course.imageUrl || course.coverImage || course.thumbnail || "/images/course-default.jpg",
+      thumbnail: course.thumbnail || course.imageUrl || course.coverImage || "/images/course-default.jpg",
+      subject: course.subject || "Khác",
+      grade: course.grade || "Khác",
+      price: course.price || 0,
+      source: course.source,
+      updatedAt: course.updatedAt || course.createdAt || new Date()
     }));
     
-    return NextResponse.json(formattedCourses);
+    return NextResponse.json({
+      courses: formattedCourses,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit)
+      },
+      status: "success"
+    });
   } catch (error) {
     console.error("API Error /courses:", error);
     return NextResponse.json(
-      { error: 'Lỗi khi lấy danh sách khóa học', details: error.message },
+      { error: 'Lỗi khi lấy danh sách khóa học', details: error.message, status: "error" },
       { status: 500 }
     );
   }
