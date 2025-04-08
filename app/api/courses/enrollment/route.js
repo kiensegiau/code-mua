@@ -97,24 +97,44 @@ export async function GET(request) {
         }
       });
 
-      // 4. Lấy thông tin chi tiết của các khóa học từ cả hai database
-      console.log("Lấy thông tin chi tiết khóa học từ database hocmai");
-      const hocmaiCourses = await hocmaiCoursesCollection.find({
-        _id: { $in: courseObjectIds }
-      }).toArray();
+      // 4. Lấy thông tin cơ bản của khóa học từ cả hai database
+      console.log("Lấy thông tin khóa học từ cả hai database");
+      const hocmaiCourses = await hocmaiCoursesCollection.find(
+        { _id: { $in: courseObjectIds } },
+        { 
+          projection: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            imageUrl: 1,
+            coverImage: 1,
+            thumbnail: 1,
+            subject: 1,
+            grade: 1,
+            price: 1
+          }
+        }
+      ).toArray();
       
-      console.log(`Tìm thấy ${hocmaiCourses.length} khóa học từ database hocmai`);
-
-      console.log("Lấy thông tin chi tiết khóa học từ database elearning");
-      const elearningCourses = await elearningCoursesCollection.find({
-        _id: { $in: courseObjectIds }
-      }).toArray();
+      const elearningCourses = await elearningCoursesCollection.find(
+        { _id: { $in: courseObjectIds } },
+        { 
+          projection: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            imageUrl: 1,
+            coverImage: 1,
+            thumbnail: 1,
+            subject: 1,
+            grade: 1,
+            price: 1
+          }
+        }
+      ).toArray();
       
-      console.log(`Tìm thấy ${elearningCourses.length} khóa học từ database elearning`);
-
-      // Gộp danh sách khóa học từ cả hai database
       const allCourses = [...hocmaiCourses, ...elearningCourses];
-      console.log(`Tổng số khóa học tìm thấy từ cả hai database: ${allCourses.length}`);
+      console.log(`Tìm thấy ${allCourses.length} khóa học từ cả hai database`);
       
       // 5. Kết hợp thông tin đăng ký với thông tin khóa học
       const enrolledCourses = uniqueCourseIds.map(courseId => {

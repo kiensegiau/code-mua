@@ -155,7 +155,7 @@ const CourseItem = ({
   const hasDiscount = discount > 0;
   
   // User state
-  const { user, profile } = useAuth();
+  const { user, profile, setProfile } = useAuth();
 
   // Format last accessed date
   const formattedLastAccessed = formatTimeToNow(lastAccessed);
@@ -372,6 +372,21 @@ const CourseItem = ({
       
       console.log("Phản hồi API:", response);
 
+      // Cập nhật profile trong context để hiển thị nút "Vào học ngay"
+      if (response) {
+        try {
+          // Lấy thông tin profile mới nhất
+          const updatedProfile = await GlobalApi.getUserProfile(userId);
+          if (updatedProfile) {
+            // Cập nhật profile trong context
+            setProfile(updatedProfile);
+            console.log("Đã cập nhật profile sau khi đăng ký:", updatedProfile);
+          }
+        } catch (profileError) {
+          console.error("Lỗi khi cập nhật profile sau khi đăng ký:", profileError);
+        }
+      }
+
       toast.success("Đăng ký khóa học thành công!");
 
       // Đóng modal trước khi chuyển trang
@@ -387,7 +402,7 @@ const CourseItem = ({
     } finally {
       setEnrolling(false);
     }
-  }, [data, coursePrice, user, router, verifyEnrollment]);
+  }, [data, coursePrice, user, router, verifyEnrollment, setProfile]);
 
   // Sử dụng CSS thuần thay vì Framer Motion
   const placeholderStyles = {
