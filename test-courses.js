@@ -1,45 +1,38 @@
 const fetch = require('node-fetch');
 
-async function testCoursesApi() {
+// URL của API
+const API_URL = 'http://localhost:3000/api/courses';
+
+// Hàm lấy danh sách khóa học
+async function getCourseList() {
   try {
-    console.log('Testing /api/courses endpoint...');
+    console.log('Đang gọi API từ URL:', API_URL);
     
-    const response = await fetch('http://localhost:3000/api/courses', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    const response = await fetch(API_URL);
+    if (!response.ok) {
+      throw new Error(`Lỗi HTTP: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Tổng số khóa học:', data.length);
+    
+    // Log các khóa học
+    console.log('\nDanh sách khóa học:');
+    data.forEach((course, index) => {
+      console.log(`${index + 1}. ID: ${course.id || course._id}`);
+      console.log(`   Tiêu đề: ${course.title || 'Không có tiêu đề'}`);
+      console.log(`   Môn học: ${course.subject || 'N/A'}`);
+      console.log(`   Lớp: ${course.grade || 'N/A'}`);
+      console.log(`   Mô tả: ${(course.description || '').substring(0, 50)}${course.description?.length > 50 ? '...' : ''}`);
+      console.log('-------------------');
     });
     
-    console.log('Status:', response.status);
-    console.log('Status Text:', response.statusText);
-    
-    const text = await response.text();
-    console.log('Response text length:', text.length);
-    
-    if (text.length > 0) {
-      try {
-        const json = JSON.parse(text);
-        console.log('Số lượng khóa học trả về:', json.length);
-        
-        if (json.length > 0) {
-          console.log('\nDanh sách 3 khóa học đầu tiên:');
-          json.slice(0, 3).forEach((course, index) => {
-            console.log(`\n${index + 1}. ${course.title || 'Không có tiêu đề'}`);
-            console.log(`   ID: ${course.id}`);
-            console.log(`   Grade: ${course.grade || 'N/A'}, Subject: ${course.subject || 'N/A'}`);
-            console.log(`   Price: ${course.price || 0}`);
-          });
-        }
-      } catch (e) {
-        console.log('Response is not valid JSON:', text);
-      }
-    } else {
-      console.log('Empty response');
-    }
+    return data;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Lỗi khi gọi API:', error.message);
+    return null;
   }
 }
 
-testCoursesApi(); 
+// Chạy hàm test
+getCourseList(); 

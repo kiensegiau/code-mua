@@ -54,6 +54,13 @@ export async function GET(request) {
     
     if (courses.length > 0) {
       console.log("Khóa học đầu tiên:", JSON.stringify(courses[0], null, 2));
+      // Log các trường quan trọng của tất cả khóa học
+      console.log("Tên của tất cả khóa học:");
+      courses.forEach((course, index) => {
+        console.log(`${index + 1}. ID: ${course._id}, Tên: ${course.title}, Môn học: ${course.subject}, Lớp: ${course.grade}`);
+      });
+    } else {
+      console.log("Không tìm thấy khóa học nào với query:", JSON.stringify(query));
     }
     
     // Định dạng dữ liệu trả về

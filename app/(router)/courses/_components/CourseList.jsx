@@ -34,7 +34,7 @@ const LazyLoadedCourseItem = ({ course, index }) => {
       }}
     >
       {inView ? (
-        <CourseItem course={course} />
+        <CourseItem data={course} />
       ) : (
         <div className="h-full aspect-video bg-gray-800/50 rounded-xl animate-pulse-custom"></div>
       )}
@@ -49,6 +49,33 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
 
   // Sử dụng useCourseList hook để fetch và cache data
   const { data: courses, isLoading, error } = useCourseList({ grade });
+
+  // Thêm console.log để hiển thị dữ liệu khóa học
+  useEffect(() => {
+    if (courses) {
+      console.log("Danh sách khóa học đã tải:", courses);
+      console.log("Số lượng khóa học:", courses.length);
+      if (courses.length > 0) {
+        console.log("Chi tiết khóa học đầu tiên:", courses[0]);
+        console.log("Tên khóa học đầu tiên:", courses[0].title);
+        console.log("Cấu trúc dữ liệu khóa học đầu tiên:", Object.keys(courses[0]));
+        
+        // Kiểm tra từng trường dữ liệu
+        courses.forEach((course, index) => {
+          console.log(`Khóa học ${index + 1}:`, {
+            id: course.id || course._id,
+            title: course.title,
+            slug: course.slug,
+            subject: course.subject,
+            grade: course.grade
+          });
+        });
+      }
+    }
+    if (error) {
+      console.error("Lỗi khi tải khóa học:", error);
+    }
+  }, [courses, error]);
 
   const subjects = [
     { value: "math", label: "Toán học", icon: <Star className="w-4 h-4" /> },
@@ -148,11 +175,61 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
   const coursesBySubject = useMemo(() => {
     if (!courses) return [];
 
+    // Tạo bản sao của courses với subject và grade được suy ra từ title nếu chúng chưa được xác định
+    const enhancedCourses = courses.map(course => {
+      const enhancedCourse = { ...course };
+      
+      // Nếu không có subject, thử xác định từ title
+      if (!enhancedCourse.subject) {
+        // Thử xác định subject từ title
+        const title = enhancedCourse.title || '';
+        
+        if (title.match(/\bTOÁN\b/i) || title.match(/\bMATH\b/i)) {
+          enhancedCourse.subject = 'math';
+        } else if (title.match(/\bVẬT LÝ\b/i) || title.match(/\bPHYSICS\b/i)) {
+          enhancedCourse.subject = 'physics';
+        } else if (title.match(/\bHÓA\b/i) || title.match(/\bCHEMISTRY\b/i)) {
+          enhancedCourse.subject = 'chemistry';
+        } else if (title.match(/\bSINH\b/i) || title.match(/\bBIOLOGY\b/i)) {
+          enhancedCourse.subject = 'biology';
+        } else if (title.match(/\bVĂN\b/i) || title.match(/\bLITERATURE\b/i)) {
+          enhancedCourse.subject = 'literature';
+        } else if (title.match(/\bANH\b/i) || title.match(/\bENGLISH\b/i)) {
+          enhancedCourse.subject = 'english';
+        } else if (title.match(/\bSỬ\b/i) || title.match(/\bLỊCH SỬ\b/i) || title.match(/\bHISTORY\b/i)) {
+          enhancedCourse.subject = 'history';
+        } else if (title.match(/\bĐỊA\b/i) || title.match(/\bĐỊA LÝ\b/i) || title.match(/\bGEOGRAPHY\b/i)) {
+          enhancedCourse.subject = 'geography';
+        } else if (title.match(/\bTIN\b/i) || title.match(/\bINFORMATICS\b/i)) {
+          enhancedCourse.subject = 'informatics';
+        } else {
+          enhancedCourse.subject = 'others';
+        }
+      }
+      
+      // Nếu không có grade, thử xác định từ title
+      if (!enhancedCourse.grade) {
+        const title = enhancedCourse.title || '';
+        
+        if (title.match(/\b10\b/) || title.match(/\b2K6\b/i)) {
+          enhancedCourse.grade = 'grade-10';
+        } else if (title.match(/\b11\b/) || title.match(/\b2K5\b/i)) {
+          enhancedCourse.grade = 'grade-11';
+        } else if (title.match(/\b12\b/) || title.match(/\b2K4\b/i) || title.match(/\b2K7\b/i)) {
+          enhancedCourse.grade = 'grade-12';
+        }
+      }
+      
+      return enhancedCourse;
+    });
+    
+    console.log("Courses sau khi cải thiện:", enhancedCourses);
+
     return subjects.map((subject) => ({
       id: subject.value,
       title: subject.label,
       icon: subject.icon,
-      courses: courses.filter((course) => {
+      courses: enhancedCourses.filter((course) => {
         if (course.subject && course.subject === subject.value) {
           return true;
         }

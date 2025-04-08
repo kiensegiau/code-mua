@@ -117,7 +117,7 @@ const CourseItem = ({
   const courseId = data?.id || data?._id || "";
   const title = data?.title || "Không có tiêu đề";
   const description = data?.description || "";
-  const imageUrl = data?.imageUrl || data?.coverImage || "/images/course-default.jpg";
+  const imageUrl = data?.imageUrl || data?.coverImage || data?.thumbnail || "";
   const grade = data?.grade || "Chưa phân loại";
   const subject = data?.subject || "Chưa phân loại";
   const price = data?.price || 0;
@@ -125,6 +125,12 @@ const CourseItem = ({
   const enrolledProgress = isMyCoursesView ? (data?.progress || 0) : progress;
   const lastAccessed = data?.lastAccessed ? new Date(data.lastAccessed) : null;
   const courseSource = data?.source || source || "hocmai";
+  
+  console.log("Dữ liệu khóa học nhận được:", { 
+    id: courseId,
+    title, 
+    imageUrl: data?.imageUrl || data?.coverImage || data?.thumbnail || "(không có)"
+  });
   
   // Formatted price with Vietnamese currency
   const formattedPrice = price === 0 
@@ -337,7 +343,7 @@ const CourseItem = ({
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
               {/* Placeholder với gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#1f1f1f] to-[#191919] flex items-center justify-center">
-                {!data?.imageUrl && (
+                {!imageLoaded && (
                   <div className="text-center relative">
                     {/* Hiệu ứng glow phía sau - tối ưu hóa */}
                     <div className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl animate-pulse-custom"></div>
@@ -355,7 +361,7 @@ const CourseItem = ({
                           Hoc Mai
                         </p>
                         <p className="text-xs text-gray-500 px-4">
-                          Khóa học sẽ hiển thị tại đây
+                          {title}
                         </p>
                       </div>
                     </div>
@@ -364,7 +370,7 @@ const CourseItem = ({
               </div>
 
               {/* Hiệu ứng dạng lưới - static */}
-              {!data?.imageUrl && (
+              {!imageLoaded && (
                 <div
                   className="absolute inset-0 opacity-20"
                   style={{
@@ -376,27 +382,27 @@ const CourseItem = ({
               )}
 
               {/* Lazy loading cho hình ảnh */}
-              {data?.imageUrl && (
-                <div
-                  className={`absolute inset-0 transition-opacity duration-300 ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                  }`}
-                >
+              <div
+                className={`absolute inset-0 transition-opacity duration-300 ${
+                  imageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {imageUrl ? (
                   <Image
-                    src={data?.imageUrl}
-                    alt={data?.title || "Khóa học"}
+                    src={imageUrl}
+                    alt={title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
                     loading="lazy"
                     onLoad={() => setImageLoaded(true)}
                     onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.onerror = null;
+                      console.error("Lỗi tải hình ảnh khóa học:", e);
+                      setImageLoaded(false);
                     }}
                   />
-                </div>
-              )}
+                ) : null}
+              </div>
 
               {/* Show enrolled badge if enrolled - tối ưu hóa animation */}
               {isEnrolledMemo && (
