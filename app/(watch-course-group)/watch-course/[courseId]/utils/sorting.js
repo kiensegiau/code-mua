@@ -7,6 +7,7 @@
  * - Xử lý định dạng có hai số liền nhau (ví dụ: "Bài 2 Danh từ 61 80")
  * - Xử lý số ở đầu chuỗi (ví dụ: "1 Bài học")
  * - Xử lý chuỗi "Tổng Hợp Từ Vựng 1700 Phần (...)" - sắp xếp theo số ở cuối
+ * - Xử lý định dạng có dấu "#" ở đầu (ví dụ: "#1. Buổi 1") - sắp xếp theo số sau dấu #
  * - Xử lý bất kỳ số nào trong chuỗi nếu không tìm thấy theo các cách trên
  * @param {string} text - Chuỗi cần phân tích
  * @returns {number} - Số để sắp xếp
@@ -19,6 +20,13 @@ export const getNumberFromTitle = (text = "") => {
   const normalizedText = text.trim().toLowerCase();
 
   // ===== ĐỊNH DẠNG ĐẶC BIỆT =====
+
+  // 0. Xử lý định dạng có dấu "#" ở đầu (ví dụ: "#1. Buổi 1")
+  const hashMatch = normalizedText.match(/^#(\d+)/);
+  if (hashMatch) {
+    const hashNumber = parseInt(hashMatch[1]);
+    return addMagnitudePrefix(hashNumber);
+  }
 
   // 0. Xử lý định dạng "Buổi X" - thêm case này để xử lý đúng thứ tự các buổi
   const buoiMatch = normalizedText.match(/^buổi\s+(\d+)/i);
