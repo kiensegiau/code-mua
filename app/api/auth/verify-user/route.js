@@ -1,5 +1,6 @@
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { NextResponse } from "next/server";
 
 // Khởi tạo Firebase Admin SDK nếu chưa được khởi tạo
 if (!getApps().length) {
@@ -19,17 +20,16 @@ if (!getApps().length) {
   }
 }
 
-export default async function handler(req, res) {
-  // Chỉ cho phép phương thức GET
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Phương thức không được hỗ trợ' });
-  }
-
-  // Lấy UID từ query parameter
-  const { uid } = req.query;
+export async function GET(request) {
+  // Lấy UID từ URL hoặc search params
+  const { searchParams } = new URL(request.url);
+  const uid = searchParams.get('uid');
 
   if (!uid) {
-    return res.status(400).json({ error: 'Thiếu tham số UID', exists: false });
+    return NextResponse.json(
+      { error: 'Thiếu tham số UID', exists: false },
+      { status: 400 }
+    );
   }
 
   try {
@@ -38,22 +38,34 @@ export default async function handler(req, res) {
     
     // Nếu tài khoản bị vô hiệu hóa, coi như không tồn tại
     if (userRecord.disabled) {
-      return res.status(200).json({ exists: false, message: 'Tài khoản đã bị vô hiệu hóa' });
+      return NextResponse.json(
+        { exists: false, message: 'Tài khoản đã bị vô hiệu hóa' },
+        { status: 200 }
+      );
     }
     
-    return res.status(200).json({ exists: true, email: userRecord.email });
+    return NextResponse.json(
+      { exists: true, email: userRecord.email },
+      { status: 200 }
+    );
   } catch (error) {
     // Nếu là lỗi không tìm thấy người dùng
     if (error.code === 'auth/user-not-found') {
-      return res.status(200).json({ exists: false, message: 'Không tìm thấy người dùng' });
+      return NextResponse.json(
+        { exists: false, message: 'Không tìm thấy người dùng' },
+        { status: 200 }
+      );
     }
     
     // Lỗi khác
     console.error('Lỗi kiểm tra người dùng:', error);
-    return res.status(500).json({ 
-      error: 'Lỗi khi kiểm tra người dùng', 
-      message: error.message,
-      exists: false 
-    });
+    return NextResponse.json(
+      { 
+        error: 'Lỗi khi kiểm tra người dùng', 
+        message: error.message,
+        exists: false 
+      },
+      { status: 500 }
+    );
   }
 } 

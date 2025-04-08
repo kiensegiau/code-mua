@@ -70,4 +70,4 @@ const ForumTopicList = ({
   );
 };
 
-export default ForumTopicList;
+export default ForumTopicList; 
