@@ -337,7 +337,7 @@ const CourseItem = ({
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
               {/* Placeholder với gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#1f1f1f] to-[#191919] flex items-center justify-center">
-                {!data.imageUrl && (
+                {!data?.imageUrl && (
                   <div className="text-center relative">
                     {/* Hiệu ứng glow phía sau - tối ưu hóa */}
                     <div className="absolute -inset-3 bg-[#ff4d4f]/10 rounded-full blur-xl animate-pulse-custom"></div>
@@ -364,7 +364,7 @@ const CourseItem = ({
               </div>
 
               {/* Hiệu ứng dạng lưới - static */}
-              {!data.imageUrl && (
+              {!data?.imageUrl && (
                 <div
                   className="absolute inset-0 opacity-20"
                   style={{
@@ -376,15 +376,15 @@ const CourseItem = ({
               )}
 
               {/* Lazy loading cho hình ảnh */}
-              {data.imageUrl && (
+              {data?.imageUrl && (
                 <div
                   className={`absolute inset-0 transition-opacity duration-300 ${
                     imageLoaded ? "opacity-100" : "opacity-0"
                   }`}
                 >
                   <Image
-                    src={data.imageUrl}
-                    alt={data.title || "Khóa học"}
+                    src={data?.imageUrl}
+                    alt={data?.title || "Khóa học"}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
@@ -464,7 +464,7 @@ const CourseItem = ({
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-300">
-                    {data.teacher}
+                    {data?.teacher}
                   </p>
                   <p className="text-[10px] text-gray-400">Giảng viên</p>
                 </div>
@@ -481,7 +481,7 @@ const CourseItem = ({
                 <div className="flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-xs text-gray-400 whitespace-nowrap">
-                    {data.totalLessons || "100+"} bài học
+                    {data?.totalLessons || "100+"} bài học
                   </span>
                 </div>
               </div>
