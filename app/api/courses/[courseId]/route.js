@@ -113,17 +113,14 @@ export async function GET(request, { params }) {
       subject: course.subject || "Khác",
       grade: course.grade || "Khác",
       price: course.price || 0,
-      chapters: courseContent ? courseContent.chapters || [] : [],
+      chapters: courseContent ? (courseContent.chapters || []) : [],
       source: source,
-      hasContent: !!courseContent,
+      hasContent: !!courseContent && courseContent.chapters && courseContent.chapters.length > 0,
       updatedAt: course.updatedAt || course.createdAt || new Date()
     };
     
     // Trả về kết quả trong định dạng đồng nhất với các API khác
-    return NextResponse.json({
-      course: formattedCourse,
-      status: "success"
-    });
+    return NextResponse.json(formattedCourse);
   } catch (error) {
     console.error("Lỗi khi lấy chi tiết khóa học:", error);
     return NextResponse.json(

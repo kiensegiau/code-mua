@@ -29,6 +29,21 @@ const Tippy = dynamic(() => import("@tippyjs/react"), {
   loading: ({ children }) => <div key="tippy-loading">{children}</div>,
 });
 
+// Component hiển thị khi không có nội dung
+const NoContent = memo(function NoContent() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+      <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+        <IoSchoolOutline className="w-8 h-8 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-medium text-white mb-2">Chưa có nội dung</h3>
+      <p className="text-sm text-gray-400 max-w-xs">
+        Khóa học này hiện chưa có nội dung hoặc đang được cập nhật. Vui lòng quay lại sau.
+      </p>
+    </div>
+  );
+});
+
 // CSS sẽ được import ở phía client
 const TippyStyles = () => {
   useEffect(() => {
@@ -1066,6 +1081,11 @@ const CourseContent = forwardRef(
     const sortFiles = useCallback((a, b) => {
       return sortByName(a, b);
     }, []);
+
+    // Kiểm tra nếu không có nội dung khóa học hoặc chapters rỗng
+    if (!chapters || chapters.length === 0) {
+      return <NoContent />;
+    }
 
     // Thêm effect để tự động mở đúng chương và bài học khi video được chọn thay đổi
     // CHỈ khi không phải do người dùng trực tiếp click

@@ -208,7 +208,10 @@ const GlobalApi = {
           throw new Error('Lỗi khi lấy thông tin khóa học');
         }
         
-        return await response.json();
+        const data = await response.json();
+        
+        // Đảm bảo trả về đúng dữ liệu khóa học, có thể nằm trong data.course
+        return data.course || data;
       } else {
         console.warn('getCourseById đang được gọi từ server, hãy sử dụng API route');
         return null;

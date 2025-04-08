@@ -303,7 +303,20 @@ export default function WatchCourse({ params }) {
   const fetchCourseInfo = useCallback(async () => {
     try {
       setLoading(true);
-      const course = await GlobalApi.getCourseById(params.courseId);
+      const response = await GlobalApi.getCourseById(params.courseId);
+      
+      // Đảm bảo rằng response trả về đúng định dạng
+      const course = response.course || response;
+
+      // Debug để xem dữ liệu khóa học
+      console.log("Dữ liệu khóa học:", course);
+
+      // Kiểm tra nếu không có chapters
+      if (!course.chapters || course.chapters.length === 0) {
+        toast.error("Khóa học chưa có nội dung");
+        setLoading(false);
+        return course;
+      }
 
       // Sắp xếp chapters ngay khi nhận dữ liệu
       if (course && course.chapters && course.chapters.length > 0) {
