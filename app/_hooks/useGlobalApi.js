@@ -124,6 +124,10 @@ export function useEnrollCourse() {
       queryClient.invalidateQueries(["enrolledCourses", variables.userId]);
       queryClient.invalidateQueries(["userProfile", variables.userId]);
       queryClient.invalidateQueries(["course", variables.courseId]);
+      // Vô hiệu hóa cache của query useCoursesWithEnrollmentStatus
+      queryClient.invalidateQueries(["coursesWithEnrollmentStatus", variables.userId]);
+      // Vô hiệu hóa tất cả các query liên quan đến courses
+      queryClient.invalidateQueries(["courses"]);
     },
     onError: (error, variables) => {
       console.error("Lỗi khi đăng ký khóa học:", error, variables);
