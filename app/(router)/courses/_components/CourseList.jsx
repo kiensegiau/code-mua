@@ -11,7 +11,8 @@ import {
   Sparkles,
   BookOpen,
 } from "lucide-react";
-import { useCourseList } from "@/app/_hooks/useGlobalApi";
+import { useCourseList, useCoursesWithEnrollmentStatus } from "@/app/_hooks/useGlobalApi";
+import { useAuth } from "@/app/_context/AuthContext";
 import dynamic from "next/dynamic";
 
 // Component LazyLoadedCourseItem để lazy load từng course item
@@ -34,7 +35,7 @@ const LazyLoadedCourseItem = ({ course, index }) => {
       }}
     >
       {inView ? (
-        <CourseItem data={course} />
+        <CourseItem data={course} isEnrolled={course.isEnrolled} progress={course.progress} />
       ) : (
         <div className="h-full aspect-video bg-gray-800/50 rounded-xl animate-pulse-custom"></div>
       )}
@@ -46,9 +47,13 @@ const LazyLoadedCourseItem = ({ course, index }) => {
 const CourseList = React.memo(function CourseList({ grade = null }) {
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [itemsPerPage, setItemsPerPage] = useState(4);
+  const { user } = useAuth();
 
-  // Sử dụng useCourseList hook để fetch và cache data
-  const { data, isLoading, error } = useCourseList({ grade });
+  // Sử dụng hook mới để lấy danh sách khóa học kèm trạng thái đăng ký
+  const { data, isLoading, error } = useCoursesWithEnrollmentStatus(
+    user?.uid, 
+    { grade }
+  );
   
   // Trích xuất courses từ data response
   const courses = useMemo(() => {
@@ -88,7 +93,9 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
             title: course.title,
             slug: course.slug,
             subject: course.subject,
-            grade: course.grade
+            grade: course.grade,
+            isEnrolled: course.isEnrolled,
+            progress: course.progress
           });
         });
       }
@@ -236,7 +243,7 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
           enhancedCourse.grade = 'grade-10';
         } else if (title.match(/\b11\b/) || title.match(/\b2K5\b/i)) {
           enhancedCourse.grade = 'grade-11';
-        } else if (title.match(/\b12\b/) || title.match(/\b2K4\b/i) || title.match(/\b2K7\b/i)) {
+        } else if (title.match(/\b12\b/) || title.match(/\b2K7\b/i)) {
           enhancedCourse.grade = 'grade-12';
         }
       }

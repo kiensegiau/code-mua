@@ -1,6 +1,7 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import React from "react";
 
 export function useCourseList(options = {}) {
   return useQuery({
@@ -35,6 +36,67 @@ export function useCourseDetails(courseId) {
     enabled: !!courseId,
     staleTime: 10 * 60 * 1000,
   });
+}
+
+// Hook mới để kết hợp danh sách tất cả khóa học với trạng thái đăng ký
+export function useCoursesWithEnrollmentStatus(userId, options = {}) {
+  // Lấy danh sách tất cả khóa học
+  const { data: allCourses, isLoading: isLoadingCourses } = useCourseList(options);
+  
+  // Lấy danh sách khóa học đã đăng ký
+  const { data: enrolledCoursesData, isLoading: isLoadingEnrollments } = useEnrolledCourses(userId);
+  
+  // Lấy thông tin người dùng
+  const { data: userProfile, isLoading: isLoadingProfile } = useUserProfile(userId);
+  
+  // Xử lý dữ liệu khi tất cả đã tải xong
+  const processedData = React.useMemo(() => {
+    if (!allCourses || !allCourses.courses) return { courses: [], isLoading: true };
+    
+    // Lấy danh sách ID khóa học đã đăng ký
+    const enrolledCourseIds = new Set();
+    
+    // Thêm từ danh sách enrolledCourses từ API
+    if (enrolledCoursesData && enrolledCoursesData.courses) {
+      enrolledCoursesData.courses.forEach(course => {
+        enrolledCourseIds.add(course.courseId.toString());
+      });
+    }
+    
+    // Thêm từ thông tin người dùng (legacy)
+    if (userProfile && userProfile.enrolledCourses) {
+      userProfile.enrolledCourses.forEach(course => {
+        const courseId = typeof course === 'string' ? course : course.courseId;
+        if (courseId) enrolledCourseIds.add(courseId.toString());
+      });
+    }
+    
+    // Kết hợp thông tin đăng ký với danh sách khóa học
+    const coursesWithStatus = allCourses.courses.map(course => {
+      const courseId = course.id || course._id;
+      const isEnrolled = enrolledCourseIds.has(courseId.toString());
+      
+      return {
+        ...course,
+        isEnrolled,
+        // Thêm thông tin tiến độ nếu đã đăng ký
+        progress: isEnrolled ? 
+          (enrolledCoursesData?.courses?.find(c => c.courseId.toString() === courseId.toString())?.progress || 0) : 
+          0
+      };
+    });
+    
+    return {
+      courses: coursesWithStatus,
+      pagination: allCourses.pagination,
+      isLoading: false
+    };
+  }, [allCourses, enrolledCoursesData, userProfile]);
+  
+  return {
+    data: processedData,
+    isLoading: isLoadingCourses || (!!userId && (isLoadingEnrollments || isLoadingProfile))
+  };
 }
 
 export function useEnrollCourse() {

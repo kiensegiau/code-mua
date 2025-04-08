@@ -2,6 +2,7 @@
 import React, { useEffect, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { useAuth } from "@/app/_context/AuthContext";
 
 // Lazy load các component để cải thiện thời gian tải trang
 const WelcomeBanner = lazy(() => import("./_components/WelcomeBanner"));
@@ -27,6 +28,8 @@ const CourseListFallback = () => (
 );
 
 function Courses() {
+  const { user } = useAuth();
+  
   // Scroll to top khi trang được load, thêm empty array vào dependency
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
