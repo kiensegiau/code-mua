@@ -85,8 +85,6 @@ const GlobalApi = {
   purchaseCourse: async (userId, courseId) => {
     try {
       if (isClient) {
-        console.log('Gọi API mua khóa học', { userId, courseId });
-        
         const response = await fetch(`${API_BASE_URL}/courses/${courseId}/purchase`, {
           method: 'POST',
           headers: {
@@ -114,8 +112,6 @@ const GlobalApi = {
   enrollCourse: async (userId, courseId) => {
     try {
       if (isClient) {
-        console.log('Gọi API đăng ký khóa học', { userId, courseId });
-        
         // Kiểm tra tham số
         if (!userId) {
           console.error('Lỗi: userId không được cung cấp');
@@ -127,8 +123,6 @@ const GlobalApi = {
           throw new Error('courseId là bắt buộc');
         }
         
-        console.log('URL API đăng ký:', `${API_BASE_URL}/courses/${courseId}/enroll`);
-        
         const response = await fetch(`${API_BASE_URL}/courses/${courseId}/enroll`, {
           method: 'POST',
           headers: {
@@ -137,25 +131,12 @@ const GlobalApi = {
           body: JSON.stringify({ userId }),
         });
         
-        // Log response status
-        console.log('API đăng ký trả về status:', response.status);
-        
-        // Thử đọc body của response để log
-        let responseData;
-        try {
-          responseData = await response.clone().json();
-          console.log('API đăng ký trả về data:', responseData);
-        } catch (jsonError) {
-          console.error('Không thể đọc JSON từ response:', jsonError);
-        }
-        
         if (!response.ok) {
-          const data = responseData || { error: 'Lỗi không xác định' };
-          console.error('API trả về lỗi:', data);
+          const data = await response.json();
           throw new Error(data.error || 'Lỗi khi đăng ký khóa học');
         }
         
-        return responseData || await response.json();
+        return await response.json();
       } else {
         console.warn('enrollCourse đang được gọi từ server, hãy sử dụng API route');
         return null;
@@ -169,8 +150,6 @@ const GlobalApi = {
   isUserEnrolled: async (userId, courseId) => {
     try {
       if (isClient) {
-        console.log(`Kiểm tra đăng ký khóa học: courseId=${courseId}, userId=${userId}`);
-        
         if (!userId) {
           console.warn("userId không được cung cấp khi kiểm tra đăng ký khóa học");
           return false;
@@ -229,8 +208,6 @@ const GlobalApi = {
           console.warn('userId không được cung cấp khi gọi getEnrolledCourses');
           return [];
         }
-        
-        console.log('Gọi API lấy khóa học đã đăng ký:', userId);
         
         const response = await fetch(`${API_BASE_URL}/courses/enrollment?userId=${userId}`);
         

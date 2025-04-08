@@ -126,12 +126,6 @@ const CourseItem = ({
   const lastAccessed = data?.lastAccessed ? new Date(data.lastAccessed) : null;
   const courseSource = data?.source || source || "hocmai";
   
-  console.log("Dữ liệu khóa học nhận được:", { 
-    id: courseId,
-    title, 
-    imageUrl: data?.imageUrl || data?.coverImage || data?.thumbnail || "(không có)"
-  });
-  
   // Formatted price with Vietnamese currency
   const formattedPrice = price === 0 
     ? "Miễn phí" 
@@ -174,7 +168,6 @@ const CourseItem = ({
     // Cập nhật latestBalance khi profile thay đổi
     if (profile?.balance !== undefined) {
       setLatestBalance(profile.balance);
-      console.log("Cập nhật số dư từ profile:", profile.balance);
     }
     
     // Gọi API để đảm bảo có số dư mới nhất
@@ -182,15 +175,8 @@ const CourseItem = ({
       const fetchLatestBalance = async () => {
         try {
           const fetchedProfile = await GlobalApi.getUserProfile(user.uid);
-          console.log("Lấy số dư từ server:", {
-            uid: user.uid,
-            profileBalance: fetchedProfile?.balance,
-            currentBalance: latestBalance
-          });
-          
           if (fetchedProfile && typeof fetchedProfile.balance === 'number') {
             setLatestBalance(fetchedProfile.balance);
-            console.log("Đã cập nhật số dư mới nhất:", fetchedProfile.balance);
           }
         } catch (error) {
           console.error("Lỗi khi lấy số dư mới nhất:", error);
@@ -224,16 +210,6 @@ const CourseItem = ({
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
-    console.log("Kiểm tra điều kiện đăng ký:", {
-      user: !!user,
-      profile: !!profile, 
-      data: !!data,
-      isEnrolledMemo,
-      coursePrice,
-      latestBalance,
-      canEnroll: !(!user || !data || isEnrolledMemo || (coursePrice > 0 && coursePrice > latestBalance))
-    });
-    
     // Kiểm tra điều kiện cơ bản
     if (!user || !data) return false;
     if (isEnrolledMemo) return false;
@@ -348,30 +324,17 @@ const CourseItem = ({
       // Xác định userId đúng - hỗ trợ cả uid và id
       const userId = user.uid || user.id;
       
-      console.log("Đăng ký khóa học với thông tin:", {
-        courseId,
-        userId,
-        courseInfo: {
-          title: data.title,
-          price: coursePrice
-        }
-      });
-      
       let response;
       
       // Phân biệt khóa học miễn phí và có phí
       if (coursePrice > 0) {
         // Đối với khóa học có phí, gọi API mua khóa học
-        console.log("Gọi API mua khóa học có phí");
         response = await GlobalApi.purchaseCourse(userId, courseId);
       } else {
         // Đối với khóa học miễn phí, gọi API đăng ký khóa học
-        console.log("Gọi API đăng ký khóa học miễn phí");
         response = await GlobalApi.enrollCourse(userId, courseId);
       }
       
-      console.log("Phản hồi API:", response);
-
       // Cập nhật profile trong context để hiển thị nút "Vào học ngay"
       if (response) {
         try {
@@ -380,7 +343,6 @@ const CourseItem = ({
           if (updatedProfile) {
             // Cập nhật profile trong context
             setProfile(updatedProfile);
-            console.log("Đã cập nhật profile sau khi đăng ký:", updatedProfile);
           }
         } catch (profileError) {
           console.error("Lỗi khi cập nhật profile sau khi đăng ký:", profileError);
@@ -472,7 +434,6 @@ const CourseItem = ({
                     loading="lazy"
                     onLoad={() => setImageLoaded(true)}
                     onError={(e) => {
-                      console.error("Lỗi tải hình ảnh khóa học:", e);
                       setImageLoaded(false);
                     }}
                   />

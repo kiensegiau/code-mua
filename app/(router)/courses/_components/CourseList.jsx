@@ -75,31 +75,6 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
 
   // Thêm console.log để hiển thị dữ liệu khóa học
   useEffect(() => {
-    if (data) {
-      console.log("Response API khóa học:", data);
-    }
-    if (courses) {
-      console.log("Danh sách khóa học đã tải:", courses);
-      console.log("Số lượng khóa học:", courses.length);
-      if (courses.length > 0) {
-        console.log("Chi tiết khóa học đầu tiên:", courses[0]);
-        console.log("Tên khóa học đầu tiên:", courses[0].title);
-        console.log("Cấu trúc dữ liệu khóa học đầu tiên:", Object.keys(courses[0]));
-        
-        // Kiểm tra từng trường dữ liệu
-        courses.forEach((course, index) => {
-          console.log(`Khóa học ${index + 1}:`, {
-            id: course.id || course._id,
-            title: course.title,
-            slug: course.slug,
-            subject: course.subject,
-            grade: course.grade,
-            isEnrolled: course.isEnrolled,
-            progress: course.progress
-          });
-        });
-      }
-    }
     if (error) {
       console.error("Lỗi khi tải khóa học:", error);
     }
@@ -251,8 +226,6 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
       return enhancedCourse;
     });
     
-    console.log("Courses sau khi cải thiện:", enhancedCourses);
-
     return subjects.map((subject) => ({
       id: subject.value,
       title: subject.label,
