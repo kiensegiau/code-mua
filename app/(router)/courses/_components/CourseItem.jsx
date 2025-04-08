@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, memo } from "react";
+import React, { useState, useCallback, useMemo, memo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -155,7 +155,7 @@ const CourseItem = ({
   const hasDiscount = discount > 0;
   
   // User state
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   // Format last accessed date
   const formattedLastAccessed = formatTimeToNow(lastAccessed);
@@ -165,9 +165,41 @@ const CourseItem = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [latestBalance, setLatestBalance] = useState(profile?.balance || 0);
 
   const coursePrice = price || 0;
-  const userBalance = user?.profile?.balance || 0;
+  
+  // Lấy số dư người dùng mới nhất khi component mount
+  useEffect(() => {
+    // Cập nhật latestBalance khi profile thay đổi
+    if (profile?.balance !== undefined) {
+      setLatestBalance(profile.balance);
+      console.log("Cập nhật số dư từ profile:", profile.balance);
+    }
+    
+    // Gọi API để đảm bảo có số dư mới nhất
+    if (user?.uid) {
+      const fetchLatestBalance = async () => {
+        try {
+          const fetchedProfile = await GlobalApi.getUserProfile(user.uid);
+          console.log("Lấy số dư từ server:", {
+            uid: user.uid,
+            profileBalance: fetchedProfile?.balance,
+            currentBalance: latestBalance
+          });
+          
+          if (fetchedProfile && typeof fetchedProfile.balance === 'number') {
+            setLatestBalance(fetchedProfile.balance);
+            console.log("Đã cập nhật số dư mới nhất:", fetchedProfile.balance);
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy số dư mới nhất:", error);
+        }
+      };
+      
+      fetchLatestBalance();
+    }
+  }, [user?.uid, profile?.balance]);
 
   // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
   const isEnrolledMemo = useMemo(() => {
@@ -177,26 +209,43 @@ const CourseItem = ({
     // Nếu prop isEnrolled được truyền vào, sử dụng giá trị này
     if (isEnrolled !== undefined) return isEnrolled;
     
-    if (!user?.profile?.enrolledCourses || !courseId) {
+    if (!profile?.enrolledCourses || !courseId) {
       return false;
     }
 
     // Kiểm tra trong mảng enrolledCourses
-    return user.profile.enrolledCourses.some((c) => {
+    return profile.enrolledCourses.some((c) => {
       // Kiểm tra cả hai trường hợp:
       // 1. c là string (courseId)
       // 2. c là object (có courseId)
       return typeof c === "string" ? c === courseId : c.courseId === courseId;
     });
-  }, [user?.profile?.enrolledCourses, courseId, isMyCoursesView, isEnrolled]);
+  }, [profile?.enrolledCourses, courseId, isMyCoursesView, isEnrolled]);
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
-    if (!user || !user.profile || !data) return false;
+    console.log("Kiểm tra điều kiện đăng ký:", {
+      user: !!user,
+      profile: !!profile, 
+      data: !!data,
+      isEnrolledMemo,
+      coursePrice,
+      latestBalance,
+      canEnroll: !(!user || !data || isEnrolledMemo || (coursePrice > 0 && coursePrice > latestBalance))
+    });
+    
+    // Kiểm tra điều kiện cơ bản
+    if (!user || !data) return false;
     if (isEnrolledMemo) return false;
-    if (coursePrice > userBalance) return false;
+    
+    // Với khóa học miễn phí, không cần kiểm tra số dư
+    if (coursePrice === 0) return true;
+    
+    // Với khóa học trả phí, kiểm tra số dư
+    if (coursePrice > latestBalance) return false;
+    
     return true;
-  }, [user, user.profile, data, isEnrolledMemo, coursePrice, userBalance]);
+  }, [user, data, isEnrolledMemo, coursePrice, latestBalance]);
 
   const handleCourseClick = useCallback(() => {
     if (isEnrolledMemo) {
@@ -211,7 +260,7 @@ const CourseItem = ({
       setVerifying(true);
 
       // Kiểm tra lại user và profile
-      if (!user || !user.profile) {
+      if (!user || !profile) {
         toast.error("Vui lòng đăng nhập để đăng ký khóa học");
         router.push("/sign-in");
         return false;
@@ -257,7 +306,7 @@ const CourseItem = ({
     } finally {
       setVerifying(false);
     }
-  }, [user, user.profile, courseId, coursePrice, router]);
+  }, [user, profile, courseId, coursePrice, router]);
 
   const handleEnrollClick = useCallback(
     (e) => {
@@ -270,7 +319,7 @@ const CourseItem = ({
 
       // Kiểm tra điều kiện cơ bản
       if (!canEnroll) {
-        if (coursePrice > userBalance) {
+        if (coursePrice > latestBalance) {
           toast.error("Số dư không đủ để mua khóa học này");
         } else if (isEnrolledMemo) {
           toast.error("Bạn đã đăng ký khóa học này rồi");
@@ -282,7 +331,7 @@ const CourseItem = ({
 
       setShowConfirmModal(true);
     },
-    [user, canEnroll, coursePrice, userBalance, isEnrolledMemo, router]
+    [user, canEnroll, coursePrice, latestBalance, isEnrolledMemo, router]
   );
 
   const handleConfirmEnroll = useCallback(async () => {
@@ -308,9 +357,20 @@ const CourseItem = ({
         }
       });
       
-      // Gọi API đăng ký khóa học thay vì sử dụng transaction Firebase trực tiếp
-      const response = await GlobalApi.enrollCourse(userId, courseId);
-      console.log("Phản hồi API đăng ký khóa học:", response);
+      let response;
+      
+      // Phân biệt khóa học miễn phí và có phí
+      if (coursePrice > 0) {
+        // Đối với khóa học có phí, gọi API mua khóa học
+        console.log("Gọi API mua khóa học có phí");
+        response = await GlobalApi.purchaseCourse(userId, courseId);
+      } else {
+        // Đối với khóa học miễn phí, gọi API đăng ký khóa học
+        console.log("Gọi API đăng ký khóa học miễn phí");
+        response = await GlobalApi.enrollCourse(userId, courseId);
+      }
+      
+      console.log("Phản hồi API:", response);
 
       toast.success("Đăng ký khóa học thành công!");
 
@@ -525,7 +585,7 @@ const CourseItem = ({
                   
                   // Không thể đăng ký
                   if (!canEnroll) {
-                    if (coursePrice > userBalance) return "Số dư không đủ";
+                    if (coursePrice > latestBalance) return "Số dư không đủ";
                     return "Không thể đăng ký";
                   }
                   
@@ -544,7 +604,7 @@ const CourseItem = ({
           onClose={() => setShowConfirmModal(false)}
           onConfirm={handleConfirmEnroll}
           course={data}
-          userBalance={userBalance}
+          userBalance={latestBalance}
           loading={enrolling || verifying}
         />
       )}
