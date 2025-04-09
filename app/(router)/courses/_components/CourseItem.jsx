@@ -456,11 +456,21 @@ const CourseItem = ({
                   : "Miễn phí"}
               </div>
 
-              {/* Level badge - static thay vì animation */}
-              <div className="absolute top-3 left-3 bg-gray-800/90 text-gray-200 text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>{grade}</span>
-              </div>
+              {/* Level badge - Chỉ hiển thị khi có thông tin lớp */}
+              {grade && (grade.includes('lớp') || grade.match(/\blớp\s*\d+\b/i) || grade.match(/\bgrade[-\s]*\d+\b/i) || grade.match(/\b\d+\b/)) && (
+                <div className="absolute top-3 left-3 bg-gray-800/90 text-gray-200 text-xs px-2.5 py-1.5 rounded-full font-medium shadow-sm flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>
+                    {grade.match(/\blớp\s*\d+\b/i) 
+                      ? grade 
+                      : grade.match(/\bgrade[-\s]*(\d+)\b/i)
+                        ? `Lớp ${grade.match(/\bgrade[-\s]*(\d+)\b/i)[1]}`
+                        : grade.match(/\b(\d+)\b/)
+                          ? `Lớp ${grade.match(/\b(\d+)\b/)[1]}`
+                          : grade}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Content section with consistent spacing */}
