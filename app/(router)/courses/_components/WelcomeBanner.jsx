@@ -9,17 +9,20 @@ import {
   Search,
   Star,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Wrap component bằng memo để tránh render không cần thiết
 const WelcomeBanner = memo(function WelcomeBanner() {
   const { user } = useAuth();
   const { theme } = useTheme();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+  const urlSearchQuery = searchParams.get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
   const isLightTheme = theme === "light";
 
   // Giảm độ phức tạp của animation để cải thiện hiệu suất
@@ -45,20 +48,29 @@ const WelcomeBanner = memo(function WelcomeBanner() {
     },
   };
 
+  // Cập nhật state khi người dùng nhập
   const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);
   }, []);
 
+  // Xử lý khi người dùng submit form tìm kiếm
   const handleSearchSubmit = useCallback(
     (e) => {
       e.preventDefault();
       if (searchQuery.trim()) {
-        // Thực hiện tìm kiếm
-        router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        // Mã hóa đúng cách cho tiếng Việt có dấu
+        const encodedQuery = encodeURIComponent(searchQuery.trim());
+        // Chuyển hướng đến trang courses với query tìm kiếm
+        router.push(`/courses?q=${encodedQuery}`);
       }
     },
     [searchQuery, router]
   );
+
+  // Xóa giá trị tìm kiếm
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
 
   return (
     <motion.div
@@ -115,7 +127,7 @@ const WelcomeBanner = memo(function WelcomeBanner() {
             học chất lượng cao
           </motion.p>
 
-          {/* Search bar */}
+          {/* Search bar - Cải tiến */}
           <motion.form
             className="relative mb-6 max-w-md"
             variants={itemVariants}
@@ -130,7 +142,7 @@ const WelcomeBanner = memo(function WelcomeBanner() {
               <input
                 type="text"
                 placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
-                className={`w-full pl-10 pr-4 py-2.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 text-sm placeholder:text-gray-500 theme-input
+                className={`w-full pl-10 pr-10 py-2.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 text-sm placeholder:text-gray-500 theme-input
                   ${
                     isLightTheme
                       ? "bg-white border border-gray-300 text-gray-800"
@@ -139,6 +151,23 @@ const WelcomeBanner = memo(function WelcomeBanner() {
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className={`absolute right-10 top-1/2 transform -translate-y-1/2 ${
+                    isLightTheme ? "text-gray-500" : "text-gray-400"
+                  } hover:text-[#ff4d4f] transition-colors`}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#ff4d4f] text-white p-1 rounded-full hover:bg-[#ff4d4f]/90 transition-colors"
+              >
+                <Search className="h-3 w-3" />
+              </button>
             </div>
           </motion.form>
 
