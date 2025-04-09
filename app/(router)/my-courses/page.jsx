@@ -1,6 +1,5 @@
 "use client";
-import { useEffect } from "react";
-import useEnrolledCourses from "@/app/_hooks/useEnrolledCourses";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -17,6 +16,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/app/_context/AuthContext";
+import { useCoursesWithEnrollmentStatus } from "@/app/_hooks/useGlobalApi";
 
 // Lazy load CourseItem để tối ưu performance
 const CourseItem = dynamic(() => import("../courses/_components/CourseItem"), {
@@ -38,32 +39,69 @@ const CourseItem = dynamic(() => import("../courses/_components/CourseItem"), {
 
 function MyCourses() {
   const coursesPerPage = 9;
-  const {
-    loading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    sortOption,
-    setSortOption,
-    selectedFilter,
-    setSelectedFilter,
-    currentPage,
-    setCurrentPage,
-    stats,
-    getPaginatedCourses,
-    filteredAndSortedCourses,
-    refresh,
-  } = useEnrolledCourses();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState('lastAccessed');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const { user } = useAuth();
+  
+  // Sử dụng hook để lấy danh sách khóa học đã đăng ký
+  const { data, isLoading, error } = useCoursesWithEnrollmentStatus(user?.uid);
+  
+  // Lọc ra các khóa học đã đăng ký
+  const enrolledCourses = useMemo(() => {
+    if (!data || !data.courses) return [];
+    return data.courses.filter(course => course.isEnrolled);
+  }, [data]);
+  
+  // Tính toán thống kê
+  const stats = {
+    totalCourses: enrolledCourses.length,
+    completedCourses: enrolledCourses.filter(course => course.progress === 100).length,
+    inProgressCourses: enrolledCourses.filter(course => course.progress < 100).length,
+    averageProgress: enrolledCourses.length > 0 
+      ? Math.round(enrolledCourses.reduce((acc, course) => acc + (course.progress || 0), 0) / enrolledCourses.length)
+      : 0
+  };
+  
+  // Lọc và sắp xếp khóa học
+  const filteredAndSortedCourses = useMemo(() => {
+    return enrolledCourses.filter((course) => {
+      if (!course) return false;
+      
+      const matchesSearch = course.title?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      if (selectedFilter === "all") return matchesSearch;
+      if (selectedFilter === "in-progress") return matchesSearch && course.progress < 100;
+      if (selectedFilter === "completed") return matchesSearch && course.progress === 100;
+      
+      return matchesSearch;
+    }).sort((a, b) => {
+      if (sortOption === "lastAccessed") {
+        const dateA = a.lastAccessed ? new Date(a.lastAccessed) : new Date(0);
+        const dateB = b.lastAccessed ? new Date(b.lastAccessed) : new Date(0);
+        return dateB - dateA;
+      } else if (sortOption === "progress") {
+        return (b.progress || 0) - (a.progress || 0);
+      } else if (sortOption === "title") {
+        return (a.title || "").localeCompare(b.title || "");
+      } else if (sortOption === "enrolledAt") {
+        const dateA = a.enrolledAt ? new Date(a.enrolledAt) : new Date(0);
+        const dateB = b.enrolledAt ? new Date(b.enrolledAt) : new Date(0);
+        return dateB - dateA;
+      }
+      return 0;
+    });
+  }, [enrolledCourses, searchQuery, selectedFilter, sortOption]);
 
-  const { totalCourses, completedCourses, inProgressCourses, averageProgress } =
-    stats || {
-      totalCourses: 0,
-      completedCourses: 0,
-      inProgressCourses: 0,
-      averageProgress: 0,
-    };
-  const { currentCourses, totalPages } = getPaginatedCourses(coursesPerPage);
-
+  // Phân trang
+  const totalPages = Math.ceil(filteredAndSortedCourses.length / coursesPerPage);
+  const startIndex = (currentPage - 1) * coursesPerPage;
+  const currentCourses = filteredAndSortedCourses.slice(
+    startIndex,
+    startIndex + coursesPerPage
+  );
+  
   // Xử lý điều hướng trang
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -72,6 +110,12 @@ function MyCourses() {
       top: document.getElementById("courses-grid")?.offsetTop - 100 || 0,
       behavior: "smooth",
     });
+  };
+
+  // Refresh data
+  const refresh = () => {
+    // Cần reload lại trang vì không có hàm refresh trực tiếp
+    window.location.reload();
   };
 
   return (
@@ -93,7 +137,7 @@ function MyCourses() {
               {/* Refresh Button only */}
               <div className="hidden md:flex gap-2 items-center">
                 <button
-                  onClick={() => refresh()}
+                  onClick={refresh}
                   className="p-2 rounded-full bg-[#1f1f1f] border border-gray-800 text-gray-400 hover:text-gray-200 transition-colors"
                   title="Làm mới danh sách"
                 >
@@ -112,10 +156,10 @@ function MyCourses() {
                   <div>
                     <p className="text-sm text-gray-400">Tổng khóa học</p>
                     <p className="text-xl font-bold text-gray-200">
-                      {loading ? (
+                      {isLoading ? (
                         <span className="inline-block w-8 h-6 bg-gray-800 animate-pulse rounded"></span>
                       ) : (
-                        totalCourses
+                        stats.totalCourses
                       )}
                     </p>
                   </div>
@@ -129,10 +173,10 @@ function MyCourses() {
                   <div>
                     <p className="text-sm text-gray-400">Đã hoàn thành</p>
                     <p className="text-xl font-bold text-gray-200">
-                      {loading ? (
+                      {isLoading ? (
                         <span className="inline-block w-8 h-6 bg-gray-800 animate-pulse rounded"></span>
                       ) : (
-                        completedCourses
+                        stats.completedCourses
                       )}
                     </p>
                   </div>
@@ -146,10 +190,10 @@ function MyCourses() {
                   <div>
                     <p className="text-sm text-gray-400">Đang học</p>
                     <p className="text-xl font-bold text-gray-200">
-                      {loading ? (
+                      {isLoading ? (
                         <span className="inline-block w-8 h-6 bg-gray-800 animate-pulse rounded"></span>
                       ) : (
-                        inProgressCourses
+                        stats.inProgressCourses
                       )}
                     </p>
                   </div>
@@ -163,10 +207,10 @@ function MyCourses() {
                   <div>
                     <p className="text-sm text-gray-400">Tiến độ trung bình</p>
                     <p className="text-xl font-bold text-gray-200">
-                      {loading ? (
+                      {isLoading ? (
                         <span className="inline-block w-8 h-6 bg-gray-800 animate-pulse rounded"></span>
                       ) : (
-                        `${averageProgress}%`
+                        `${stats.averageProgress}%`
                       )}
                     </p>
                   </div>
@@ -288,7 +332,7 @@ function MyCourses() {
 
             {/* Courses grid */}
             <div id="courses-grid" className="mb-6">
-              {loading ? (
+              {isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 6 }).map((_, index) => (
                     <div
@@ -335,6 +379,8 @@ function MyCourses() {
                     <CourseItem
                       key={course.id || course._id}
                       data={course}
+                      isEnrolled={true}
+                      progress={course.progress}
                       type="my-courses"
                     />
                   ))}
@@ -343,7 +389,7 @@ function MyCourses() {
             </div>
 
             {/* Pagination */}
-            {!loading && currentCourses.length > 0 && totalPages > 1 && (
+            {!isLoading && currentCourses.length > 0 && totalPages > 1 && (
               <div className="flex justify-center mt-6">
                 <div className="flex items-center space-x-1">
                   <button
