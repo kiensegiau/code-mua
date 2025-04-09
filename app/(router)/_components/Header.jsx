@@ -15,7 +15,7 @@ import {
   Moon,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/app/_context/AuthContext";
 import { useTheme } from "@/app/_context/ThemeContext";
 import { auth, db } from "@/app/_utils/firebase";
@@ -58,6 +58,26 @@ function Header() {
     }
   };
 
+  // Xử lý tìm kiếm và chuyển hướng
+  const handleSearch = useCallback((e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Đóng thanh tìm kiếm mobile nếu đang mở
+      if (isSearchOpen) {
+        setIsSearchOpen(false);
+      }
+      // Chuyển hướng đến trang courses với query tìm kiếm
+      router.push(`/courses?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }, [searchQuery, isSearchOpen, router]);
+
+  // Xử lý khi nhấn Enter trên ô tìm kiếm
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter") {
+      handleSearch(e);
+    }
+  }, [handleSearch]);
+
   return (
     <>
       <div className="px-3 md:px-4 py-2 bg-[var(--header-background)] flex justify-between items-center border-b border-[var(--border-color)] fixed top-0 left-0 right-0 z-50">
@@ -87,17 +107,25 @@ function Header() {
         </div>
 
         {/* Search bar - Desktop */}
-        <div className="hidden md:flex flex-1 px-4 lg:px-6">
-          <div className="relative max-w-[680px] mx-auto">
+        <div className="hidden md:flex flex-1 px-4 lg:px-6 justify-center w-full">
+          <form onSubmit={handleSearch} className="relative w-full max-w-[680px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="w-full pl-10 pr-4 py-2 rounded-full bg-[var(--input-background)] border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/20 text-sm text-[var(--text-color)] placeholder:text-gray-500"
             />
-          </div>
+            <button 
+              type="submit" 
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#ff4d4f] rounded-full p-1 hover:bg-[#ff4d4f]/90 transition-colors"
+              aria-label="Tìm kiếm"
+            >
+              <Search className="h-3.5 w-3.5 text-white" />
+            </button>
+          </form>
         </div>
 
         <div className="flex items-center gap-1 md:gap-4">
@@ -263,15 +291,24 @@ function Header() {
       {/* Mobile Search Bar */}
       {isSearchOpen && (
         <div className="fixed top-[48px] left-0 right-0 p-2 bg-[var(--header-background)] border-b border-[var(--border-color)] z-40 md:hidden">
-          <div className="flex items-center gap-2 bg-[var(--input-background)]/50 py-1.5 px-3 rounded-full border border-[var(--border-color)]">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-[var(--input-background)]/50 py-1.5 px-3 rounded-full border border-[var(--border-color)]">
             <Search className="h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Tìm kiếm khóa học, môn học, giáo viên..."
               className="bg-transparent outline-none w-full text-sm text-[var(--text-color)] placeholder:text-gray-500"
               autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
             />
-          </div>
+            <button 
+              type="submit" 
+              className="bg-[#ff4d4f] rounded-full p-1 hover:bg-[#ff4d4f]/90 transition-colors"
+            >
+              <Search className="h-3.5 w-3.5 text-white" />
+            </button>
+          </form>
         </div>
       )}
 

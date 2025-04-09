@@ -10,10 +10,12 @@ import {
   Star,
   Sparkles,
   BookOpen,
+  Search,
 } from "lucide-react";
 import { useCourseList, useCoursesWithEnrollmentStatus } from "@/app/_hooks/useGlobalApi";
 import { useAuth } from "@/app/_context/AuthContext";
 import dynamic from "next/dynamic";
+import { useSearchParams } from 'next/navigation';
 
 // Component LazyLoadedCourseItem để lazy load từng course item
 const LazyLoadedCourseItem = ({ course, index }) => {
@@ -48,6 +50,10 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [itemsPerPage, setItemsPerPage] = useState(4);
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Sử dụng hook mới để lấy danh sách khóa học kèm trạng thái đăng ký
   const { data, isLoading, error } = useCoursesWithEnrollmentStatus(
@@ -72,6 +78,31 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
     console.error("Dữ liệu courses không đúng định dạng:", data);
     return [];
   }, [data]);
+
+  // Xử lý tìm kiếm khi có searchQuery
+  useEffect(() => {
+    if (!courses || courses.length === 0) return;
+    
+    setIsSearching(!!searchQuery);
+    
+    if (searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      const results = courses.filter(course => {
+        // Tìm kiếm trong các trường dữ liệu của khóa học
+        return (
+          (course.title && course.title.toLowerCase().includes(lowerQuery)) ||
+          (course.description && course.description.toLowerCase().includes(lowerQuery)) ||
+          (course.subject && course.subject.toLowerCase().includes(lowerQuery)) ||
+          (course.grade && course.grade.toLowerCase().includes(lowerQuery)) ||
+          (course.teacher && course.teacher.toLowerCase().includes(lowerQuery))
+        );
+      });
+      
+      setFilteredCourses(results);
+    } else {
+      setFilteredCourses([]);
+    }
+  }, [searchQuery, courses]);
 
   // Thêm console.log để hiển thị dữ liệu khóa học
   useEffect(() => {
@@ -296,7 +327,47 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
 
   return (
     <div className="space-y-12">
-      {subjectsWithCourses.map((subject, subjectIndex) => {
+      {/* Hiển thị kết quả tìm kiếm nếu có searchQuery */}
+      {isSearching && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Search className="h-5 w-5 text-[#ff4d4f]" />
+            <h2 className="text-xl font-bold text-white">
+              Kết quả tìm kiếm: "{searchQuery}"
+            </h2>
+            <span className="text-gray-400 text-sm">
+              ({filteredCourses.length} khóa học)
+            </span>
+          </div>
+          
+          {filteredCourses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredCourses.map((course, index) => (
+                <LazyLoadedCourseItem 
+                  key={course.id || course._id} 
+                  course={course} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-[#1f1f1f]/50 rounded-xl p-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#1f1f1f] flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-gray-500" />
+              </div>
+              <h3 className="text-gray-200 font-medium text-lg mb-2">
+                Không tìm thấy khóa học nào
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Thử tìm kiếm với từ khóa khác hoặc duyệt qua các khóa học bên dưới
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chỉ hiển thị danh sách theo môn học nếu không đang tìm kiếm */}
+      {!isSearching && subjectsWithCourses.map((subject, subjectIndex) => {
         const category = coursesBySubject.find(
           (cat) => cat.id === subject.value
         );
