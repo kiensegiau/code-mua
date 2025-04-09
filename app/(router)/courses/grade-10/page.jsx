@@ -110,7 +110,7 @@ function Grade10Courses() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <CourseList grade="10" />
+          <CourseList grade="grade-10" />
         </motion.div>
 
         {/* Page bottom decoration - static element */}

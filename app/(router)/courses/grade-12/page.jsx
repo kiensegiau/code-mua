@@ -121,7 +121,7 @@ function Grade12Courses() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          <CourseList grade="12" />
+          <CourseList grade="grade-12" />
         </motion.div>
 
         {/* Page bottom decoration */}

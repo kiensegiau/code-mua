@@ -24,11 +24,59 @@ export async function GET(request) {
     let query = {};
     
     if (grade) {
-      query.grade = grade;
+      // Chuyển đổi cách biểu diễn của grade
+      let formattedGrade = grade;
+      
+      // Nếu grade chỉ là số (10, 11, 12), thì chuyển thành định dạng grade-X
+      if (/^[0-9]+$/.test(grade)) {
+        formattedGrade = `grade-${grade}`;
+      }
+      
+      // Xử lý các trường hợp khác
+      if (grade === '10' || grade === 'grade-10' || grade === 'grade10' || grade === 'lớp 10') {
+        query.$or = [
+          { grade: 'grade-10' },
+          { grade: 'grade10' },
+          { grade: 'lớp 10' },
+          { grade: '10' },
+          { title: { $regex: '\\b10\\b|\\blớp 10\\b', $options: 'i' } }
+        ];
+      } else if (grade === '11' || grade === 'grade-11' || grade === 'grade11' || grade === 'lớp 11') {
+        query.$or = [
+          { grade: 'grade-11' },
+          { grade: 'grade11' },
+          { grade: 'lớp 11' },
+          { grade: '11' },
+          { title: { $regex: '\\b11\\b|\\blớp 11\\b', $options: 'i' } }
+        ];
+      } else if (grade === '12' || grade === 'grade-12' || grade === 'grade12' || grade === 'lớp 12') {
+        query.$or = [
+          { grade: 'grade-12' },
+          { grade: 'grade12' },
+          { grade: 'lớp 12' },
+          { grade: '12' },
+          { title: { $regex: '\\b12\\b|\\blớp 12\\b', $options: 'i' } }
+        ];
+      } else {
+        query.grade = formattedGrade;
+      }
     }
     
     if (subject) {
-      query.subject = subject;
+      // Nếu đã có $or từ điều kiện grade, thêm điều kiện subject vào query riêng
+      if (query.$or) {
+        const orConditions = query.$or;
+        delete query.$or;
+        query.subject = subject;
+        query = {
+          $and: [
+            { $or: orConditions },
+            { subject: subject }
+          ]
+        };
+      } else {
+        query.subject = subject;
+      }
     }
     
     // Thêm tìm kiếm theo từ khóa

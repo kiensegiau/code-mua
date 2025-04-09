@@ -245,11 +245,42 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
       if (!enhancedCourse.grade) {
         const title = enhancedCourse.title || '';
         
-        if (title.match(/\b10\b/) || title.match(/\b2K6\b/i)) {
+        // Cải thiện nhận dạng lớp trong tiêu đề
+        if (
+          title.match(/\b10\b/i) || 
+          title.match(/\blớp[\s_-]*10\b/i) || 
+          title.match(/\bgrade[\s_-]*10\b/i) || 
+          title.match(/\bkhối[\s_-]*10\b/i) ||
+          title.match(/\b2K6\b/i)
+        ) {
           enhancedCourse.grade = 'grade-10';
-        } else if (title.match(/\b11\b/) || title.match(/\b2K5\b/i)) {
+        } else if (
+          title.match(/\b11\b/i) || 
+          title.match(/\blớp[\s_-]*11\b/i) || 
+          title.match(/\bgrade[\s_-]*11\b/i) || 
+          title.match(/\bkhối[\s_-]*11\b/i) ||
+          title.match(/\b2K5\b/i)
+        ) {
           enhancedCourse.grade = 'grade-11';
-        } else if (title.match(/\b12\b/) || title.match(/\b2K7\b/i)) {
+        } else if (
+          title.match(/\b12\b/i) || 
+          title.match(/\blớp[\s_-]*12\b/i) || 
+          title.match(/\bgrade[\s_-]*12\b/i) || 
+          title.match(/\bkhối[\s_-]*12\b/i) ||
+          title.match(/\b2K4\b/i)
+        ) {
+          enhancedCourse.grade = 'grade-12';
+        }
+      }
+      
+      // Chuẩn hóa format của grade nếu có
+      if (enhancedCourse.grade) {
+        // Chuyển đổi các định dạng của grade sang định dạng chuẩn grade-X
+        if (enhancedCourse.grade === '10' || enhancedCourse.grade === 'lớp 10' || enhancedCourse.grade === 'grade10') {
+          enhancedCourse.grade = 'grade-10';
+        } else if (enhancedCourse.grade === '11' || enhancedCourse.grade === 'lớp 11' || enhancedCourse.grade === 'grade11') {
+          enhancedCourse.grade = 'grade-11';
+        } else if (enhancedCourse.grade === '12' || enhancedCourse.grade === 'lớp 12' || enhancedCourse.grade === 'grade12') {
           enhancedCourse.grade = 'grade-12';
         }
       }
