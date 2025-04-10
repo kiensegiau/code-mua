@@ -241,7 +241,8 @@ export async function GET(request) {
         page,
         limit,
         totalPages: Math.ceil(totalCount / limit)
-      }
+      },
+      status: "success"
     });
     
   } catch (error) {

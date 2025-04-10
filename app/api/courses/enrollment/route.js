@@ -4,18 +4,13 @@ import mongoose from "mongoose";
 
 export async function GET(request) {
   try {
-    console.log("API lấy danh sách khóa học đã đăng ký được gọi");
-    
     // Lấy userId từ query params
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const limit = parseInt(searchParams.get('limit') || '100');
     const page = parseInt(searchParams.get('page') || '1');
     
-    console.log("userId từ query params:", userId);
-    
     if (!userId) {
-      console.log("Lỗi: userId không được cung cấp");
       return NextResponse.json(
         { error: 'userId là bắt buộc', status: "error" },
         { status: 400 }
@@ -24,15 +19,12 @@ export async function GET(request) {
 
     // Kết nối đến database
     await connectToDatabase();
-    console.log("Đã kết nối database");
     
     // Kết nối đến database hocmai
     const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    console.log("Đã kết nối đến database hocmai");
     
     // Kết nối đến database elearning
     const elearningDb = mongoose.connection.useDb('elearning', { useCache: true });
-    console.log("Đã kết nối đến database elearning");
     
     // Truy cập các collections
     const usersCollection = hocmaiDb.collection('users');
@@ -42,21 +34,16 @@ export async function GET(request) {
     
     try {
       // 1. Lấy danh sách đăng ký từ enrollments collection
-      console.log("Lấy danh sách đăng ký từ enrollments collection");
       const enrollments = await enrollmentsCollection.find({
         userId: userId,
         status: 'active'
       }).toArray();
       
-      console.log(`Tìm thấy ${enrollments.length} đăng ký từ collection enrollments`);
-      
       // 2. Lấy thông tin user để kiểm tra enrolledCourses (legacy)
-      console.log("Lấy thông tin user từ collection users");
       const user = await usersCollection.findOne({ uid: userId });
       
       let legacyEnrollments = [];
       if (user && user.enrolledCourses && Array.isArray(user.enrolledCourses)) {
-        console.log("Xử lý enrolledCourses từ user (legacy)");
         legacyEnrollments = user.enrolledCourses.map(course => {
           // Chuẩn hóa dữ liệu course
           if (typeof course === 'string') {
@@ -83,11 +70,8 @@ export async function GET(request) {
         ...legacyEnrollments.map(e => e.courseId)
       ];
       
-      console.log(`Tổng số khóa học đã đăng ký: ${allEnrollmentIds.length}`);
-      
       // Loại bỏ trùng lặp
       const uniqueCourseIds = [...new Set(allEnrollmentIds.map(id => id.toString()))];
-      console.log(`Số lượng khóa học đã đăng ký (đã loại bỏ trùng lặp): ${uniqueCourseIds.length}`);
       
       // Phân trang dữ liệu
       const totalEnrollments = uniqueCourseIds.length;
@@ -98,13 +82,11 @@ export async function GET(request) {
         try {
           return new mongoose.Types.ObjectId(id);
         } catch (e) {
-          console.log(`Không thể chuyển đổi ID ${id} thành ObjectId:`, e.message);
           return id;
         }
       });
 
       // 4. Lấy thông tin cơ bản của khóa học từ cả hai database song song
-      console.log("Lấy thông tin khóa học từ cả hai database song song");
       const projection = {
         _id: 1,
         title: 1,
@@ -135,8 +117,6 @@ export async function GET(request) {
         ...elearningCourses.map(course => ({ ...course, source: 'elearning' }))
       ];
       
-      console.log(`Tìm thấy ${allCourses.length} khóa học từ cả hai database`);
-      
       // 5. Kết hợp thông tin đăng ký với thông tin khóa học
       const enrolledCourses = paginatedCourseIds.map(courseId => {
         // Tìm thông tin chi tiết khóa học (ưu tiên từ hocmai trước)
@@ -165,7 +145,6 @@ export async function GET(request) {
         
         // Nếu không tìm thấy thông tin khóa học
         if (!courseDetail) {
-          console.log(`Không tìm thấy thông tin cho khóa học có ID ${courseId}`);
           return {
             id: courseId,
             courseId: courseId,
@@ -201,11 +180,8 @@ export async function GET(request) {
         };
       });
       
-      console.log(`Đã kết hợp thông tin cho ${enrolledCourses.length} khóa học`);
-      
       // Chỉ trả về các khóa học hợp lệ (đã tìm thấy thông tin)
       const validEnrolledCourses = enrolledCourses.filter(course => course.found);
-      console.log(`Số lượng khóa học hợp lệ: ${validEnrolledCourses.length}`);
       
       return NextResponse.json({
         courses: validEnrolledCourses,

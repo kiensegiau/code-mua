@@ -4,21 +4,16 @@ import mongoose from 'mongoose';
 
 export async function GET(request, { params }) {
   try {
-    console.log("API courses/[courseId] được gọi");
     const { courseId } = params;
-    console.log("courseId:", courseId);
     
     // Kết nối đến database
     await connectToDatabase();
-    console.log("Đã kết nối database");
     
     // Tạo ObjectId từ courseId
     let objectId;
     try {
       objectId = new mongoose.Types.ObjectId(courseId);
-      console.log("ObjectId:", objectId);
     } catch (idError) {
-      console.error("Lỗi khi chuyển đổi ID:", idError);
       return NextResponse.json(
         { error: "ID khóa học không hợp lệ", details: idError.message, status: "error" },
         { status: 400 }
@@ -28,7 +23,6 @@ export async function GET(request, { params }) {
     // Kết nối đến cả hai database
     const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
     const elearningDb = mongoose.connection.useDb('elearning', { useCache: true });
-    console.log("Đã kết nối đến cả hai database");
     
     // Projection để chỉ lấy các fields cần thiết
     const courseProjection = {
@@ -70,16 +64,13 @@ export async function GET(request, { params }) {
     if (hocmaiCourse) {
       course = hocmaiCourse;
       source = 'hocmai';
-      console.log("Đã tìm thấy khóa học trong hocmai:", course.title);
     } else if (elearningCourse) {
       course = elearningCourse;
       source = 'elearning';
-      console.log("Đã tìm thấy khóa học trong elearning:", course.title);
     }
     
     // Kiểm tra nếu không tìm thấy khóa học
     if (!course) {
-      console.log("Không tìm thấy khóa học với ID:", courseId, "trong cả hai database");
       return NextResponse.json(
         { error: "Không tìm thấy khóa học", status: "error" },
         { status: 404 }
@@ -92,15 +83,6 @@ export async function GET(request, { params }) {
       { courseId: objectId },
       { projection: contentProjection }
     );
-    
-    if (courseContent) {
-      console.log("Đã tìm thấy nội dung khóa học:", {
-        chapters: (courseContent.chapters || []).length,
-        totalLessons: courseContent.chapters?.reduce((sum, chapter) => sum + (chapter.lessons?.length || 0), 0) || 0
-      });
-    } else {
-      console.log("Không tìm thấy nội dung khóa học");
-    }
     
     // Định dạng dữ liệu trả về
     const formattedCourse = {
