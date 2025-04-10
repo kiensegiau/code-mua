@@ -19,7 +19,7 @@ const outfit = Outfit({
 
 // Thêm metadata để cải thiện SEO
 export const metadata = {
-  title: "Hocmai - Nền tảng học trực tuyến",
+  title: "Khoahoc.live - Nền tảng học trực tuyến",
   description: "Nền tảng học trực tuyến hàng đầu Việt Nam",
 };
 
