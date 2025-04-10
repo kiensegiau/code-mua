@@ -9,8 +9,6 @@ if (!MONGODB_URI) {
   throw new Error('Vui lòng định nghĩa biến môi trường MONGODB_URI trong file .env');
 }
 
-// Giữ lại log này để theo dõi URI đang được sử dụng
-console.log('MongoDB URI config:', MONGODB_URI.replace(/:[^:]*@/, ':****@'));
 
 let cached = global.mongoose;
 

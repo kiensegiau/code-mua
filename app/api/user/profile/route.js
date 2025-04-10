@@ -4,16 +4,11 @@ import mongoose from 'mongoose';
 
 export async function GET(request) {
   try {
-    console.log("API /user/profile được gọi");
-    
     // Lấy userId từ query params
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
-    console.log("userId từ query params:", userId);
-    
     if (!userId) {
-      console.log("Lỗi: userId không được cung cấp");
       return NextResponse.json(
         { error: 'userId là bắt buộc' },
         { status: 400 }
@@ -23,17 +18,13 @@ export async function GET(request) {
     // Kết nối đến database
     try {
       await connectToDatabase();
-      console.log("Đã kết nối đến database");
       
       // Kết nối trực tiếp đến collection users trong database hocmai
       const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
       const usersCollection = hocmaiDb.collection('users');
       
-      console.log("Đã kết nối đến collection users trong database hocmai");
-      
       // Tìm người dùng theo uid
       const user = await usersCollection.findOne({ uid: userId });
-      console.log("Kết quả tìm kiếm user:", user ? "Tìm thấy" : "Không tìm thấy");
       
       if (!user) {
         return NextResponse.json(
@@ -68,15 +59,10 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    console.log("API PUT /user/profile được gọi");
-    
     const body = await request.json();
     const { userId } = body;
     
-    console.log("userId từ body:", userId);
-    
     if (!userId) {
-      console.log("Lỗi: userId không được cung cấp");
       return NextResponse.json(
         { error: 'userId là bắt buộc' },
         { status: 400 }
@@ -91,13 +77,10 @@ export async function PUT(request) {
     // Kết nối đến database
     try {
       await connectToDatabase();
-      console.log("Đã kết nối đến database");
       
       // Kết nối trực tiếp đến collection users trong database hocmai
       const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
       const usersCollection = hocmaiDb.collection('users');
-      
-      console.log("Đã kết nối đến collection users trong database hocmai");
       
       // Cập nhật người dùng
       const result = await usersCollection.findOneAndUpdate(
@@ -107,7 +90,6 @@ export async function PUT(request) {
       );
       
       const updatedUser = result.value;
-      console.log("Kết quả cập nhật user:", updatedUser ? "Thành công" : "Không tìm thấy");
       
       if (!updatedUser) {
         return NextResponse.json(

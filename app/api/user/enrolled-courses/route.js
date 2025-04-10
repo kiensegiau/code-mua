@@ -4,16 +4,11 @@ import mongoose from 'mongoose';
 
 export async function GET(request) {
   try {
-    console.log("API lấy danh sách khóa học đã đăng ký được gọi");
-    
     // Lấy userId từ query params
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
-    console.log("userId từ query params:", userId);
-    
     if (!userId) {
-      console.log("Lỗi: userId không được cung cấp");
       return NextResponse.json(
         { error: 'userId là bắt buộc' },
         { status: 400 }
@@ -22,11 +17,9 @@ export async function GET(request) {
 
     // Kết nối đến database
     await connectToDatabase();
-    console.log("Đã kết nối database");
     
     // Kết nối đến database hocmai
     const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    console.log("Đã kết nối đến database hocmai");
     
     // Truy cập các collections
     const usersCollection = hocmaiDb.collection('users');
@@ -35,13 +28,10 @@ export async function GET(request) {
     
     try {
       // Cách 1: Tìm dữ liệu từ collection enrollments
-      console.log("Tìm dữ liệu đăng ký từ collection enrollments");
       const enrollments = await enrollmentsCollection.find({ 
         userId: userId,
         status: 'active'
       }).toArray();
-      
-      console.log(`Tìm thấy ${enrollments.length} đăng ký từ collection enrollments`);
       
       if (enrollments.length > 0) {
         // Lấy danh sách courseId
@@ -54,8 +44,6 @@ export async function GET(request) {
           }
         }).filter(id => id !== null);
         
-        console.log(`Đã lọc được ${courseIds.length} courseId hợp lệ`);
-        
         if (courseIds.length === 0) {
           return NextResponse.json([]);
         }
@@ -64,8 +52,6 @@ export async function GET(request) {
         const courses = await coursesCollection.find({
           _id: { $in: courseIds }
         }).toArray();
-        
-        console.log(`Tìm thấy ${courses.length} khóa học`);
         
         // Kết hợp thông tin khóa học với thông tin đăng ký
         const enrolledCourses = courses.map(course => {
@@ -86,21 +72,16 @@ export async function GET(request) {
       }
       
       // Cách 2: Backup - Tìm trong user.enrolledCourses (cho backwards compatibility)
-      console.log("Tìm dữ liệu đăng ký từ user.enrolledCourses (backup)");
       const user = await usersCollection.findOne({ uid: userId });
       
       if (!user) {
-        console.log("Không tìm thấy người dùng với ID:", userId);
         return NextResponse.json(
           { error: "Không tìm thấy thông tin người dùng" },
           { status: 404 }
         );
       }
       
-      console.log("Đã tìm thấy người dùng:", user.email || user.uid);
-      
       const enrolledCourses = user.enrolledCourses || [];
-      console.log(`User có ${enrolledCourses.length} khóa học đã đăng ký`);
       
       if (!enrolledCourses.length) {
         return NextResponse.json([]);
@@ -118,8 +99,6 @@ export async function GET(request) {
         }
       }).filter(id => id !== null);
       
-      console.log(`Đã lọc được ${courseIds.length} courseId hợp lệ từ user.enrolledCourses`);
-      
       if (courseIds.length === 0) {
         return NextResponse.json([]);
       }
@@ -128,8 +107,6 @@ export async function GET(request) {
       const courses = await coursesCollection.find({
         _id: { $in: courseIds }
       }).toArray();
-      
-      console.log(`Tìm thấy ${courses.length} khóa học (từ user.enrolledCourses)`);
       
       // Kết hợp thông tin khóa học với thông tin đăng ký
       const formattedCourses = courses.map(course => {

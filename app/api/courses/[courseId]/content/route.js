@@ -4,17 +4,13 @@ import mongoose from 'mongoose';
 
 export async function GET(request, { params }) {
   try {
-    console.log("API courses/[courseId]/content được gọi");
     const { courseId } = params;
-    console.log("courseId:", courseId);
     
     // Kết nối đến database
     await connectToDatabase();
-    console.log("Đã kết nối database");
     
     // Kết nối đến database hocmai
     const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    console.log("Đã kết nối đến database hocmai");
     
     // Truy cập collection courseContents
     const courseContentsCollection = hocmaiDb.collection('courseContents');
@@ -24,15 +20,11 @@ export async function GET(request, { params }) {
       const courseContent = await courseContentsCollection.findOne({ courseId: courseId });
       
       if (!courseContent) {
-        console.log("Không tìm thấy nội dung khóa học với courseId:", courseId);
         return NextResponse.json(
           { error: "Không tìm thấy nội dung khóa học" },
           { status: 404 }
         );
       }
-      
-      console.log("Đã tìm thấy nội dung khóa học, số chương:", 
-        courseContent.chapters ? courseContent.chapters.length : 0);
 
       // Định dạng lại response để có ID string
       const formattedContent = {
