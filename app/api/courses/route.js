@@ -4,11 +4,8 @@ import mongoose from 'mongoose';
 
 export async function GET(request) {
   try {
-    console.log("API courses được gọi");
-    
     // Kết nối đến database
     await connectToDatabase();
-    console.log("Đã kết nối database");
     
     // Lấy các tham số query
     const { searchParams } = new URL(request.url);
@@ -18,8 +15,6 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search");
-    
-    console.log("MongoDB query params:", { grade, subject, dgnlType, limit, page, search });
     
     // Xây dựng query
     let query = {};
@@ -181,12 +176,9 @@ export async function GET(request) {
       ];
     }
     
-    console.log("MongoDB query:", JSON.stringify(query));
-    
     // Kết nối đến cả hai database
     const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
     const elearningDb = mongoose.connection.useDb('elearning', { useCache: true });
-    console.log("Đã kết nối đến cả hai database");
     
     // Truy cập collection courses trong cả hai database
     const hocmaiCoursesCollection = hocmaiDb.collection('courses');
@@ -213,7 +205,6 @@ export async function GET(request) {
     ]);
     
     const totalCount = hocmaiCount + elearningCount;
-    console.log(`Tổng số khóa học: ${totalCount} (hocmai: ${hocmaiCount}, elearning: ${elearningCount})`);
     
     // Kết hợp kết quả từ cả hai database
     const allCourses = [
@@ -250,13 +241,15 @@ export async function GET(request) {
         page,
         limit,
         totalPages: Math.ceil(totalCount / limit)
-      },
-      status: "success"
+      }
     });
+    
   } catch (error) {
-    console.error("API Error /courses:", error);
+    // Giữ lại console.error cho lỗi để thuận tiện debug
+    console.error("Lỗi khi lấy danh sách khóa học:", error);
+    
     return NextResponse.json(
-      { error: 'Lỗi khi lấy danh sách khóa học', details: error.message, status: "error" },
+      { error: "Lỗi khi lấy danh sách khóa học", details: error.message },
       { status: 500 }
     );
   }

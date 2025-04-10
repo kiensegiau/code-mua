@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import CourseContent from "./components/CourseContent";
 import { useVideoNavigation } from "./hooks/useVideoNavigation";
 import { getNumberFromTitle, sortByName } from "./utils/sorting";
+import { useAuth } from "@/app/_context/AuthContext";
 
 // Lazy load VideoPlayer để tối ưu hiệu năng
 const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
@@ -167,6 +168,8 @@ const VideoSection = memo(
 VideoSection.displayName = "VideoSection";
 
 export default function WatchCourse({ params }) {
+  const { courseId } = params;
+  const { user, profile, logout } = useAuth();
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
   const [activeChapter, setActiveChapter] = useState(null);
@@ -235,26 +238,14 @@ export default function WatchCourse({ params }) {
 
   const handleLogout = useCallback(async () => {
     try {
-      // Gọi API để xóa cookie
-      const response = await fetch("/api/auth/sign-out", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Xóa dữ liệu từ localStorage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("token");
-
+      await logout();
       router.push("/sign-in");
       toast.success("Đăng xuất thành công");
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
       toast.error("Có lỗi xảy ra khi đăng xuất");
     }
-  }, [router]);
+  }, [router, logout]);
 
   const handleTimeUpdate = useCallback(
     (time) => {

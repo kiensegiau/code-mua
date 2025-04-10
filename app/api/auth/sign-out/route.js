@@ -5,7 +5,12 @@ export async function POST(request) {
   try {
     const cookieStore = cookies();
     
-    // Xóa các cookie liên quan đến xác thực
+    // Xóa cookie Firebase token
+    cookieStore.delete('firebaseToken');
+    
+    // Xóa các cookie khác liên quan đến xác thực nếu còn
+    cookieStore.delete('accessToken');
+    cookieStore.delete('refreshToken');
     cookieStore.delete('userToken');
     cookieStore.delete('userRole');
     cookieStore.delete('userId');

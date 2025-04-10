@@ -25,7 +25,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { useMobileMenu } from "@/app/_context/MobileMenuContext";
 
 function Header() {
-  const { user, profile } = useAuth();
+  const { user, profile, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -36,22 +36,7 @@ function Header() {
 
   const handleSignOut = async () => {
     try {
-      // Gọi API để xóa cookie
-      const response = await fetch("/api/auth/sign-out", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      // Xóa dữ liệu từ localStorage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      // Đăng xuất khỏi Firebase
-      auth.signOut();
-
-      // Chuyển hướng về trang đăng nhập
+      await logout();
       router.push("/sign-in");
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);

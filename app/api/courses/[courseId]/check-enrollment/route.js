@@ -4,12 +4,9 @@ import mongoose from 'mongoose';
 
 export async function GET(request, { params }) {
   try {
-    console.log("API check-enrollment được gọi");
     const { courseId } = params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
-    console.log("Params:", { courseId, userId });
 
     if (!userId) {
       return NextResponse.json(
@@ -20,11 +17,9 @@ export async function GET(request, { params }) {
 
     // Kết nối đến database
     await connectToDatabase();
-    console.log("Đã kết nối database");
     
     // Kết nối đến database hocmai
     const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    console.log("Đã kết nối đến database hocmai");
     
     // Truy cập các collections
     const usersCollection = hocmaiDb.collection('users');
@@ -39,7 +34,6 @@ export async function GET(request, { params }) {
     try {
       courseObjectId = new mongoose.Types.ObjectId(courseId);
     } catch (error) {
-      console.error("Không thể chuyển đổi courseId thành ObjectId:", error.message);
       courseObjectId = courseId;
     }
     
@@ -51,7 +45,6 @@ export async function GET(request, { params }) {
     });
     
     if (enrollment) {
-      console.log("Tìm thấy đăng ký trong collection enrollments");
       isEnrolled = true;
       enrollmentInfo = {
         enrolledAt: enrollment.enrolledAt,
@@ -60,8 +53,6 @@ export async function GET(request, { params }) {
         type: enrollment.paymentStatus === 'paid' ? 'purchased' : 'free'
       };
     } else {
-      console.log("Không tìm thấy đăng ký trong collection enrollments");
-      
       // Kiểm tra trong user.enrolledCourses (cách cũ)
       const user = await usersCollection.findOne({ uid: userId });
       
@@ -79,7 +70,6 @@ export async function GET(request, { params }) {
         });
         
         if (enrolledCourse) {
-          console.log("Tìm thấy đăng ký trong user.enrolledCourses");
           isEnrolled = true;
           enrollmentInfo = {
             enrolledAt: typeof enrolledCourse === 'string' ? new Date() : (enrolledCourse.enrolledAt || new Date()),
@@ -87,8 +77,6 @@ export async function GET(request, { params }) {
             lastAccessed: typeof enrolledCourse === 'string' ? new Date() : (enrolledCourse.lastAccessed || enrolledCourse.enrolledAt || new Date()),
             type: 'legacy'
           };
-        } else {
-          console.log("Không tìm thấy đăng ký trong user.enrolledCourses");
         }
       }
     }
