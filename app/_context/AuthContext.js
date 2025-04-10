@@ -10,7 +10,7 @@ import {
   useRef,
 } from "react";
 import { auth } from "../_utils/firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, signInWithCustomToken, getIdToken } from "firebase/auth";
 import GlobalApi from "../_utils/GlobalApi";
 import { useRouter } from "next/navigation";
 import nookies from 'nookies';
@@ -54,6 +54,28 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Hàm lưu ID token vào cookie thông qua API
+  const setTokenInCookie = useCallback(async (idToken) => {
+    try {
+      const response = await fetch("/api/auth/set-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể lưu token vào cookie');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("❌ Lỗi khi lưu token vào cookie:", error);
+      return false;
+    }
+  }, []);
+
   // Khai báo logout trước refreshToken để tránh lỗi tham chiếu
   const logout = useCallback(async () => {
     try {
@@ -74,9 +96,6 @@ export function AuthProvider({ children }) {
       // Xóa dữ liệu từ localStorage
       localStorage.removeItem("tokenExpiryTime");
 
-      // Xóa cookie
-      nookies.destroy(null, 'firebaseToken', { path: '/' });
-
       // Đăng xuất khỏi Firebase
       await signOut(auth);
 
@@ -94,32 +113,46 @@ export function AuthProvider({ children }) {
     }
   }, [router]);
 
-  // Hàm để làm mới token và lưu vào cookie
+  // Hàm để làm mới token bằng cách gọi API
   const refreshToken = useCallback(async (forceRefresh = true) => {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) return null;
 
-      const idToken = await currentUser.getIdToken(forceRefresh);
-      
-      // Sử dụng nookies để quản lý cookies đồng nhất
-      nookies.set(null, 'firebaseToken', idToken, {
-        maxAge: COOKIE_MAX_AGE,
-        path: '/',
-        sameSite: 'strict',
-        secure: process.env.NODE_ENV !== 'development',
+      // Gọi API để lấy custom token
+      const response = await fetch("/api/auth/refresh-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uid: currentUser.uid,
+          forceRefresh,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Không thể lấy custom token');
+      }
+
+      const data = await response.json();
+      const customToken = data.customToken;
       
-      console.log("🔄 Đã làm mới token Firebase");
+      // Đăng nhập với custom token để lấy ID token mới
+      await signInWithCustomToken(auth, customToken);
+      
+      // Lấy ID token mới
+      const idToken = await getIdToken(auth.currentUser, true);
+      
+      // Lưu ID token vào cookie thông qua API
+      await setTokenInCookie(idToken);
       
       // Lưu thời điểm làm mới và thời điểm hết hạn
-      const expiryTime = Date.now() + TOKEN_EXPIRY_TIME;
-      localStorage.setItem("tokenExpiryTime", expiryTime.toString());
+      localStorage.setItem("tokenExpiryTime", data.expiryTime.toString());
       
       // Kiểm tra xem người dùng có đang ở trang đăng nhập không và tự động chuyển hướng
       const currentPath = window.location.pathname;
       if (currentPath === '/sign-in' || currentPath === '/sign-up') {
-        console.log('🔄 Token đã được làm mới, chuyển hướng đến trang chủ...');
         // Chuyển hướng bằng window.location để đảm bảo trang được tải lại
         setTimeout(() => {
           window.location.href = '/';
@@ -137,13 +170,12 @@ export function AuthProvider({ children }) {
         error.code === 'auth/user-not-found' ||
         error.code === 'auth/id-token-expired'
       ) {
-        console.log("🚫 Tài khoản không hợp lệ hoặc bị vô hiệu hóa");
         await logout();
       }
       
       return null;
     }
-  }, [logout]);
+  }, [logout, setTokenInCookie]);
 
   // Hàm thiết lập hẹn giờ làm mới token
   const setupTokenRefresh = useCallback((currentUser) => {
@@ -171,11 +203,8 @@ export function AuthProvider({ children }) {
       timeUntilRefresh = TOKEN_EXPIRY_TIME - REFRESH_TIME_BEFORE_EXPIRY;
     }
     
-    console.log(`⏱️ Đặt lịch làm mới token sau ${Math.floor(timeUntilRefresh/60000)} phút`);
-    
     // Thiết lập hẹn giờ mới
     refreshTimerRef.current = setTimeout(async () => {
-      console.log("⏱️ Đến thời gian làm mới token Firebase");
       if (auth.currentUser) {
         await refreshToken(true);
         // Thiết lập lại hẹn giờ cho lần làm mới tiếp theo
@@ -189,11 +218,8 @@ export function AuthProvider({ children }) {
     // Bỏ qua kiểm tra khi đang tải hoặc không có router/pathname
     if (loading || !pathname) return;
 
-    console.log(`🧭 Đang kiểm tra đường dẫn: ${pathname}`);
-
     // Kiểm tra nếu là đường dẫn loại trừ (API, tệp tĩnh, v.v.)
     if (EXCLUDED_PATHS.some(path => pathname.startsWith(path))) {
-      console.log(`⏩ Bỏ qua đường dẫn đặc biệt: ${pathname}`);
       return;
     }
 
@@ -202,16 +228,9 @@ export function AuthProvider({ children }) {
       path => pathname === path || pathname.startsWith(`${path}/`)
     );
 
-    if (isPublicPath) {
-      console.log(`🔓 Đường dẫn công khai: ${pathname}`);
-    } else {
-      console.log(`🔒 Đường dẫn được bảo vệ: ${pathname}`);
-    }
-
     // Người dùng đã đăng nhập và đang truy cập trang đăng nhập/đăng ký
     // Xử lý case này trước để ưu tiên chuyển hướng người dùng đã đăng nhập
     if (user && (pathname === '/sign-in' || pathname === '/sign-up')) {
-      console.log(`✅ Người dùng đã đăng nhập, chuyển hướng từ ${pathname} đến trang chủ`);
       // Dùng setTimeout để đảm bảo chuyển hướng xảy ra sau khi tất cả state được cập nhật
       setTimeout(() => {
         router.push('/');
@@ -221,12 +240,9 @@ export function AuthProvider({ children }) {
 
     // Người dùng chưa đăng nhập và đang truy cập đường dẫn được bảo vệ
     if (!user && !isPublicPath) {
-      console.log(`⛔ Người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập từ ${pathname}`);
       router.replace('/sign-in');
       return;
     }
-
-    console.log(`✓ Cho phép truy cập: ${pathname}`);
   }, [user, loading, pathname, router]);
 
   useEffect(() => {
@@ -239,8 +255,6 @@ export function AuthProvider({ children }) {
         if (!isMounted) return; // Tránh cập nhật state nếu component đã unmounted
 
         if (firebaseUser) {
-          console.log("👤 Phát hiện người dùng Firebase:", firebaseUser.email);
-          
           setUser(firebaseUser);
           await fetchUserProfile(firebaseUser.uid);
           
@@ -248,7 +262,6 @@ export function AuthProvider({ children }) {
           await refreshToken(false); // false để tránh làm mới không cần thiết
           setupTokenRefresh(firebaseUser);
         } else {
-          console.log("👤 Không có người dùng Firebase đăng nhập");
           setUser(null);
           setProfile(null);
           
@@ -280,8 +293,6 @@ export function AuthProvider({ children }) {
   // Thêm hàm để xác thực token ở server-side
   const verifyTokenServer = useCallback(async () => {
     try {
-      console.log('🔍 Đang gửi request xác thực token đến API...');
-      
       // Đảm bảo gửi credentials để cookie được gửi cùng request
       const response = await fetch('/api/auth/verify-token', {
         method: 'GET',
@@ -295,11 +306,9 @@ export function AuthProvider({ children }) {
       const data = await response.json();
       
       if (!response.ok || !data.valid) {
-        console.error('❌ Token không hợp lệ:', data.message || response.statusText);
         return false;
       }
       
-      console.log('✅ Token hợp lệ, hết hạn:', data.expiresAt);
       return true;
     } catch (error) {
       console.error('❌ Lỗi xác thực token:', error);
@@ -317,24 +326,18 @@ export function AuthProvider({ children }) {
       
       // Đã phát hiện đăng nhập thành công, đảm bảo người dùng được chuyển hướng khỏi trang đăng nhập
       if (window.location.pathname === '/sign-in' || window.location.pathname === '/sign-up') {
-        console.log('🔄 Đăng nhập thành công, chuyển hướng đến trang chủ...');
         window.location.href = '/'; // Dùng window.location để đảm bảo chuyển hướng xảy ra
         return;
       }
       
       // Đợi một chút để đảm bảo token đã được lưu vào cookie
       tokenCheckTimeout = setTimeout(async () => {
-        console.log('🔄 Bắt đầu kiểm tra token server-side...');
-        
         // Kiểm tra token
         const isValid = await verifyTokenServer();
         
         // Nếu token không hợp lệ, đăng xuất
         if (!isValid) {
-          console.log('🚫 Token không hợp lệ, đăng xuất');
           await logout();
-        } else {
-          console.log('✅ Xác thực token thành công!');
         }
       }, 1000); // Đợi 1s sau khi user được xác định
     };
