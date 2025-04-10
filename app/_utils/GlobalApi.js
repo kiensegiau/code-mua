@@ -12,6 +12,7 @@ const GlobalApi = {
         const queryParams = new URLSearchParams();
         if (options.grade) queryParams.append('grade', options.grade);
         if (options.subject) queryParams.append('subject', options.subject);
+        if (options.dgnlType) queryParams.append('dgnlType', options.dgnlType);
         if (options.limit) queryParams.append('limit', options.limit);
         if (options.page) queryParams.append('page', options.page);
         

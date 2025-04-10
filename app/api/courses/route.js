@@ -14,11 +14,12 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const grade = searchParams.get("grade");
     const subject = searchParams.get("subject");
+    const dgnlType = searchParams.get("dgnlType");
     const limit = parseInt(searchParams.get("limit") || "50");
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search");
     
-    console.log("MongoDB query params:", { grade, subject, limit, page, search });
+    console.log("MongoDB query params:", { grade, subject, dgnlType, limit, page, search });
     
     // Xây dựng query
     let query = {};
@@ -57,25 +58,118 @@ export async function GET(request) {
           { grade: '12' },
           { title: { $regex: '\\b12\\b|\\blớp 12\\b', $options: 'i' } }
         ];
+      } else if (grade === 'dgnl' || grade === 'đgnl' || grade === 'đánh giá năng lực') {
+        // Xóa trường hợp này ở đây vì ĐGNL là subject, không phải grade
+        query.grade = formattedGrade;
       } else {
         query.grade = formattedGrade;
       }
     }
     
     if (subject) {
-      // Nếu đã có $or từ điều kiện grade, thêm điều kiện subject vào query riêng
-      if (query.$or) {
-        const orConditions = query.$or;
-        delete query.$or;
-        query.subject = subject;
-        query = {
-          $and: [
-            { $or: orConditions },
-            { subject: subject }
-          ]
-        };
+      // Trường hợp đặc biệt cho ĐGNL - xử lý như một subject đặc biệt
+      if (subject === 'dgnl' || subject === 'đgnl' || subject === 'đánh giá năng lực' || subject === 'assessment') {
+        const dgnlConditions = [
+          { subject: 'dgnl' },
+          { subject: 'đgnl' },
+          { subject: 'assessment' },
+          { subject: 'đánh giá năng lực' },
+          { title: { $regex: '\\bđánh giá năng lực\\b|\\bđgnl\\b|\\bthi đánh giá\\b|\\bnăng lực đh\\b', $options: 'i' } }
+        ];
+        
+        // Kết hợp điều kiện ĐGNL với điều kiện grade nếu có
+        if (query.$or) {
+          const orConditions = query.$or;
+          delete query.$or;
+          query = {
+            $and: [
+              { $or: orConditions },
+              { $or: dgnlConditions }
+            ]
+          };
+        } else {
+          query.$or = dgnlConditions;
+        }
+        
+        // Nếu có dgnlType, lọc thêm theo loại ĐGNL cụ thể
+        if (dgnlType) {
+          let dgnlTypeCondition;
+          
+          switch(dgnlType) {
+            case 'hanoi':
+              dgnlTypeCondition = { 
+                $or: [
+                  { title: { $regex: '\\bđh quốc gia hà nội\\b|\\bđhqghn\\b|\\bqg hà nội\\b|\\bđgnl hà nội\\b|\\bđgnl hn\\b', $options: 'i' } },
+                  { description: { $regex: '\\bđh quốc gia hà nội\\b|\\bđhqghn\\b|\\bqg hà nội\\b|\\bđgnl hà nội\\b|\\bđgnl hn\\b', $options: 'i' } }
+                ]
+              };
+              break;
+            case 'hcm':
+              dgnlTypeCondition = { 
+                $or: [
+                  { title: { $regex: '\\bđh quốc gia hcm\\b|\\bđhqg hcm\\b|\\bđhqg-hcm\\b|\\bqg tp.hcm\\b|\\bđgnl hcm\\b|\\bđgnl tphcm\\b|\\bđgnl tp.hcm\\b', $options: 'i' } },
+                  { description: { $regex: '\\bđh quốc gia hcm\\b|\\bđhqg hcm\\b|\\bđhqg-hcm\\b|\\bqg tp.hcm\\b|\\bđgnl hcm\\b|\\bđgnl tphcm\\b|\\bđgnl tp.hcm\\b', $options: 'i' } }
+                ]
+              };
+              break;
+            case 'bachkhoa':
+              dgnlTypeCondition = { 
+                $or: [
+                  { title: { $regex: '\\bbách khoa\\b|\\bbk\\b|\\bđgtd\\b|\\bđánh giá tư duy\\b', $options: 'i' } },
+                  { description: { $regex: '\\bbách khoa\\b|\\bbk\\b|\\bđgtd\\b|\\bđánh giá tư duy\\b', $options: 'i' } }
+                ]
+              };
+              break;
+            case 'supham':
+              dgnlTypeCondition = { 
+                $or: [
+                  { title: { $regex: '\\bsư phạm\\b|\\bsp\\b|\\bđhsp\\b|\\bđgnl sp\\b', $options: 'i' } },
+                  { description: { $regex: '\\bsư phạm\\b|\\bsp\\b|\\bđhsp\\b|\\bđgnl sp\\b', $options: 'i' } }
+                ]
+              };
+              break;
+            default:
+              break;
+          }
+          
+          if (dgnlTypeCondition) {
+            // Thêm điều kiện lọc dgnlType vào query hiện tại
+            if (query.$and) {
+              query.$and.push(dgnlTypeCondition);
+            } else if (query.$or) {
+              const orConditions = query.$or;
+              delete query.$or;
+              query = {
+                $and: [
+                  { $or: orConditions },
+                  dgnlTypeCondition
+                ]
+              };
+            } else {
+              query = {
+                $and: [
+                  query,
+                  dgnlTypeCondition
+                ]
+              };
+            }
+          }
+        }
       } else {
-        query.subject = subject;
+        // Nếu đã có $or từ điều kiện grade, thêm điều kiện subject vào query riêng
+        if (query.$or) {
+          const orConditions = query.$or;
+          delete query.$or;
+          query.subject = subject;
+          query = {
+            $and: [
+              { $or: orConditions },
+              { subject: subject }
+            ]
+          };
+        } else {
+          query.subject = subject;
+        }
       }
     }
     

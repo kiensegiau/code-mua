@@ -46,7 +46,7 @@ const LazyLoadedCourseItem = ({ course, index }) => {
 };
 
 // Wrap bằng memo để tránh re-render khi parent component thay đổi
-const CourseList = React.memo(function CourseList({ grade = null }) {
+const CourseList = React.memo(function CourseList({ grade = null, subject = null, dgnlType = null }) {
   const [expandedSubjects, setExpandedSubjects] = useState({});
   const [itemsPerPage, setItemsPerPage] = useState(4);
   const { user } = useAuth();
@@ -58,7 +58,7 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
   // Sử dụng hook mới để lấy danh sách khóa học kèm trạng thái đăng ký
   const { data, isLoading, error } = useCoursesWithEnrollmentStatus(
     user?.uid, 
-    { grade }
+    { grade, subject, dgnlType }
   );
   
   // Trích xuất courses từ data response
@@ -153,6 +153,16 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
       label: "Tin học",
       icon: <BookOpen className="w-4 h-4" />,
     },
+    {
+      value: "dgnl",
+      label: "Đánh giá năng lực",
+      icon: <Sparkles className="w-4 h-4" />,
+    },
+    {
+      value: "assessment",
+      label: "Đánh giá năng lực",
+      icon: <Sparkles className="w-4 h-4" />,
+    },
     { value: "others", label: "Khác", icon: <BookOpen className="w-4 h-4" /> },
   ];
 
@@ -236,6 +246,8 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
           enhancedCourse.subject = 'geography';
         } else if (title.match(/\bTIN\b/i) || title.match(/\bINFORMATICS\b/i)) {
           enhancedCourse.subject = 'informatics';
+        } else if (title.match(/\bđgnl\b/i) || title.match(/\bđánh giá năng lực\b/i) || title.match(/\bthi đánh giá\b/i) || title.match(/\bnăng lực đh\b/i)) {
+          enhancedCourse.subject = 'dgnl';
         } else {
           enhancedCourse.subject = 'others';
         }
@@ -270,6 +282,13 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
           title.match(/\b2K4\b/i)
         ) {
           enhancedCourse.grade = 'grade-12';
+        } else if (
+          title.match(/\bđgnl\b/i) || 
+          title.match(/\bđánh giá năng lực\b/i) || 
+          title.match(/\bthi đánh giá\b/i) ||
+          title.match(/\bnăng lực đh\b/i)
+        ) {
+          // Không set grade mà đã set subject = 'dgnl' ở trên
         }
       }
       
@@ -282,6 +301,8 @@ const CourseList = React.memo(function CourseList({ grade = null }) {
           enhancedCourse.grade = 'grade-11';
         } else if (enhancedCourse.grade === '12' || enhancedCourse.grade === 'lớp 12' || enhancedCourse.grade === 'grade12') {
           enhancedCourse.grade = 'grade-12';
+        } else if (enhancedCourse.grade === 'đgnl' || enhancedCourse.grade === 'đánh giá năng lực') {
+          enhancedCourse.grade = 'dgnl';
         }
       }
       

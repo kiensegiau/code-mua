@@ -56,6 +56,13 @@ function SideNav() {
       color: "text-gray-400",
     },
     {
+      title: "DGNL",
+      icon: GraduationCap,
+      href: "/courses/dgnl",
+      color: "text-gray-400",
+      badge: "Mới",
+    },
+    {
       title: "Khóa học của tôi",
       icon: BookMarked,
       href: "/my-courses",
