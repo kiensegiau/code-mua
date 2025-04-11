@@ -360,6 +360,9 @@ export function AuthProvider({ children }) {
       refreshToken,
       verifyTokenServer,
       isAuthenticated: !!user,
+      // Thêm thuộc tính isVip để kiểm tra người dùng VIP
+      isVip: profile?.isVip === true && profile?.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date(),
+      vipExpiresAt: profile?.vipExpiresAt || null,
     }),
     [user, profile, loading, logout, refreshToken, verifyTokenServer]
   );

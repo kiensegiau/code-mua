@@ -25,6 +25,30 @@ export async function GET(request, { params }) {
     const usersCollection = hocmaiDb.collection('users');
     const enrollmentsCollection = hocmaiDb.collection('enrollments');
     
+    // Lấy thông tin user
+    const user = await usersCollection.findOne({ uid: userId });
+    
+    // Kiểm tra người dùng VIP
+    if (user && user.isVip === true) {
+      const currentDate = new Date();
+      // Kiểm tra nếu người dùng đang VIP và VIP chưa hết hạn
+      if (user.vipExpiresAt && new Date(user.vipExpiresAt) > currentDate) {
+        return NextResponse.json({
+          enrolled: true,
+          enrollment: {
+            enrolledAt: currentDate,
+            progress: 0,
+            lastAccessed: currentDate,
+            type: 'vip'
+          },
+          userId,
+          courseId,
+          status: "success",
+          isVip: true
+        });
+      }
+    }
+    
     // Kiểm tra trong collection enrollments
     let isEnrolled = false;
     let enrollmentInfo = null;
@@ -54,8 +78,6 @@ export async function GET(request, { params }) {
       };
     } else {
       // Kiểm tra trong user.enrolledCourses (cách cũ)
-      const user = await usersCollection.findOne({ uid: userId });
-      
       if (user && user.enrolledCourses && Array.isArray(user.enrolledCourses)) {
         // Tìm kiếm courseId trong danh sách khóa học đã đăng ký
         const enrolledCourse = user.enrolledCourses.find(course => {

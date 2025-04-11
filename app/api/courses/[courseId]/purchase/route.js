@@ -57,6 +57,56 @@ export async function POST(request, { params }) {
         );
       }
       
+      // Kiểm tra người dùng VIP
+      const isVip = user.isVip === true && user.vipExpiresAt && new Date(user.vipExpiresAt) > new Date();
+      
+      // Nếu người dùng VIP, cho phép mua khóa học mà không cần trừ tiền
+      if (isVip) {
+        // Kiểm tra xem đã đăng ký trong enrollments chưa
+        const existingEnrollment = await enrollmentsCollection.findOne({
+          userId: userId,
+          courseId: courseId,
+          status: 'active'
+        });
+        
+        if (existingEnrollment) {
+          return NextResponse.json({
+            success: true,
+            message: "Bạn đã đăng ký khóa học này với tài khoản VIP",
+            isVip: true
+          });
+        }
+        
+        // Lưu thông tin mua khóa học với người dùng VIP
+        const enrollmentData = {
+          userId,
+          courseId,
+          enrolledAt: new Date(),
+          progress: 0,
+          lastAccessed: new Date(),
+          status: 'active',
+          paymentStatus: 'vip',
+          type: 'vip'
+        };
+        
+        await enrollmentsCollection.insertOne(enrollmentData);
+        
+        // Cập nhật số người đăng ký khóa học
+        await coursesCollection.updateOne(
+          { _id: courseObjectId },
+          { 
+            $addToSet: { enrolledUsers: userId },
+            $inc: { enrollments: 1 }
+          }
+        );
+        
+        return NextResponse.json({
+          success: true,
+          message: "Đăng ký khóa học thành công với tài khoản VIP",
+          isVip: true
+        });
+      }
+      
       const userBalance = user.balance || 0;
 
       // Lấy giá của khóa học

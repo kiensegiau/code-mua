@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/app/_utils/firebase";
+import { useAuth } from "@/app/_context/AuthContext";
 
 function CourseContentSection({
   courseInfo,
@@ -8,8 +9,20 @@ function CourseContentSection({
   watchMode,
   setActiveLesson,
 }) {
+  const { profile } = useAuth();
   const [activeChapterIndex, setActiveChapterIndex] = useState(null);
   const [activeLessonId, setActiveLessonId] = useState(null);
+  
+  // Kiểm tra người dùng có VIP không
+  const isUserVip = React.useMemo(() => {
+    if (!profile) return false;
+    
+    // Kiểm tra trạng thái VIP và thời hạn
+    const isVip = profile?.isVip === true;
+    const hasValidExpiration = profile?.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+    
+    return isVip && hasValidExpiration;
+  }, [profile]);
 
   // Thiết lập ban đầu khi courseInfo thay đổi
   useEffect(() => {
@@ -83,12 +96,15 @@ function CourseContentSection({
     [courseInfo, getLessonData, setActiveLesson]
   );
 
-  // Kiểm tra xem lesson có bị khóa không
+  // Kiểm tra xem lesson có bị khóa không (cập nhật để tính đến người dùng VIP)
   const isLessonLocked = useCallback(
     (lesson) => {
+      // Người dùng VIP có thể xem tất cả bài học
+      if (isUserVip) return false;
+      
       return !isUserAlreadyEnrolled && !lesson?.isFree;
     },
-    [isUserAlreadyEnrolled]
+    [isUserAlreadyEnrolled, isUserVip]
   );
 
   // Đếm tổng số bài học
@@ -107,6 +123,14 @@ function CourseContentSection({
           {courseInfo?.chapters?.length || 0} chương • {totalLessons} bài học
         </div>
       </div>
+      
+      {isUserVip && !isUserAlreadyEnrolled && (
+        <div className="mb-4 p-2 bg-gradient-to-r from-[#ffd700]/20 to-[#ffa500]/20 border border-[#ffd700]/40 rounded-md">
+          <p className="text-[#ffd700] font-medium text-center">
+            Bạn có thể xem tất cả bài học với tài khoản VIP
+          </p>
+        </div>
+      )}
 
       <div className="space-y-4">
         {courseInfo?.chapters?.map((chapter, chapterIndex) => (
@@ -188,6 +212,11 @@ function CourseContentSection({
                     {lesson.isFree && (
                       <span className="ml-2 text-xs bg-green-900/30 text-green-400 px-2 py-0.5 rounded">
                         Miễn phí
+                      </span>
+                    )}
+                    {isUserVip && !lesson.isFree && !isUserAlreadyEnrolled && (
+                      <span className="ml-2 text-xs bg-[#ffd700]/30 text-[#ffd700] px-2 py-0.5 rounded">
+                        VIP
                       </span>
                     )}
                   </div>

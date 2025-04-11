@@ -31,6 +31,18 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  role: {
+    type: String,
+    default: 'user',
+  },
+  isVip: {
+    type: Boolean,
+    default: false,
+  },
+  vipExpiresAt: {
+    type: Date,
+    default: null,
+  },
   enrolledCourses: {
     type: Array,
     default: [],

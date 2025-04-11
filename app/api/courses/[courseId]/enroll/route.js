@@ -56,23 +56,26 @@ export async function POST(request, { params }) {
         });
       }
 
-      // Nếu là khóa học có phí, chuyển đến API mua khóa học
-      if (course.price > 0) {
-        return NextResponse.json(
-          { 
-            error: "Đây là khóa học có phí, vui lòng sử dụng API mua khóa học",
-            redirectToPurchase: true 
-          },
-          { status: 400 }
-        );
-      }
-
       // Tìm người dùng
       const user = await usersCollection.findOne({ uid: userId });
       if (!user) {
         return NextResponse.json(
           { error: "Không tìm thấy thông tin người dùng" },
           { status: 404 }
+        );
+      }
+      
+      // Kiểm tra người dùng VIP
+      const isVip = user.isVip === true && user.vipExpiresAt && new Date(user.vipExpiresAt) > new Date();
+      
+      // Nếu là khóa học có phí và người dùng không phải VIP, chuyển đến API mua khóa học
+      if (course.price > 0 && !isVip) {
+        return NextResponse.json(
+          { 
+            error: "Đây là khóa học có phí, vui lòng sử dụng API mua khóa học",
+            redirectToPurchase: true 
+          },
+          { status: 400 }
         );
       }
 

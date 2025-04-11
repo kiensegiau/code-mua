@@ -25,9 +25,23 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
 
   const coursePrice = courseInfo?.price || 0;
   const userBalance = profile?.balance || 0;
+  
+  // Kiểm tra người dùng có VIP không
+  const isUserVip = React.useMemo(() => {
+    if (!profile) return false;
+    
+    // Kiểm tra trạng thái VIP và thời hạn
+    const isVip = profile.isVip === true;
+    const hasValidExpiration = profile.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+    
+    return isVip && hasValidExpiration;
+  }, [profile]);
 
-  // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
+  // Kiểm tra kỹ xem khóa học đã được đăng ký chưa hoặc người dùng là VIP
   const isEnrolled = React.useMemo(() => {
+    // Nếu là người dùng VIP, luôn coi như đã đăng ký
+    if (isUserVip) return true;
+    
     if (!profile?.enrolledCourses || !courseInfo?.id) {
       return false;
     }
@@ -41,15 +55,18 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
         ? c === courseInfo.id
         : c.courseId === courseInfo.id;
     });
-  }, [profile?.enrolledCourses, courseInfo?.id]);
+  }, [profile?.enrolledCourses, courseInfo?.id, isUserVip]);
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = React.useMemo(() => {
+    // Nếu là VIP, không cần kiểm tra điều kiện đăng ký
+    if (isUserVip) return true;
+    
     if (!user || !profile || !courseInfo) return false;
     if (isEnrolled) return false;
     if (coursePrice > userBalance) return false;
     return true;
-  }, [user, profile, courseInfo, isEnrolled, coursePrice, userBalance]);
+  }, [user, profile, courseInfo, isEnrolled, coursePrice, userBalance, isUserVip]);
 
   const verifyEnrollment = async () => {
     try {
@@ -67,8 +84,17 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
         toast.error("Không tìm thấy thông tin khóa học");
         return false;
       }
+      
+      // Kiểm tra xem người dùng có VIP không
+      const isVip = profile.isVip === true;
+      const hasValidExpiration = profile.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+      
+      // Nếu người dùng VIP, luôn cho phép truy cập
+      if (isVip && hasValidExpiration) {
+        return true;
+      }
 
-      // Kiểm tra lại số dư
+      // Kiểm tra lại số dư nếu không phải VIP
       if (coursePrice > userBalance) {
         toast.error("Số dư không đủ để mua khóa học này");
         return false;
@@ -104,7 +130,8 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       return;
     }
 
-    if (isEnrolled) {
+    // Nếu là VIP hoặc đã đăng ký, chuyển thẳng đến trang học
+    if (isUserVip || isEnrolled) {
       router.push(`/watch-course/${courseInfo.id}`);
       return;
     }
@@ -131,6 +158,21 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
       // Xác minh lại toàn bộ điều kiện
       const isVerified = await verifyEnrollment();
       if (!isVerified) return;
+
+      // Kiểm tra nếu là người dùng VIP thì không cần thanh toán, chuyển thẳng đến trang học
+      const isVip = profile.isVip === true && profile.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+      if (isVip) {
+        toast.success("Truy cập khóa học thành công với tài khoản VIP!");
+        
+        // Đóng modal trước khi chuyển trang
+        setShowConfirmModal(false);
+        
+        setTimeout(() => {
+          router.push(`/watch-course/${courseInfo.id}`);
+        }, 1000);
+        
+        return;
+      }
 
       // Lưu courseId thay vì object phức tạp
       const courseId = courseInfo.id;
@@ -211,6 +253,14 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
   return (
     <>
       <div className="bg-[#1f1f1f] rounded-lg border border-gray-800 p-6">
+        {isUserVip && (
+          <div className="mb-4 p-2 bg-gradient-to-r from-[#ffd700]/20 to-[#ffa500]/20 border border-[#ffd700]/40 rounded-md">
+            <p className="text-[#ffd700] font-medium text-center">
+              Bạn đang sử dụng tài khoản VIP - Truy cập tất cả khóa học
+            </p>
+          </div>
+        )}
+        
         <div className="flex items-baseline justify-between mb-4">
           <div>
             <h3 className="text-2xl font-bold text-white">
@@ -236,7 +286,7 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
               )}
           </div>
 
-          {user && (
+          {user && !isUserVip && (
             <div className="text-right">
               <p className="text-sm text-gray-400">Số dư hiện tại</p>
               <p className="text-base font-medium text-[#ff4d4f]">
@@ -249,6 +299,15 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
               </p>
             </div>
           )}
+          
+          {user && isUserVip && (
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Hết hạn VIP</p>
+              <p className="text-base font-medium text-[#ffd700]">
+                {new Date(profile?.vipExpiresAt).toLocaleDateString("vi-VN")}
+              </p>
+            </div>
+          )}
         </div>
 
         <Button
@@ -256,17 +315,21 @@ function CourseEnrollSection({ courseInfo, isEnrolling }) {
             ${
               enrolling || verifying
                 ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
-                : !canEnroll && !isEnrolled
-                ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed"
+                : !canEnroll && !isEnrolled && !isUserVip
+                ? "bg-gray-700 hover:bg-gray-700 cursor-not-allowed" 
+                : isUserVip
+                ? "bg-gradient-to-r from-[#ffd700] to-[#ffa500] hover:from-[#ffa500] hover:to-[#ff8c00] text-black"
                 : "bg-[#ff4d4f] hover:bg-[#ff4d4f]/90"
             }`}
           onClick={handleEnrollClick}
-          disabled={enrolling || verifying || (!canEnroll && !isEnrolled)}
+          disabled={enrolling || verifying || (!canEnroll && !isEnrolled && !isUserVip)}
         >
           {enrolling
             ? "Đang xử lý..."
             : verifying
             ? "Đang xác minh..."
+            : isUserVip
+            ? "Xem khóa học ngay (VIP)"
             : isEnrolled
             ? "Tiếp tục học"
             : !canEnroll

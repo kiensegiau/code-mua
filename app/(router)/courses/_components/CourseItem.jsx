@@ -154,6 +154,17 @@ const CourseItem = ({
   // Format last accessed date
   const formattedLastAccessed = formatTimeToNow(lastAccessed);
 
+  // Kiểm tra người dùng VIP
+  const isUserVip = useMemo(() => {
+    if (!profile) return false;
+    
+    // Kiểm tra trạng thái VIP và thời hạn
+    const isVip = profile.isVip === true;
+    const hasValidExpiration = profile.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+    
+    return isVip && hasValidExpiration;
+  }, [profile]);
+
   const router = useRouter();
   const [enrolling, setEnrolling] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -189,6 +200,9 @@ const CourseItem = ({
 
   // Kiểm tra kỹ xem khóa học đã được đăng ký chưa
   const isEnrolledMemo = useMemo(() => {
+    // Nếu là người dùng VIP, luôn coi như đã đăng ký
+    if (isUserVip) return true;
+    
     // Nếu đang ở trang my-courses, mặc định coi như đã đăng ký
     if (isMyCoursesView) return true;
     
@@ -206,10 +220,13 @@ const CourseItem = ({
       // 2. c là object (có courseId)
       return typeof c === "string" ? c === courseId : c.courseId === courseId;
     });
-  }, [profile?.enrolledCourses, courseId, isMyCoursesView, isEnrolled]);
+  }, [profile?.enrolledCourses, courseId, isMyCoursesView, isEnrolled, isUserVip]);
 
   // Kiểm tra điều kiện đăng ký
   const canEnroll = useMemo(() => {
+    // Nếu là người dùng VIP, luôn có thể đăng ký
+    if (isUserVip) return true;
+    
     // Kiểm tra điều kiện cơ bản
     if (!user || !data) return false;
     if (isEnrolledMemo) return false;
@@ -221,7 +238,7 @@ const CourseItem = ({
     if (coursePrice > latestBalance) return false;
     
     return true;
-  }, [user, data, isEnrolledMemo, coursePrice, latestBalance]);
+  }, [user, data, isEnrolledMemo, coursePrice, latestBalance, isUserVip]);
 
   const handleCourseClick = useCallback(() => {
     if (isEnrolledMemo) {
@@ -246,6 +263,15 @@ const CourseItem = ({
       if (!courseId) {
         toast.error("Không tìm thấy thông tin khóa học");
         return false;
+      }
+      
+      // Kiểm tra xem người dùng có VIP không
+      const isVip = profile.isVip === true;
+      const hasValidExpiration = profile.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+      
+      // Nếu người dùng VIP, luôn cho phép truy cập
+      if (isVip && hasValidExpiration) {
+        return true;
       }
 
       // Kiểm tra lại số dư
@@ -292,6 +318,13 @@ const CourseItem = ({
         router.push("/sign-in");
         return;
       }
+      
+      // Nếu là VIP hoặc đã đăng ký, chuyển thẳng đến trang học
+      if (isUserVip || isEnrolledMemo) {
+        e.stopPropagation();
+        router.push(`/watch-course/${courseId}`);
+        return;
+      }
 
       // Kiểm tra điều kiện cơ bản
       if (!canEnroll) {
@@ -307,7 +340,7 @@ const CourseItem = ({
 
       setShowConfirmModal(true);
     },
-    [user, canEnroll, coursePrice, latestBalance, isEnrolledMemo, router]
+    [user, canEnroll, coursePrice, latestBalance, isEnrolledMemo, router, courseId, isUserVip]
   );
 
   const handleConfirmEnroll = useCallback(async () => {
@@ -317,7 +350,10 @@ const CourseItem = ({
       // Xác minh lại toàn bộ điều kiện
       const isVerified = await verifyEnrollment();
       if (!isVerified) return;
-
+      
+      // Kiểm tra tài khoản VIP
+      const isVip = profile.isVip === true && profile.vipExpiresAt && new Date(profile.vipExpiresAt) > new Date();
+      
       // Xác định courseId đúng - hỗ trợ cả id và _id
       const courseId = data.id || data._id;
       
@@ -326,8 +362,12 @@ const CourseItem = ({
       
       let response;
       
-      // Phân biệt khóa học miễn phí và có phí
-      if (coursePrice > 0) {
+      // Nếu tài khoản VIP, gọi API để đánh dấu đã đăng ký
+      if (isVip) {
+        response = await GlobalApi.purchaseCourse(userId, courseId);
+      }
+      // Phân biệt khóa học miễn phí và có phí cho tài khoản thường
+      else if (coursePrice > 0) {
         // Đối với khóa học có phí, gọi API mua khóa học
         response = await GlobalApi.purchaseCourse(userId, courseId);
       } else {
@@ -364,7 +404,7 @@ const CourseItem = ({
     } finally {
       setEnrolling(false);
     }
-  }, [data, coursePrice, user, router, verifyEnrollment, setProfile]);
+  }, [data, coursePrice, user, router, verifyEnrollment, setProfile, profile]);
 
   // Sử dụng CSS thuần thay vì Framer Motion
   const placeholderStyles = {
@@ -441,10 +481,19 @@ const CourseItem = ({
               </div>
 
               {/* Show enrolled badge if enrolled - tối ưu hóa animation */}
-              {isEnrolledMemo && (
+              {isEnrolledMemo && !isUserVip && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <div className="bg-[#ff4d4f] rounded-full p-2 animate-fadeInScale">
                     <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              )}
+              
+              {/* Show VIP badge if user is VIP */}
+              {isUserVip && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="bg-gradient-to-r from-[#ffd700] to-[#ffa500] rounded-full p-2 animate-fadeInScale">
+                    <Star className="w-6 h-6 text-black" />
                   </div>
                 </div>
               )}
@@ -548,10 +597,12 @@ const CourseItem = ({
                     handleEnrollClick(e);
                   }
                 }}
-                disabled={!isEnrolledMemo && (enrolling || verifying || !canEnroll)}
+                disabled={!isEnrolledMemo && !isUserVip && (enrolling || verifying || !canEnroll)}
                 className={`mt-3 w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 hover-scale
                   ${
-                    isEnrolledMemo
+                    isUserVip
+                      ? "bg-gradient-to-r from-[#ffd700] to-[#ffa500] hover:from-[#ffa500] hover:to-[#ff8c00] text-black"
+                      : isEnrolledMemo
                       ? "bg-green-600 text-white hover:bg-green-700"
                       : enrolling || verifying
                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
@@ -562,6 +613,9 @@ const CourseItem = ({
                 `}
               >
                 {(() => {
+                  // Nếu là tài khoản VIP
+                  if (isUserVip) return "Xem khóa học (VIP)";
+                  
                   // Nếu đã đăng ký khóa học
                   if (isEnrolledMemo) return "Vào học ngay";
                   
