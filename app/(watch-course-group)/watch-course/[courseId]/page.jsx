@@ -169,7 +169,7 @@ VideoSection.displayName = "VideoSection";
 
 export default function WatchCourse({ params }) {
   const { courseId } = params;
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, isVip } = useAuth();
   const [courseInfo, setCourseInfo] = useState(null);
   const [activeLesson, setActiveLesson] = useState(null);
   const [activeChapter, setActiveChapter] = useState(null);
@@ -177,6 +177,8 @@ export default function WatchCourse({ params }) {
   const [videoUrl, setVideoUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [key, setKey] = useState(0);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [expandedChapterIndex, setExpandedChapterIndex] = useState(-1);
   const [expandedLessonId, setExpandedLessonId] = useState(null);
@@ -361,6 +363,48 @@ export default function WatchCourse({ params }) {
       setLoading(false);
     }
   }, [params.courseId, getNumberFromTitle, sortFiles]);
+
+  // Kiểm tra quyền truy cập khóa học
+  const checkCourseAccess = useCallback(async () => {
+    try {
+      setCheckingAuth(true);
+      
+      // Nếu không có người dùng, từ chối quyền truy cập
+      if (!user) {
+        setIsAuthorized(false);
+        router.push('/sign-in');
+        return false;
+      }
+      
+      // Kiểm tra nếu người dùng là VIP
+      if (isVip) {
+        setIsAuthorized(true);
+        return true;
+      }
+      
+      // Kiểm tra xem người dùng đã đăng ký khóa học này chưa
+      const response = await GlobalApi.checkCourseEnrollment(courseId, user.uid);
+      
+      if (response && response.enrolled) {
+        setIsAuthorized(true);
+        return true;
+      }
+      
+      // Người dùng chưa đăng ký khóa học
+      setIsAuthorized(false);
+      toast.error("Bạn chưa đăng ký khóa học này");
+      router.push(`/course-preview/${courseId}`);
+      return false;
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra quyền truy cập khóa học:", error);
+      setIsAuthorized(false);
+      toast.error("Có lỗi xảy ra khi kiểm tra quyền truy cập");
+      router.push('/courses');
+      return false;
+    } finally {
+      setCheckingAuth(false);
+    }
+  }, [user, courseId, router, isVip]);
 
   // Restore last watched video
   const restoreLastWatchedVideo = useCallback(
@@ -592,6 +636,16 @@ export default function WatchCourse({ params }) {
   // Effects
   useEffect(() => {
     async function initialize() {
+      // Trước tiên, kiểm tra quyền truy cập
+      const hasAccess = await checkCourseAccess();
+      
+      // Nếu không có quyền truy cập, dừng lại
+      if (!hasAccess) {
+        setLoading(false);
+        setIsInitialLoad(false);
+        return;
+      }
+      
       const course = await fetchCourseInfo();
       if (course) {
         const restored = restoreLastWatchedVideo(course);
@@ -643,6 +697,7 @@ export default function WatchCourse({ params }) {
     handleLessonClick,
     getNumberFromTitle,
     sortFiles,
+    checkCourseAccess,
   ]);
 
   // Save current video state on unmount or beforeunload
@@ -670,8 +725,20 @@ export default function WatchCourse({ params }) {
     };
   }, [activeVideo, activeLesson, activeChapter, params.courseId]);
 
-  if (loading) {
+  if (loading || checkingAuth) {
     return <LoadingScreen />;
+  }
+  
+  if (!isAuthorized) {
+    // Người dùng đã được chuyển hướng nên chỉ hiển thị màn hình tạm thời
+    return (
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center flex-col">
+        <div className="w-12 h-12 text-[#ff4d4f]">
+          <LogOut className="w-full h-full" />
+        </div>
+        <p className="mt-4 text-gray-300">Đang chuyển hướng...</p>
+      </div>
+    );
   }
 
   return (

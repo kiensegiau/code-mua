@@ -6,7 +6,39 @@ const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 năm tính bằng giây
 
 export async function POST(request) {
   try {
-    const { idToken } = await request.json();
+    // Kiểm tra content-type để đảm bảo là JSON
+    const contentType = request.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ API set-token - Content-Type không hợp lệ:', contentType);
+      return NextResponse.json(
+        { error: 'Content-Type phải là application/json' },
+        { status: 400 }
+      );
+    }
+
+    // Kiểm tra nội dung request trước khi phân tích JSON
+    const text = await request.text();
+    if (!text || text.trim() === '') {
+      console.error('❌ API set-token - Request body trống');
+      return NextResponse.json(
+        { error: 'Request body không được trống' },
+        { status: 400 }
+      );
+    }
+
+    // Phân tích JSON với xử lý lỗi
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      console.error('❌ API set-token - Lỗi phân tích JSON:', jsonError);
+      return NextResponse.json(
+        { error: 'Dữ liệu JSON không hợp lệ', details: jsonError.message },
+        { status: 400 }
+      );
+    }
+
+    const { idToken } = data;
     
     if (!idToken) {
       return NextResponse.json(

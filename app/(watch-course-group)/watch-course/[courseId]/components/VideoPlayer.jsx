@@ -3,22 +3,28 @@ import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 import "./plyr-custom.css"; // Import CSS tùy chỉnh cho Plyr
+import { useAuth } from "@/app/_context/AuthContext";
 
 // Hàm helper để lấy stream URL từ API
-const getStreamUrl = async (key) => {
+const getStreamUrl = async (key, userId, courseId) => {
   try {
+    if (!key || !userId || !courseId) {
+      console.error("Thiếu thông tin cần thiết để lấy stream URL", { key, userId, courseId });
+      return null;
+    }
+
     const encodedKey = encodeURIComponent(key);
-    const response = await fetch(`/api/stream?key=${encodedKey}`);
+    const response = await fetch(`/api/stream?key=${encodedKey}&userId=${userId}&courseId=${courseId}`);
     const data = await response.json();
 
     if (data.success && data.streamUrl) {
       return data.streamUrl;
     } else {
-      // console.error("Lỗi khi lấy stream URL:", data.error || "Không xác định");
+      console.error("Lỗi khi lấy stream URL:", data.error || "Không xác định");
       return null;
     }
   } catch (error) {
-    // console.error("Lỗi khi gọi API stream:", error);
+    console.error("Lỗi khi gọi API stream:", error);
     return null;
   }
 };
@@ -82,6 +88,7 @@ const VideoPlayer = memo(function VideoPlayer({
   onPrevious,
   autoPlay = true,
 }) {
+  const { user } = useAuth();
   const videoRef = useRef(null);
   const playerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,6 +98,14 @@ const VideoPlayer = memo(function VideoPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const [streamUrl, setStreamUrl] = useState("");
+  
+  // Lấy courseId từ URL
+  const courseId = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.split("/").pop();
+    }
+    return null;
+  }, []);
 
   // Sử dụng ref để theo dõi file hiện tại để tránh vấn đề với useEffect cleanup
   const currentFileRef = useRef(file);
@@ -129,23 +144,37 @@ const VideoPlayer = memo(function VideoPlayer({
   useEffect(() => {
     const fetchStreamUrl = async () => {
       if (!file?.storage?.key) {
-        // console.error("Không có storage key cho video");
+        console.error("Không có storage key cho video");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!user?.uid) {
+        console.error("Không có thông tin user để xác thực");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!courseId) {
+        console.error("Không thể xác định courseId");
         setIsLoading(false);
         return;
       }
 
       setIsLoading(true);
-      const url = await getStreamUrl(file.storage.key);
+      const url = await getStreamUrl(file.storage.key, user.uid, courseId);
 
       if (url) {
         setStreamUrl(url);
       } else {
-        // console.error("Không thể lấy URL video");
+        console.error("Không thể lấy URL video");
       }
+      
+      setIsLoading(false);
     };
 
     fetchStreamUrl();
-  }, [file]);
+  }, [file, user, courseId]);
 
   // Khởi tạo Plyr khi có streamUrl
   useEffect(() => {

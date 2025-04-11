@@ -179,6 +179,37 @@ const GlobalApi = {
     }
   },
 
+  checkCourseEnrollment: async (courseId, userId) => {
+    try {
+      if (isClient) {
+        if (!userId) {
+          console.warn("userId không được cung cấp khi kiểm tra đăng ký khóa học");
+          return { enrolled: false };
+        }
+        
+        if (!courseId) {
+          console.warn("courseId không được cung cấp khi kiểm tra đăng ký khóa học");
+          return { enrolled: false };
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/courses/${courseId}/check-enrollment?userId=${userId}`);
+        
+        if (!response.ok) {
+          return { enrolled: false };
+        }
+        
+        const data = await response.json();
+        return data;
+      } else {
+        console.warn('checkCourseEnrollment đang được gọi từ server, hãy sử dụng API route');
+        return { enrolled: false };
+      }
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra đăng ký khóa học:", error);
+      return { enrolled: false };
+    }
+  },
+
   getCourseById: async (courseId) => {
     try {
       if (isClient) {

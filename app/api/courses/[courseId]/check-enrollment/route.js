@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import connectToDatabase from "@/app/_utils/mongodb";
 import mongoose from 'mongoose';
 
+// Cache cho thông tin người dùng và quyền truy cập
+const userEnrollmentCache = new Map();
+
 export async function GET(request, { params }) {
   try {
     const { courseId } = params;
@@ -13,6 +16,20 @@ export async function GET(request, { params }) {
         { error: "userId là bắt buộc", status: "error" },
         { status: 400 }
       );
+    }
+
+    // Tạo cacheKey từ thông tin người dùng và khóa học
+    const cacheKey = `${userId}-${courseId}`;
+    
+    // Kiểm tra cache trước khi truy vấn database
+    const cachedEnrollment = userEnrollmentCache.get(cacheKey);
+    if (cachedEnrollment) {
+      // Kiểm tra xem cache có còn hạn không (còn ít nhất 5 phút)
+      if (cachedEnrollment.expires > Date.now()) {
+        return NextResponse.json(cachedEnrollment.data);
+      }
+      // Cache đã hết hạn, xóa khỏi cache
+      userEnrollmentCache.delete(cacheKey);
     }
 
     // Kết nối đến database
@@ -33,7 +50,7 @@ export async function GET(request, { params }) {
       const currentDate = new Date();
       // Kiểm tra nếu người dùng đang VIP và VIP chưa hết hạn
       if (user.vipExpiresAt && new Date(user.vipExpiresAt) > currentDate) {
-        return NextResponse.json({
+        const responseData = {
           enrolled: true,
           enrollment: {
             enrolledAt: currentDate,
@@ -45,7 +62,19 @@ export async function GET(request, { params }) {
           courseId,
           status: "success",
           isVip: true
+        };
+        
+        // Lưu vào cache (hết hạn sau 15 phút)
+        userEnrollmentCache.set(cacheKey, {
+          data: responseData,
+          expires: Date.now() + 15 * 60 * 1000,
+          userData: {
+            isVip: true,
+            vipExpiresAt: user.vipExpiresAt
+          }
         });
+        
+        return NextResponse.json(responseData);
       }
     }
     
@@ -103,13 +132,25 @@ export async function GET(request, { params }) {
       }
     }
     
-    return NextResponse.json({
+    const responseData = {
       enrolled: isEnrolled,
       enrollment: enrollmentInfo,
       userId,
       courseId,
       status: "success"
+    };
+    
+    // Lưu kết quả vào cache (hết hạn sau 15 phút)
+    userEnrollmentCache.set(cacheKey, {
+      data: responseData,
+      expires: Date.now() + 15 * 60 * 1000,
+      userData: user ? {
+        isVip: user.isVip || false,
+        vipExpiresAt: user.vipExpiresAt || null
+      } : null
     });
+    
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Lỗi khi kiểm tra đăng ký:", error);
     return NextResponse.json(

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import connectToDatabase from "@/app/_utils/mongodb";
 import mongoose from 'mongoose';
 
+// Cache cho thông tin profile người dùng
+const userProfileCache = new Map();
+const CACHE_DURATION = 10 * 60 * 1000; // 10 phút
+
 export async function GET(request) {
   try {
     // Lấy userId từ query params
@@ -13,6 +17,17 @@ export async function GET(request) {
         { error: 'userId là bắt buộc' },
         { status: 400 }
       );
+    }
+    
+    // Kiểm tra cache trước khi truy vấn database
+    const cachedProfile = userProfileCache.get(userId);
+    if (cachedProfile && cachedProfile.expires > Date.now()) {
+      return NextResponse.json(cachedProfile.data);
+    }
+    
+    // Xóa cache hết hạn
+    if (cachedProfile) {
+      userProfileCache.delete(userId);
     }
     
     // Kết nối đến database
@@ -39,6 +54,12 @@ export async function GET(request) {
         id: user._id.toString(),
         _id: user._id.toString()
       };
+      
+      // Lưu vào cache
+      userProfileCache.set(userId, {
+        data: formattedUser,
+        expires: Date.now() + CACHE_DURATION
+      });
       
       return NextResponse.json(formattedUser);
     } catch (dbError) {
@@ -104,6 +125,12 @@ export async function PUT(request) {
         id: updatedUser._id.toString(),
         _id: updatedUser._id.toString()
       };
+      
+      // Cập nhật cache với dữ liệu mới
+      userProfileCache.set(userId, {
+        data: formattedUser,
+        expires: Date.now() + CACHE_DURATION
+      });
       
       return NextResponse.json(formattedUser);
     } catch (dbError) {
