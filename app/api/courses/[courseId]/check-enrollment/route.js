@@ -2,10 +2,107 @@ import { NextResponse } from "next/server";
 import connectToDatabase from "@/app/_utils/mongodb";
 import mongoose from 'mongoose';
 
-// Cache cho thông tin người dùng và quyền truy cập
-const userEnrollmentCache = new Map();
+// Cache cho thông tin người dùng và quyền truy cập với giới hạn kích thước
+class LRUCache {
+  constructor(maxSize = 1000) {
+    this.cache = new Map();
+    this.maxSize = maxSize;
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) return undefined;
+    
+    // Lấy giá trị và cập nhật vị trí (đưa lên đầu)
+    const value = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  set(key, value) {
+    // Nếu đã tồn tại, xóa trước để cập nhật vị trí
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    }
+    // Kiểm tra kích thước cache
+    else if (this.cache.size >= this.maxSize) {
+      // Xóa entry cũ nhất (phần tử đầu tiên trong Map)
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+    }
+    
+    // Thêm entry mới
+    this.cache.set(key, value);
+  }
+
+  delete(key) {
+    this.cache.delete(key);
+  }
+
+  // Dọn dẹp các mục hết hạn
+  cleanup() {
+    const now = Date.now();
+    for (const [key, value] of this.cache.entries()) {
+      if (value.expires <= now) {
+        this.cache.delete(key);
+      }
+    }
+  }
+}
+
+// Khởi tạo cache với giới hạn 5000 mục (có thể điều chỉnh theo nhu cầu)
+const userEnrollmentCache = new LRUCache(5000);
+
+// Duy trì kết nối database để tránh mở kết nối mới mỗi request
+let dbConnection = null;
+let hocmaiDb = null;
+let usersCollection = null;
+let enrollmentsCollection = null;
+
+// Hàm khởi tạo kết nối trước
+async function initDatabaseConnection() {
+  if (!dbConnection) {
+    try {
+      await connectToDatabase();
+      dbConnection = mongoose.connection;
+      hocmaiDb = dbConnection.useDb('hocmai', { useCache: true });
+      usersCollection = hocmaiDb.collection('users');
+      enrollmentsCollection = hocmaiDb.collection('enrollments');
+      console.log("Đã khởi tạo kết nối database cho enrollment API");
+    } catch (error) {
+      console.error("Lỗi khi khởi tạo kết nối database:", error);
+      // Reset để thử lại lần sau
+      dbConnection = null;
+    }
+  }
+}
+
+// Khởi tạo kết nối ngay khi server khởi động
+initDatabaseConnection();
+
+// Chạy dọn dẹp cache mỗi 10 phút
+setInterval(() => {
+  userEnrollmentCache.cleanup();
+}, 10 * 60 * 1000);
+
+// Hàm kiểm tra và khởi tạo lại kết nối database nếu cần
+async function ensureDatabaseConnection() {
+  if (!dbConnection || !dbConnection.readyState || dbConnection.readyState !== 1) {
+    await initDatabaseConnection();
+  }
+  
+  // Nếu vẫn không có kết nối, thử kết nối lại
+  if (!dbConnection || !dbConnection.readyState || dbConnection.readyState !== 1) {
+    await connectToDatabase();
+    dbConnection = mongoose.connection;
+    hocmaiDb = dbConnection.useDb('hocmai', { useCache: true });
+    usersCollection = hocmaiDb.collection('users');
+    enrollmentsCollection = hocmaiDb.collection('enrollments');
+  }
+}
 
 export async function GET(request, { params }) {
+  const startTime = Date.now();
   try {
     const { courseId } = params;
     const { searchParams } = new URL(request.url);
@@ -24,23 +121,21 @@ export async function GET(request, { params }) {
     // Kiểm tra cache trước khi truy vấn database
     const cachedEnrollment = userEnrollmentCache.get(cacheKey);
     if (cachedEnrollment) {
-      // Kiểm tra xem cache có còn hạn không (còn ít nhất 5 phút)
+      // Kiểm tra xem cache có còn hạn không
       if (cachedEnrollment.expires > Date.now()) {
+        console.log(`[CACHE HIT] User: ${userId}, Course: ${courseId}, Time: ${Date.now() - startTime}ms`);
         return NextResponse.json(cachedEnrollment.data);
       }
       // Cache đã hết hạn, xóa khỏi cache
       userEnrollmentCache.delete(cacheKey);
     }
 
-    // Kết nối đến database
-    await connectToDatabase();
+    // Đảm bảo có kết nối database
+    await ensureDatabaseConnection();
     
-    // Kết nối đến database hocmai
-    const hocmaiDb = mongoose.connection.useDb('hocmai', { useCache: true });
-    
-    // Truy cập các collections
-    const usersCollection = hocmaiDb.collection('users');
-    const enrollmentsCollection = hocmaiDb.collection('enrollments');
+    if (!usersCollection || !enrollmentsCollection) {
+      throw new Error("Không thể kết nối đến collections");
+    }
     
     // Lấy thông tin user
     const user = await usersCollection.findOne({ uid: userId });
@@ -64,16 +159,18 @@ export async function GET(request, { params }) {
           isVip: true
         };
         
-        // Lưu vào cache (hết hạn sau 15 phút)
+        // Thời gian cache ngắn hơn cho người dùng VIP để đảm bảo cập nhật kịp thời
+        // khi trạng thái VIP thay đổi
         userEnrollmentCache.set(cacheKey, {
           data: responseData,
-          expires: Date.now() + 15 * 60 * 1000,
+          expires: Date.now() + 10 * 60 * 1000, // 10 phút cho VIP
           userData: {
             isVip: true,
             vipExpiresAt: user.vipExpiresAt
           }
         });
         
+        console.log(`[VIP USER] User: ${userId}, Course: ${courseId}, Time: ${Date.now() - startTime}ms`);
         return NextResponse.json(responseData);
       }
     }
@@ -90,7 +187,7 @@ export async function GET(request, { params }) {
       courseObjectId = courseId;
     }
     
-    // Tìm trong enrollments collection
+    // Tìm trong enrollments collection - thêm index để cải thiện hiệu suất
     const enrollment = await enrollmentsCollection.findOne({
       userId: userId,
       courseId: courseObjectId, 
@@ -140,19 +237,21 @@ export async function GET(request, { params }) {
       status: "success"
     };
     
-    // Lưu kết quả vào cache (hết hạn sau 15 phút)
+    // Lưu kết quả vào cache (30 phút cho người dùng thường)
+    // Thời gian cache dài hơn cho những người không phải VIP
     userEnrollmentCache.set(cacheKey, {
       data: responseData,
-      expires: Date.now() + 15 * 60 * 1000,
+      expires: Date.now() + 30 * 60 * 1000, // 30 phút cho người dùng thường
       userData: user ? {
         isVip: user.isVip || false,
         vipExpiresAt: user.vipExpiresAt || null
       } : null
     });
     
+    console.log(`[DB QUERY] User: ${userId}, Course: ${courseId}, Time: ${Date.now() - startTime}ms`);
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Lỗi khi kiểm tra đăng ký:", error);
+    console.error(`Lỗi khi kiểm tra đăng ký (${Date.now() - startTime}ms):`, error);
     return NextResponse.json(
       { error: "Lỗi khi kiểm tra đăng ký", details: error.message, status: "error" },
       { status: 500 }

@@ -306,7 +306,7 @@ export default function WatchCourse({ params }) {
       const course = response.course || response;
 
       // Debug để xem dữ liệu khóa học
-      console.log("Dữ liệu khóa học:", course);
+      // console.log("Dữ liệu khóa học:", course);
 
       // Kiểm tra nếu không có chapters
       if (!course.chapters || course.chapters.length === 0) {
@@ -383,7 +383,7 @@ export default function WatchCourse({ params }) {
       
       // Nếu đã có user và là VIP thì cấp quyền ngay lập tức
       if (user && isVip) {
-        console.log("Người dùng VIP, cấp quyền truy cập");
+        // console.log("Người dùng VIP, cấp quyền truy cập");
         setIsAuthorized(true);
         setCheckingAuth(false);
         setHasCheckedAuth(true);
@@ -392,7 +392,7 @@ export default function WatchCourse({ params }) {
       
       // Thêm thời gian chờ để đảm bảo thông tin user được tải
       if (!user) {
-        console.log("Không tìm thấy thông tin người dùng, đợi thêm");
+        // console.log("Không tìm thấy thông tin người dùng, đợi thêm");
         
         // Đợi thêm tối đa 2 giây để xem thông tin user có được tải không
         const waitForUser = new Promise((resolve) => {
@@ -419,14 +419,14 @@ export default function WatchCourse({ params }) {
         if (delayedUser) {
           // Kiểm tra lại nếu là VIP (có thể profile đã được tải)
           if (isVip) {
-            console.log("Người dùng VIP (sau thời gian chờ), cấp quyền truy cập");
+            // console.log("Người dùng VIP (sau thời gian chờ), cấp quyền truy cập");
             setIsAuthorized(true);
             setCheckingAuth(false);
             setHasCheckedAuth(true);
             return true;
           }
         } else {
-          console.log("Vẫn không có thông tin người dùng sau thời gian chờ");
+          // console.log("Vẫn không có thông tin người dùng sau thời gian chờ");
           setIsAuthorized(false);
           setCheckingAuth(false);
           setHasCheckedAuth(true);
@@ -437,7 +437,7 @@ export default function WatchCourse({ params }) {
       // Đảm bảo có UID của người dùng trước khi kiểm tra đăng ký
       const userId = user?.uid || auth.currentUser?.uid;
       if (!userId) {
-        console.log("Không tìm thấy UID của người dùng");
+        // console.log("Không tìm thấy UID của người dùng");
         setIsAuthorized(false);
         setHasCheckedAuth(true);
         return false;
@@ -448,22 +448,22 @@ export default function WatchCourse({ params }) {
         const response = await GlobalApi.checkCourseEnrollment(courseId, userId);
         
         if (response && response.enrolled) {
-          console.log("Người dùng đã đăng ký khóa học này");
+          // console.log("Người dùng đã đăng ký khóa học này");
           setIsAuthorized(true);
           setHasCheckedAuth(true);
           return true;
         }
       } catch (enrollError) {
-        console.error("Lỗi khi kiểm tra đăng ký:", enrollError);
+        // console.error("Lỗi khi kiểm tra đăng ký:", enrollError);
       }
       
       // Người dùng chưa đăng ký khóa học
-      console.log("Người dùng chưa đăng ký khóa học này");
+      // console.log("Người dùng chưa đăng ký khóa học này");
       setIsAuthorized(false);
       setHasCheckedAuth(true);
       return false;
     } catch (error) {
-      console.error("Lỗi khi kiểm tra quyền truy cập khóa học:", error);
+      // console.error("Lỗi khi kiểm tra quyền truy cập khóa học:", error);
       setIsAuthorized(false);
       setHasCheckedAuth(true);
       return false;
