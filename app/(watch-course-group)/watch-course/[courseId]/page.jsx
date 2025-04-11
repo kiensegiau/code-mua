@@ -24,6 +24,7 @@ import CourseContent from "./components/CourseContent";
 import { useVideoNavigation } from "./hooks/useVideoNavigation";
 import { getNumberFromTitle, sortByName } from "./utils/sorting";
 import { useAuth } from "@/app/_context/AuthContext";
+import { auth } from "@/app/_utils/firebase";
 
 // Lazy load VideoPlayer để tối ưu hiệu năng
 const VideoPlayer = dynamic(() => import("./components/VideoPlayer"), {
@@ -57,8 +58,9 @@ const videoHeight = `${100 * aspectRatio}vw`;
 
 // Component Loading
 const LoadingScreen = memo(() => (
-  <div className="min-h-screen bg-[#141414] flex items-center justify-center">
-    <div className="animate-spin w-6 h-6 border-2 border-[#ff4d4f] border-t-transparent rounded-full"></div>
+  <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center">
+    <div className="animate-spin w-8 h-8 border-2 border-[#ff4d4f] border-t-transparent rounded-full mb-4"></div>
+    <p className="text-gray-300 text-sm">Đang tải khóa học...</p>
   </div>
 ));
 
@@ -179,6 +181,8 @@ export default function WatchCourse({ params }) {
   const [key, setKey] = useState(0);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [redirectInProgress, setRedirectInProgress] = useState(false);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
   const [expandedChapterIndex, setExpandedChapterIndex] = useState(-1);
   const [expandedLessonId, setExpandedLessonId] = useState(null);
@@ -366,45 +370,107 @@ export default function WatchCourse({ params }) {
 
   // Kiểm tra quyền truy cập khóa học
   const checkCourseAccess = useCallback(async () => {
+    // Nếu đã kiểm tra xong, không kiểm tra lại nữa để tránh lặp lại
+    if (hasCheckedAuth) {
+      return isAuthorized;
+    }
+
     try {
       setCheckingAuth(true);
       
-      // Nếu không có người dùng, từ chối quyền truy cập
+      // Sử dụng biến auth được import thay vì window.auth
+      const currentUser = auth.currentUser;
+      
+      // Nếu đã có user và là VIP thì cấp quyền ngay lập tức
+      if (user && isVip) {
+        console.log("Người dùng VIP, cấp quyền truy cập");
+        setIsAuthorized(true);
+        setCheckingAuth(false);
+        setHasCheckedAuth(true);
+        return true;
+      }
+      
+      // Thêm thời gian chờ để đảm bảo thông tin user được tải
       if (!user) {
+        console.log("Không tìm thấy thông tin người dùng, đợi thêm");
+        
+        // Đợi thêm tối đa 2 giây để xem thông tin user có được tải không
+        const waitForUser = new Promise((resolve) => {
+          let attempts = 0;
+          const maxAttempts = 8; // 8 lần * 250ms = 2 giây
+          
+          const checkUser = () => {
+            attempts++;
+            // Sử dụng auth.currentUser thay vì window.auth?.currentUser
+            if (auth.currentUser || attempts >= maxAttempts) {
+              resolve(auth.currentUser);
+            } else {
+              setTimeout(checkUser, 250);
+            }
+          };
+          
+          checkUser();
+        });
+        
+        // Đợi promise hoàn tất
+        const delayedUser = await waitForUser;
+        
+        // Kiểm tra lại sau khi đợi
+        if (delayedUser) {
+          // Kiểm tra lại nếu là VIP (có thể profile đã được tải)
+          if (isVip) {
+            console.log("Người dùng VIP (sau thời gian chờ), cấp quyền truy cập");
+            setIsAuthorized(true);
+            setCheckingAuth(false);
+            setHasCheckedAuth(true);
+            return true;
+          }
+        } else {
+          console.log("Vẫn không có thông tin người dùng sau thời gian chờ");
+          setIsAuthorized(false);
+          setCheckingAuth(false);
+          setHasCheckedAuth(true);
+          return false;
+        }
+      }
+      
+      // Đảm bảo có UID của người dùng trước khi kiểm tra đăng ký
+      const userId = user?.uid || auth.currentUser?.uid;
+      if (!userId) {
+        console.log("Không tìm thấy UID của người dùng");
         setIsAuthorized(false);
-        router.push('/sign-in');
+        setHasCheckedAuth(true);
         return false;
       }
       
-      // Kiểm tra nếu người dùng là VIP
-      if (isVip) {
-        setIsAuthorized(true);
-        return true;
-      }
-      
       // Kiểm tra xem người dùng đã đăng ký khóa học này chưa
-      const response = await GlobalApi.checkCourseEnrollment(courseId, user.uid);
-      
-      if (response && response.enrolled) {
-        setIsAuthorized(true);
-        return true;
+      try {
+        const response = await GlobalApi.checkCourseEnrollment(courseId, userId);
+        
+        if (response && response.enrolled) {
+          console.log("Người dùng đã đăng ký khóa học này");
+          setIsAuthorized(true);
+          setHasCheckedAuth(true);
+          return true;
+        }
+      } catch (enrollError) {
+        console.error("Lỗi khi kiểm tra đăng ký:", enrollError);
       }
       
       // Người dùng chưa đăng ký khóa học
+      console.log("Người dùng chưa đăng ký khóa học này");
       setIsAuthorized(false);
-      toast.error("Bạn chưa đăng ký khóa học này");
-      router.push(`/course-preview/${courseId}`);
+      setHasCheckedAuth(true);
       return false;
     } catch (error) {
       console.error("Lỗi khi kiểm tra quyền truy cập khóa học:", error);
       setIsAuthorized(false);
-      toast.error("Có lỗi xảy ra khi kiểm tra quyền truy cập");
-      router.push('/courses');
+      setHasCheckedAuth(true);
       return false;
     } finally {
       setCheckingAuth(false);
     }
-  }, [user, courseId, router, isVip]);
+  }, [user, courseId, isVip, hasCheckedAuth, isAuthorized]);
 
   // Restore last watched video
   const restoreLastWatchedVideo = useCallback(
@@ -635,59 +701,83 @@ export default function WatchCourse({ params }) {
 
   // Effects
   useEffect(() => {
+    // Nếu đã kiểm tra xong auth, không khởi tạo lại
+    if (hasCheckedAuth) {
+      return;
+    }
+    
     async function initialize() {
-      // Trước tiên, kiểm tra quyền truy cập
-      const hasAccess = await checkCourseAccess();
-      
-      // Nếu không có quyền truy cập, dừng lại
-      if (!hasAccess) {
-        setLoading(false);
-        setIsInitialLoad(false);
-        return;
-      }
-      
-      const course = await fetchCourseInfo();
-      if (course) {
-        const restored = restoreLastWatchedVideo(course);
+      // Đặt một khoảng thời gian tối thiểu cho việc kiểm tra xác thực
+      const authCheckTimeout = setTimeout(async () => {
+        // Trước tiên, kiểm tra quyền truy cập
+        const hasAccess = await checkCourseAccess();
+        
+        // Nếu không có quyền truy cập, thực hiện chuyển hướng sau khi đã kiểm tra xong
+        if (!hasAccess) {
+          setLoading(false);
+          setIsInitialLoad(false);
+          
+          // Chỉ chuyển hướng sau khi xác nhận rằng đã hoàn tất quá trình kiểm tra xác thực
+          if (!checkingAuth) {
+            // Đánh dấu đang thực hiện chuyển hướng
+            setRedirectInProgress(true);
+            
+            if (!user) {
+              toast.error("Vui lòng đăng nhập để xem khóa học");
+              router.push('/sign-in');
+            } else {
+              toast.error("Bạn chưa đăng ký khóa học này");
+              router.push(`/course-preview/${courseId}`);
+            }
+          }
+          return;
+        }
+        
+        const course = await fetchCourseInfo();
+        if (course) {
+          const restored = restoreLastWatchedVideo(course);
 
-        if (!restored && course.chapters && course.chapters.length > 0) {
-          const firstChapter = [...course.chapters].sort((a, b) => {
-            const numA = getNumberFromTitle(a.title);
-            const numB = getNumberFromTitle(b.title);
-            return numA - numB;
-          })[0];
-
-          if (
-            firstChapter &&
-            firstChapter.lessons &&
-            firstChapter.lessons.length > 0
-          ) {
-            const firstLesson = [...firstChapter.lessons].sort((a, b) => {
+          if (!restored && course.chapters && course.chapters.length > 0) {
+            const firstChapter = [...course.chapters].sort((a, b) => {
               const numA = getNumberFromTitle(a.title);
               const numB = getNumberFromTitle(b.title);
               return numA - numB;
             })[0];
 
             if (
-              firstLesson &&
-              firstLesson.files &&
-              firstLesson.files.length > 0
+              firstChapter &&
+              firstChapter.lessons &&
+              firstChapter.lessons.length > 0
             ) {
-              const firstVideo = firstLesson.files
-                .filter((f) => f.type?.includes("video"))
-                .sort(sortFiles)[0];
+              const firstLesson = [...firstChapter.lessons].sort((a, b) => {
+                const numA = getNumberFromTitle(a.title);
+                const numB = getNumberFromTitle(b.title);
+                return numA - numB;
+              })[0];
 
-              if (firstVideo) {
-                setExpandedChapterIndex(0);
-                setExpandedLessonId(firstLesson.id);
-                handleLessonClick(firstLesson, firstChapter, firstVideo);
+              if (
+                firstLesson &&
+                firstLesson.files &&
+                firstLesson.files.length > 0
+              ) {
+                const firstVideo = firstLesson.files
+                  .filter((f) => f.type?.includes("video"))
+                  .sort(sortFiles)[0];
+
+                if (firstVideo) {
+                  setExpandedChapterIndex(0);
+                  setExpandedLessonId(firstLesson.id);
+                  handleLessonClick(firstLesson, firstChapter, firstVideo);
+                }
               }
             }
           }
         }
-      }
 
-      setIsInitialLoad(false);
+        setIsInitialLoad(false);
+      }, 1000); // Đợi ít nhất 1 giây để hệ thống xác thực có thể hoạt động
+      
+      return () => clearTimeout(authCheckTimeout);
     }
 
     initialize();
@@ -698,6 +788,10 @@ export default function WatchCourse({ params }) {
     getNumberFromTitle,
     sortFiles,
     checkCourseAccess,
+    router,
+    user,
+    courseId,
+    hasCheckedAuth
   ]);
 
   // Save current video state on unmount or beforeunload
@@ -730,15 +824,18 @@ export default function WatchCourse({ params }) {
   }
   
   if (!isAuthorized) {
-    // Người dùng đã được chuyển hướng nên chỉ hiển thị màn hình tạm thời
-    return (
-      <div className="min-h-screen bg-[#141414] flex items-center justify-center flex-col">
-        <div className="w-12 h-12 text-[#ff4d4f]">
-          <LogOut className="w-full h-full" />
+    // Chỉ hiển thị màn hình chuyển hướng khi đang thực hiện chuyển hướng
+    if (redirectInProgress) {
+      return (
+        <div className="min-h-screen bg-[#141414] flex items-center justify-center flex-col">
+          <div className="animate-spin w-8 h-8 border-2 border-[#ff4d4f] border-t-transparent rounded-full mb-4"></div>
+          <p className="mt-4 text-gray-400 text-sm">Đang chuyển hướng...</p>
         </div>
-        <p className="mt-4 text-gray-300">Đang chuyển hướng...</p>
-      </div>
-    );
+      );
+    }
+    
+    // Nếu không được xác thực nhưng chưa chuyển hướng, hiển thị loading
+    return <LoadingScreen />;
   }
 
   return (
