@@ -184,7 +184,7 @@ export default function Roadmap() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 mb-3"
+          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 mb-3"
         >
           <GiRoad className="w-4 h-4 mr-2" />
           Lộ trình du học
@@ -203,7 +203,7 @@ export default function Roadmap() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-4 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-300"
+          className="mt-4 max-w-2xl mx-auto text-xl text-gray-600 dark:text-gray-300"
         >
           Từng bước chuẩn bị chu đáo để bạn tự tin trên con đường du học
         </motion.p>
@@ -230,8 +230,8 @@ export default function Roadmap() {
                 disabled={activeStep === 0}
                 className={`inline-flex items-center justify-center p-2 rounded-full ${
                   activeStep === 0 
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed dark:text-gray-600 dark:bg-gray-800" 
-                    : "text-blue-600 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
+                    ? "text-gray-500 bg-gray-100 cursor-not-allowed dark:text-gray-500 dark:bg-gray-800" 
+                    : "text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70"
                 }`}
               >
                 <FaArrowLeft className="w-4 h-4" />
@@ -241,8 +241,8 @@ export default function Roadmap() {
                 onClick={togglePlayPause}
                 className={`inline-flex items-center justify-center p-2 rounded-full ${
                   isPlaying
-                    ? "text-yellow-600 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/50"
-                    : "text-blue-600 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
+                    ? "text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70"
+                    : "text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70"
                 }`}
               >
                 <FaPlay className={`w-4 h-4 ${isPlaying ? "animate-pulse" : ""}`} />
@@ -253,15 +253,15 @@ export default function Roadmap() {
                 disabled={activeStep === ROADMAP_DATA.length - 1}
                 className={`inline-flex items-center justify-center p-2 rounded-full ${
                   activeStep === ROADMAP_DATA.length - 1 
-                    ? "text-gray-400 bg-gray-100 cursor-not-allowed dark:text-gray-600 dark:bg-gray-800" 
-                    : "text-blue-600 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
+                    ? "text-gray-500 bg-gray-100 cursor-not-allowed dark:text-gray-500 dark:bg-gray-800" 
+                    : "text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70"
                 }`}
               >
                 <FaArrowRight className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
               Bước {activeStep + 1} / {ROADMAP_DATA.length}
             </div>
           </div>
@@ -302,12 +302,12 @@ export default function Roadmap() {
           <div className="px-6 py-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
               {ROADMAP_DATA[activeStep].icon && (
-                <span className="mr-3 text-blue-600 dark:text-blue-400">{ROADMAP_DATA[activeStep].icon}</span>
+                <span className="mr-3 text-blue-700 dark:text-blue-300">{ROADMAP_DATA[activeStep].icon}</span>
               )}
               {ROADMAP_DATA[activeStep].title}
             </h3>
             
-            <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center mt-2 text-sm text-gray-600 dark:text-gray-300">
               <IoTimeOutline className="w-4 h-4 mr-1" />
               <span>Thời gian: {ROADMAP_DATA[activeStep].duration} tuần</span>
             </div>
@@ -323,15 +323,15 @@ export default function Roadmap() {
                     transition={{ duration: 0.4, delay: idx * 0.1 }}
                     className="flex items-start"
                   >
-                    <IoCheckmarkCircleOutline className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5 mr-2" />
-                    <span>{item}</span>
+                    <IoCheckmarkCircleOutline className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5 mr-2" />
+                    <span className="text-gray-700 dark:text-gray-300">{item}</span>
                   </motion.li>
                 ))}
               </ul>
             </div>
             
             <div className="mt-8">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200">
+              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200">
                 Tìm hiểu thêm
                 <FaArrowRight className="ml-2 -mr-1 w-4 h-4" />
               </button>
@@ -345,7 +345,7 @@ export default function Roadmap() {
           initial="hidden"
           animate="visible"
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-700 dark:to-indigo-800 rounded-xl shadow-lg overflow-hidden text-white"
+          className="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-900 rounded-xl shadow-lg overflow-hidden text-white"
         >
           <div className="px-6 py-8">
             <h3 className="text-xl font-bold mb-6">Cố vấn chuyên môn</h3>
@@ -360,7 +360,7 @@ export default function Roadmap() {
                 className="flex flex-col items-center text-center"
               >
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/30">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/40">
                     <img
                       src={MENTORS[currentMentor].avatar}
                       alt={MENTORS[currentMentor].name}
@@ -373,10 +373,10 @@ export default function Roadmap() {
                   </div>
                 </div>
                 
-                <h4 className="mt-4 font-bold text-lg">{MENTORS[currentMentor].name}</h4>
-                <p className="text-blue-100 dark:text-blue-200">{MENTORS[currentMentor].role}</p>
+                <h4 className="mt-4 font-bold text-lg text-white">{MENTORS[currentMentor].name}</h4>
+                <p className="text-blue-50">{MENTORS[currentMentor].role}</p>
                 
-                <div className="mt-4 flex items-center text-sm text-blue-100 dark:text-blue-200">
+                <div className="mt-4 flex items-center text-sm text-blue-50">
                   <span className="flex items-center">
                     <IoPeopleOutline className="w-4 h-4 mr-1" />
                     {MENTORS[currentMentor].reviews} đánh giá
@@ -406,7 +406,7 @@ export default function Roadmap() {
             </AnimatePresence>
             
             <div className="mt-8 pt-6 border-t border-white/20">
-              <button className="w-full py-3 px-4 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center">
+              <button className="w-full py-3 px-4 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center">
                 Tư vấn miễn phí
                 <FaArrowRight className="ml-2 w-4 h-4" />
               </button>

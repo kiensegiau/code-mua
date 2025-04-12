@@ -125,7 +125,7 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
             className={`absolute top-0 -translate-y-full left-1/2 transform -translate-x-1/2 w-0.5 h-12 
               ${status === "pending" 
                 ? "bg-gray-200 dark:bg-gray-700" 
-                : "bg-gradient-to-t from-blue-500 to-indigo-600"
+                : "bg-gradient-to-t from-blue-600 to-indigo-700"
               }`}
           ></div>
         )}
@@ -134,17 +134,17 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
         <div 
           className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
             status === "pending"
-              ? "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 group-hover:border-gray-400 dark:group-hover:border-gray-500"
+              ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 group-hover:border-gray-400 dark:group-hover:border-gray-500"
               : status === "current"
-                ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30 ring-4 ring-blue-100 dark:ring-blue-900/20"
-                : "border-green-500 bg-green-50 dark:border-green-400 dark:bg-green-900/30"
+                ? "border-blue-600 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30 ring-4 ring-blue-100 dark:ring-blue-900/20"
+                : "border-green-600 bg-green-50 dark:border-green-400 dark:bg-green-900/30"
           }`}
         >
           <div 
             className={`transition-all duration-300 ${
-              status === "pending" ? "text-gray-400 dark:text-gray-500" : 
-              status === "current" ? "text-blue-500 dark:text-blue-400" : 
-              "text-green-500 dark:text-green-400"
+              status === "pending" ? "text-gray-500 dark:text-gray-400" : 
+              status === "current" ? "text-blue-700 dark:text-blue-300" : 
+              "text-green-700 dark:text-green-300"
             }`}
           >
             {getIconByTitle()}
@@ -156,7 +156,7 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
           <motion.div 
             className={`absolute bottom-0 translate-y-full left-1/2 transform -translate-x-1/2 w-0.5 h-12 
               ${index < active
-                ? "bg-gradient-to-b from-blue-500 to-indigo-600"
+                ? "bg-gradient-to-b from-blue-600 to-indigo-700"
                 : "bg-gray-200 dark:bg-gray-700"
               }`}
             initial={{ height: 0 }}
@@ -183,20 +183,20 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
           <div className="flex items-center">
             <div className={`mr-2 ${
               status === "pending" 
-                ? "text-gray-400 dark:text-gray-500" 
+                ? "text-gray-500 dark:text-gray-400" 
                 : status === "current"
-                  ? "text-blue-500 dark:text-blue-400"
-                  : "text-green-500 dark:text-green-400"
+                  ? "text-blue-700 dark:text-blue-300"
+                  : "text-green-700 dark:text-green-300"
             }`}>
               {getStatusIcon()}
             </div>
             <h3 
               className={`font-medium transition-colors duration-300 ${
                 status === "pending" 
-                  ? "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300" 
+                  ? "text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200" 
                   : status === "current"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-gray-800 dark:text-gray-200"
+                    ? "text-blue-800 dark:text-blue-200"
+                    : "text-gray-900 dark:text-gray-100"
               }`}
             >
               {title}
@@ -206,10 +206,10 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
           <span 
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
               status === "pending" 
-                ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" 
+                ? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300" 
                 : status === "current"
-                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                  : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200"
+                  : "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200"
             }`}
           >
             {status === "pending" 
@@ -229,7 +229,7 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
               exit="exit"
               className="mt-3"
             >
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
                 {description.split('\n').map((item, idx) => (
                   <motion.li 
                     key={idx} 
@@ -238,7 +238,7 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.2, delay: idx * 0.1 }}
                   >
-                    <BiRightArrowAlt className="flex-shrink-0 mt-0.5 mr-1.5 text-blue-500 dark:text-blue-400" />
+                    <BiRightArrowAlt className="flex-shrink-0 mt-0.5 mr-1.5 text-blue-600 dark:text-blue-400" />
                     {item}
                   </motion.li>
                 ))}
@@ -247,10 +247,10 @@ const RoadmapItem = ({ title, description, duration, index, active, setActive, t
               <button 
                 className={`mt-4 inline-flex items-center text-xs font-medium px-3 py-1 rounded-full transition-all ${
                   status === "pending" 
-                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" 
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700" 
                     : status === "current"
-                      ? "bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-800/60"
-                      : "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300 dark:hover:bg-green-800/60"
+                      ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-200 dark:hover:bg-blue-800/60"
+                      : "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-200 dark:hover:bg-green-800/60"
                 }`}
               >
                 Chi tiết <GoArrowRight className="ml-1" />
