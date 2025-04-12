@@ -1,15 +1,23 @@
-export const metadata = {
-  title: "TopUni HOCMAI - Luyện thi Đại học 2k8",
-  description: "Luyện thi đại học toàn diện cho học sinh 2k8 - Chuyên biệt cho kỳ thi ĐGNL, ĐGTD và Tốt nghiệp THPT"
-};
+"use client";
+import { useEffect, useState } from 'react';
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: 'swap',
+});
 
 export default function TopuniLayout({ children }) {
-  // Sử dụng layout riêng, không dùng layout chung với sidebar
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
-    <html lang="vi" className="scroll-smooth">
-      <body className="font-sans antialiased">
-        {children}
-      </body>
-    </html>
+    <div className={poppins.className}>
+      {children}
+    </div>
   );
 } 

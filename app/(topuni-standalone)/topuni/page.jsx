@@ -2,19 +2,12 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Poppins } from "next/font/google";
-import { Button } from "@/app/_components/ui/button";
-import { Input } from "@/app/_components/ui/input";
 import CountdownTimer from "./components/CountdownTimer";
 import TeacherCard from "./components/TeacherCard";
 import StudentReview from "./components/StudentReview";
 import RoadmapItem from "./components/RoadmapItem";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: 'swap',
-});
+import { Button } from "@/app/_components/ui/button";
+import { Input } from "@/app/_components/ui/input";
 
 export default function TopuniPage() {
   const [name, setName] = useState("");
@@ -110,7 +103,7 @@ export default function TopuniPage() {
   }, []);
 
   return (
-    <div className={`${poppins.className} bg-white min-h-screen`}>
+    <div className="bg-white min-h-screen">
       <style jsx global>{`
         @keyframes fadeIn {
           from { opacity: 0; }
