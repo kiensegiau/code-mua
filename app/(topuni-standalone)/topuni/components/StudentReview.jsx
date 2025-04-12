@@ -4,6 +4,18 @@ import Image from 'next/image';
 
 const StudentReview = ({ name, school, score, examType, avatar }) => {
   const [isClient, setIsClient] = useState(false);
+  
+  // Hàm an toàn encode base64 cho chuỗi Unicode
+  const safeBase64Encode = (str) => {
+    // Lấy viết tắt tên người dùng một cách an toàn
+    const initials = name?.split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('') || 'HS';
+    
+    // Dùng SVG cố định thay vì tạo động với btoa
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23777'/%3E%3Ctext x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='middle' fill='white'%3E${initials}%3C/text%3E%3C/svg%3E`;
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -21,18 +33,26 @@ const StudentReview = ({ name, school, score, examType, avatar }) => {
         <div className="flex items-center gap-4 mb-6">
           <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-red-500 ring-offset-2">
             {isClient ? (
-              <Image 
-                src={avatar || '/placeholder.jpg'} 
-                alt={name}
-                fill
-                className="object-cover"
-                onError={(e) => {
-                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNzc3Ii8+PHRleHQgeD0iODAiIHk9IjgwIiBmb250LXNpemU9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0id2hpdGUiPkhTPC90ZXh0Pjwvc3ZnPg==';
-                }}
-              />
+              avatar ? (
+                <Image 
+                  src={avatar}
+                  alt={name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div 
+                  className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold"
+                  style={{ 
+                    backgroundImage: `url("${safeBase64Encode(name)}")`,
+                    backgroundSize: 'cover'
+                  }}
+                >
+                </div>
+              )
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold">
-                {name?.split(' ').map(n => n[0]).join('') || 'HS'}
+                {name?.split(' ').slice(0, 2).map(n => n[0]).join('') || 'HS'}
               </div>
             )}
           </div>
