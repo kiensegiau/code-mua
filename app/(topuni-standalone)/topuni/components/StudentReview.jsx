@@ -1,156 +1,387 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AiFillStar } from 'react-icons/ai';
+import { FaQuoteLeft, FaQuoteRight, FaGraduationCap, FaUniversity, FaAward } from 'react-icons/fa';
+import { LuExternalLink } from 'react-icons/lu';
+import { TbSchool } from 'react-icons/tb';
 
-const StudentReview = ({ name, school, score, examType, avatar }) => {
+// Dữ liệu học viên tiêu biểu
+const REVIEWS_DATA = [
+  {
+    id: 1,
+    name: "Minh Nguyễn",
+    avatar: null,
+    program: "Cử nhân Quản trị Kinh doanh",
+    stars: 5,
+    text: "TopUni đã giúp tôi đạt được điểm IELTS 7.5 và được nhận vào chương trình học bổng toàn phần tại Đại học Cambridge. Đội ngũ giảng viên tại đây thực sự chuyên nghiệp và tận tâm!",
+    university: "Cambridge University",
+    graduationYear: 2023,
+    achievement: "Học bổng toàn phần"
+  },
+  {
+    id: 2,
+    name: "Hương Trần",
+    avatar: null,
+    program: "Thạc sĩ Khoa học Máy tính",
+    stars: 5,
+    text: "Tôi đã tham gia khóa học chuẩn bị hồ sơ du học của TopUni và được nhận vào MIT với học bổng một phần. Các mentors ở đây không chỉ giỏi chuyên môn mà còn rất tâm lý, hỗ trợ tôi trong suốt quá trình ứng tuyển.",
+    university: "Massachusetts Institute of Technology",
+    graduationYear: 2022,
+    achievement: "Học bổng 75% học phí"
+  },
+  {
+    id: 3,
+    name: "Tuấn Anh",
+    avatar: null,
+    program: "Cử nhân Tài chính",
+    stars: 4,
+    text: "TopUni đã giúp tôi định hướng rõ ràng hơn về con đường học tập và nghề nghiệp. Nhờ sự hướng dẫn từ đội ngũ tư vấn, tôi đã chuẩn bị hồ sơ thành công và nhận được offer từ LSE.",
+    university: "London School of Economics",
+    graduationYear: 2021,
+    achievement: "Được nhận vào trường top 5 thế giới"
+  }
+];
+
+const StudentReview = () => {
   const [isClient, setIsClient] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const quoteRef = useRef(null);
-  
-  // Hàm an toàn encode base64 cho chuỗi Unicode
-  const safeBase64Encode = (str) => {
-    // Lấy viết tắt tên người dùng một cách an toàn
-    const initials = name?.split(' ')
-      .map(n => n[0])
-      .slice(0, 2)
-      .join('') || 'HS';
-    
-    // Dùng SVG cố định thay vì tạo động với btoa
-    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23777'/%3E%3Ctext x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='middle' fill='white'%3E${initials}%3C/text%3E%3C/svg%3E`;
+  const intervalRef = useRef(null);
+  const reviewsRef = useRef(null);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+    exit: { opacity: 0, transition: { staggerChildren: 0.05, staggerDirection: -1 } }
   };
 
+  const childVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.2 } }
+  };
+
+  const quoteVariants = {
+    hidden: { opacity: 0, scale: 0 },
+    visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 200, delay: 0.2 } }
+  };
+
+  // Implement auto-scroll
   useEffect(() => {
     setIsClient(true);
+    startAutoRotate();
+    window.addEventListener('scroll', handleScroll);
     
-    // Thêm hiệu ứng typing cho quote khi component mount
-    if (quoteRef.current) {
-      quoteRef.current.classList.add('typing-effect');
-    }
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
-  // Tránh hydration mismatch bằng cách không render nội dung phức tạp cho đến khi client-side hydration hoàn tất
+  // Reset interval when activeIndex changes
+  useEffect(() => {
+    if (isHovered) return;
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    startAutoRotate();
+  }, [activeIndex, isHovered]);
+
+  const startAutoRotate = () => {
+    intervalRef.current = setInterval(() => {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % REVIEWS_DATA.length);
+    }, 5000); // Rotate every 5 seconds
+  };
+
+  const handleScroll = () => {
+    // Temporarily pause auto-rotation while scrolling
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    // Resume after a delay
+    setTimeout(() => {
+      if (!isHovered) {
+        startAutoRotate();
+      }
+    }, 2000);
+  };
+
+  const handleReviewHover = (isHovering) => {
+    setIsHovered(isHovering);
+    
+    if (isHovering) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    } else {
+      startAutoRotate();
+    }
+  };
+
+  const handleDotClick = (index) => {
+    setActiveIndex(index);
+  };
+
+  // Placeholder for when component first loads (pre-hydration)
   if (!isClient) {
-    return <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-8 h-[300px] flex items-center justify-center">
-      <div className="animate-pulse w-3/4 h-4 bg-gray-200 rounded"></div>
-    </div>;
-  }
-
-  return (
-    <div 
-      className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-500 transform border border-gray-100 ${isHovered ? 'shadow-2xl -translate-y-2 border-red-100' : ''}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="p-8 relative">
-        {/* Background decoration */}
-        <div className={`absolute right-0 top-0 w-24 h-24 bg-gradient-to-bl from-red-50 to-transparent rounded-bl-3xl transition-all duration-500 ${isHovered ? 'scale-125' : ''}`}></div>
-        
-        <div className="absolute top-4 right-4 z-10">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={`text-red-50 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-80'}`}>
-            <path d="M12.92 6C9.16 7.92 6.44 10.72 4.76 14.4C3.08 18 2.24 22 2.24 26.4C2.24 31.12 3.48 35.36 5.96 39.12C8.52 42.8 12.04 45.36 16.52 46.8L18.64 42.96C15.08 41.76 12.24 39.68 10.12 36.72C8.08 33.76 7.06 30.32 7.06 26.4C7.06 23.2 7.66 20.24 8.86 17.52C10.14 14.8 12.12 12.16 14.8 9.6L12.92 6ZM36.92 6C33.16 7.92 30.44 10.72 28.76 14.4C27.08 18 26.24 22 26.24 26.4C26.24 31.12 27.48 35.36 29.96 39.12C32.52 42.8 36.04 45.36 40.52 46.8L42.64 42.96C39.08 41.76 36.24 39.68 34.12 36.72C32.08 33.76 31.06 30.32 31.06 26.4C31.06 23.2 31.66 20.24 32.86 17.52C34.14 14.8 36.12 12.16 38.8 9.6L36.92 6Z" fill="currentColor"/>
-          </svg>
-        </div>
-
-        <div className="flex items-center gap-4 mb-6 relative z-10">
-          <div className={`relative w-16 h-16 rounded-full overflow-hidden transition-all duration-500 ${isHovered ? 'ring-3 ring-red-500 ring-offset-3 shadow-lg' : 'ring-2 ring-red-500 ring-offset-2'}`}>
-            {avatar ? (
-              <Image 
-                src={avatar}
-                alt={name}
-                fill
-                className={`object-cover transition-transform duration-700 ${isHovered ? 'scale-110' : ''}`}
-              />
-            ) : (
-              <div 
-                className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold"
-                style={{ 
-                  backgroundImage: `url("${safeBase64Encode(name)}")`,
-                  backgroundSize: 'cover'
-                }}
-              >
-              </div>
-            )}
-            {isHovered && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-            )}
-          </div>
-          <div>
-            <h3 className={`font-bold text-xl text-gray-900 transition-all duration-300 ${isHovered ? 'text-red-600' : ''}`}>{name}</h3>
-            <p className="text-gray-600 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 transition-colors duration-300 ${isHovered ? 'text-red-600' : 'text-red-500'}`} viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-              </svg>
-              {school}
-            </p>
-          </div>
-        </div>
-        
-        <div className={`bg-gradient-to-r from-blue-50 to-red-50 p-4 rounded-lg mb-6 border transition-all duration-300 relative overflow-hidden ${isHovered ? 'border-red-200 shadow-md' : 'border-gray-100'}`}>
-          {isHovered && <div className="absolute inset-0 bg-gradient-to-r from-blue-100/30 to-red-100/30 animate-pulse"></div>}
-          <div className="flex items-center justify-between relative z-10">
-            <span className="text-gray-600 text-sm font-medium">{examType}</span>
-            <div className={`bg-gradient-to-r transition-all duration-500 text-white rounded-full px-4 py-1.5 font-bold shadow-md ${isHovered ? 'from-red-500 to-red-600 scale-110' : 'from-red-600 to-red-700'}`}>
-              {score}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-1 mb-4">
-          {[1, 2, 3, 4, 5].map((star, index) => (
-            <svg 
-              key={star}
-              xmlns="http://www.w3.org/2000/svg" 
-              className={`h-5 w-5 transition-all duration-300 ${isHovered ? 'animate-star text-yellow-400' : 'text-yellow-500'}`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-              viewBox="0 0 20 20" 
-              fill="currentColor"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
+    return (
+      <div className="w-full max-w-5xl mx-auto p-8 rounded-2xl bg-white shadow-lg animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-6"></div>
+        <div className="h-36 bg-gray-200 rounded-xl mb-6"></div>
+        <div className="flex justify-center gap-2 mt-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-2 w-2 bg-gray-300 rounded-full"></div>
           ))}
         </div>
+      </div>
+    );
+  }
 
-        <p ref={quoteRef} className={`text-gray-700 italic relative pl-6 transition-all duration-300 ${isHovered ? 'text-gray-800' : ''}`}>
-          <span className={`absolute left-0 top-0 text-red-500 font-serif text-xl transition-all duration-300 ${isHovered ? 'text-2xl' : ''}`}>"</span>
-          HOCMAI là người đồng hành tuyệt vời giúp mình đạt được mục tiêu và đỗ vào ngôi trường mơ ước.
-          <span className={`absolute text-red-500 font-serif text-xl transition-all duration-300 ${isHovered ? 'text-2xl' : ''}`}>"</span>
-        </p>
+  // Generate random placeholder avatar when image is missing
+  const getInitialsAvatar = (name) => {
+    const initials = name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+    
+    // Generate a random pastel color based on the name
+    const hue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+    
+    // Create an SVG with the initials using a gradient fill
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:hsl(${hue}, 85%, 85%);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:hsl(${(hue + 40) % 360}, 85%, 75%);stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#grad)" rx="50" ry="50" />
+        <text x="50" y="52" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central" style="text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+          ${initials}
+        </text>
+      </svg>
+    `;
+    
+    // Convert SVG to base64 data URL - handle Unicode characters safely
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+  };
+
+  // Truy cập thông tin học viên hiện tại
+  const currentReview = REVIEWS_DATA[activeIndex];
+
+  return (
+    <motion.div 
+      className="w-full max-w-6xl mx-auto"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      ref={reviewsRef}
+    >
+      {/* Tiêu đề phần */}
+      <motion.div 
+        className="relative text-center mb-16"
+        variants={childVariants}
+      >
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-200 to-transparent transform -translate-y-1/2"></div>
+        <h2 className="relative inline-block px-6 bg-white dark:bg-slate-900 text-3xl font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
+          Học viên tiêu biểu của TopUni
+        </h2>
+      </motion.div>
+      
+      {/* Container chính */}
+      <div className="relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeIndex}
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.5 }}
+            onMouseEnter={() => handleReviewHover(true)}
+            onMouseLeave={() => handleReviewHover(false)}
+          >
+            <motion.div 
+              className="relative w-full p-8 sm:p-10 bg-white dark:bg-slate-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-slate-700"
+              whileHover={{ 
+                y: -5,
+                boxShadow: "0 25px 50px -12px rgba(79, 70, 229, 0.25)",
+              }}
+            >
+              {/* Subtle gradient backdrop */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl blur opacity-20"></div>
+              
+              {/* Background accent */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-50 dark:from-blue-900/10 to-transparent rounded-tl-3xl rounded-br-2xl z-0 opacity-70"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-indigo-50 dark:from-indigo-900/10 to-transparent rounded-br-3xl rounded-tl-2xl z-0 opacity-70"></div>
+              
+              {/* Quote marks */}
+              <motion.div 
+                className="absolute top-6 left-6 text-blue-200 dark:text-blue-800 text-4xl opacity-40"
+                variants={quoteVariants}
+              >
+                <FaQuoteLeft />
+              </motion.div>
+              
+              <motion.div 
+                className="absolute bottom-6 right-6 text-indigo-200 dark:text-indigo-800 text-4xl opacity-40"
+                variants={quoteVariants}
+              >
+                <FaQuoteRight />
+              </motion.div>
+              
+              {/* Main content */}
+              <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start">
+                {/* Avatar section with badges */}
+                <div className="flex flex-col items-center">
+                  <div className="relative">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full opacity-70 blur-[2px]"></div>
+                    <div 
+                      className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md"
+                      style={{
+                        backgroundImage: `url("${currentReview.avatar || getInitialsAvatar(currentReview.name)}")`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    ></div>
+                    
+                    {/* Achievement badge */}
+                    <div className="absolute -right-2 -bottom-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-xs px-3 py-1 rounded-full shadow-md font-bold">
+                      <FaAward className="inline mr-1" />
+                      {currentReview.achievement}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 text-center">
+                    <h3 className="font-bold text-xl text-gray-800 dark:text-white">{currentReview.name}</h3>
+                    <p className="text-sm text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center">
+                      <FaGraduationCap className="mr-1" />
+                      {currentReview.program}
+                    </p>
+                    
+                    {/* Star rating */}
+                    <div className="flex justify-center gap-1 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <AiFillStar 
+                          key={i} 
+                          className={i < currentReview.stars 
+                            ? "text-yellow-400" 
+                            : "text-gray-300 dark:text-gray-600"
+                          }
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* University badge */}
+                    <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 mt-1 mb-3">
+                      <FaUniversity className="mr-1" />
+                      {currentReview.university}
+                    </div>
+                    
+                    {/* Year badge */}
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <TbSchool className="inline mr-1" />
+                      Tốt nghiệp {currentReview.graduationYear}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Review text */}
+                <div className="flex-1 bg-gradient-to-br from-gray-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
+                  <p className="text-gray-700 dark:text-gray-300 italic leading-relaxed text-lg">
+                    {currentReview.text}
+                  </p>
+                  
+                  <div className="mt-6 flex justify-between items-center">
+                    <div className="flex items-center space-x-1">
+                      {REVIEWS_DATA.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleDotClick(index)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                            index === activeIndex
+                              ? "bg-blue-600 w-7" 
+                              : "bg-gray-300 dark:bg-gray-600 hover:bg-blue-400 dark:hover:bg-blue-700"
+                          }`}
+                          aria-label={`Xem lời chứng thực ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                    
+                    <a 
+                      href="#" 
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center transition-colors duration-300"
+                    >
+                      Xem lời chứng thực đầy đủ
+                      <LuExternalLink className="ml-1" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
         
-        {isHovered && (
-          <div className="mt-4 text-center">
-            <button className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-              Xem thêm
-            </button>
-          </div>
-        )}
+        {/* Navigation arrows - desktop only */}
+        <div className="absolute top-1/2 left-0 right-0 hidden md:flex justify-between items-center -translate-y-1/2 px-4">
+          <motion.button
+            className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-blue-600 dark:text-blue-400 border border-gray-100 dark:border-slate-700 z-10"
+            onClick={() => setActiveIndex((activeIndex - 1 + REVIEWS_DATA.length) % REVIEWS_DATA.length)}
+            whileHover={{ scale: 1.1, x: -5 }}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Xem học viên trước đó"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </motion.button>
+          
+          <motion.button
+            className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-lg flex items-center justify-center text-blue-600 dark:text-blue-400 border border-gray-100 dark:border-slate-700 z-10"
+            onClick={() => setActiveIndex((activeIndex + 1) % REVIEWS_DATA.length)}
+            whileHover={{ scale: 1.1, x: 5 }}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Xem học viên tiếp theo"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+          </motion.button>
+        </div>
       </div>
       
-      <style jsx global>{`
-        @keyframes star-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); }
-        }
-        .animate-star {
-          animation: star-pulse 1s ease-in-out infinite;
-        }
-        
-        @keyframes typing {
-          from { width: 0 }
-          to { width: 100% }
-        }
-        .typing-effect:before {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          width: 100%;
-          height: 100%;
-          background: white;
-          animation: typing 1.5s steps(40, end) forwards;
-          animation-delay: 0.5s;
-        }
-      `}</style>
-    </div>
+      {/* CTA Section */}
+      <motion.div 
+        className="mt-16 text-center"
+        variants={childVariants}
+      >
+        <div className="inline-flex justify-center mb-8">
+          <div className="h-1 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+        </div>
+        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+          Hãy trở thành một phần trong câu chuyện thành công của học viên TopUni. Đăng ký ngay hôm nay để nhận tư vấn lộ trình cá nhân hóa từ đội ngũ chuyên gia giàu kinh nghiệm của chúng tôi.
+        </p>
+        <motion.a 
+          href="#register"
+          className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+          whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(79, 70, 229, 0.4)" }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Đăng ký tư vấn miễn phí
+          <svg className="w-4 h-4 ml-2" viewBox="0 0 16 16" fill="none">
+            <path d="M6.66667 4L11.3333 8L6.66667 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </motion.a>
+      </motion.div>
+    </motion.div>
   );
 };
 

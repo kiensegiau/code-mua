@@ -8,6 +8,8 @@ import StudentReview from "./components/StudentReview";
 import RoadmapItem from "./components/RoadmapItem";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
+import { motion } from "framer-motion";
+import Footer from './components/Footer';
 
 export default function TopuniPage() {
   const [name, setName] = useState("");
@@ -84,27 +86,92 @@ export default function TopuniPage() {
     setIsModalOpen(true);
   };
 
-  // Thêm class animation fadeIn cho Modal
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+  // Hiệu ứng particles cho background
+  const particles = {
+    count: 100,
+    color: "#ff4d4f",
+    size: 2,
+    minSpeed: 0.3,
+    maxSpeed: 1
+  };
+
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
       }
-      .animate-fadeIn {
-        animation: fadeIn 0.3s ease-out forwards;
+    }
+  };
+
+  const pulse = {
+    initial: { scale: 1 },
+    animate: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse"
       }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+    }
+  };
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-gradient-to-b from-white to-gray-50 min-h-screen relative overflow-hidden">
+      {/* Background Particles */}
+      {isClient && (
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-pattern opacity-10"></div>
+          {Array.from({ length: particles.count }).map((_, index) => {
+            const size = Math.random() * particles.size + 1;
+            const speed = particles.minSpeed + Math.random() * (particles.maxSpeed - particles.minSpeed);
+            const initialLeft = Math.random() * 100;
+            const initialTop = Math.random() * 100;
+            
+            return (
+              <div
+                key={index}
+                className="absolute rounded-full bg-red-500 animate-float"
+                style={{
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  left: `${initialLeft}%`,
+                  top: `${initialTop}%`,
+                  opacity: Math.random() * 0.5 + 0.1,
+                  animationDuration: `${Math.random() * 10 + 10}s`,
+                  animationDelay: `${Math.random() * 5}s`
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+      
       <style jsx global>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+          }
+          25% {
+            transform: translateY(-30px) translateX(15px);
+          }
+          50% {
+            transform: translateY(-15px) translateX(-15px);
+          }
+          75% {
+            transform: translateY(-25px) translateX(10px);
+          }
+        }
+        .animate-float {
+          animation: float linear infinite;
+        }
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -113,20 +180,44 @@ export default function TopuniPage() {
           animation: fadeIn 0.3s ease-out forwards;
         }
         .bg-pattern {
-          background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+          background-image: radial-gradient(circle, rgba(255,77,79,0.1) 1px, transparent 1px);
           background-size: 20px 20px;
         }
+        .glass-card {
+          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .text-gradient {
+          background: linear-gradient(to right, #ff4d4f, #f5222d);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .bg-gradient-red {
+          background: linear-gradient(135deg, #ff4d4f 0%, #f5222d 100%);
+        }
+        .floating {
+          animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
       `}</style>
+      
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-md">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-100">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="w-[150px] h-[40px] bg-red-600 flex items-center justify-center text-white font-bold mr-4">
+          <div className="flex items-center gap-4">
+            <div className="w-[150px] h-[45px] bg-gradient-to-r from-red-600 to-red-500 flex items-center justify-center text-white font-bold rounded-md shadow-md">
               HOCMAI
             </div>
-            <span className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-700">TopUni</span>
+            <div className="h-6 w-0.5 bg-gray-200 hidden md:block"></div>
+            <span className="font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-700 transition-transform duration-300 cursor-pointer">TopUni</span>
           </div>
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex space-x-10">
             <Link href="#roadmap" className="font-medium hover:text-red-600 transition relative group py-2">
               Lộ trình
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
@@ -144,62 +235,183 @@ export default function TopuniPage() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </nav>
-          <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 font-medium shadow-lg hover:shadow-xl transition-all duration-300 rounded-full">
-            Đăng ký ngay
-          </Button>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 font-medium shadow-lg hover:shadow-xl transition-all duration-300 rounded-full px-6">
+              Đăng ký ngay
+            </Button>
+          </motion.div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-24">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-800 to-red-800 z-0"></div>
+      <section className="relative overflow-hidden py-24 lg:py-28">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-indigo-900 to-red-900 z-0 opacity-95"></div>
+        <div className="absolute inset-0 bg-[url('/images/pattern.png')] opacity-10 z-0 mix-blend-overlay"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white font-medium mb-6 animate-pulse">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeIn}
+            >
+              <motion.div 
+                className="inline-block px-5 py-2 bg-white/15 backdrop-blur-md rounded-full text-white font-medium mb-8 border border-white/10"
+                animate={{ 
+                  opacity: [0.7, 1, 0.7],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
                 Đợt cuối tuyển sinh 2K8
-              </div>
-              <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold mb-6 text-white leading-tight">
+              </motion.div>
+              <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold mb-8 text-white leading-tight tracking-tight">
                 Luyện thi Đại học <br />
-                <span className="relative inline-block text-yellow-400">
+                <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">
                   2K8 xuất phát ngay!
-                  <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 358 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <motion.svg 
+                    className="absolute -bottom-2 left-0 w-full" 
+                    viewBox="0 0 358 12" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  >
                     <path d="M3 9C118.957 4.47226 236.066 3.86015 355 9" stroke="#FCD34D" strokeWidth="5" strokeLinecap="round"/>
-                  </svg>
+                  </motion.svg>
                 </span>
               </h1>
-              <p className="text-xl mb-8 text-gray-100 leading-relaxed">
+              <p className="text-xl mb-10 text-gray-100 leading-relaxed max-w-xl">
                 Chiến lược ôn thi đột phá giúp học sinh 2k8 chinh phục trường đại học top đầu với phương pháp học hiệu quả
               </p>
-              <div className="bg-white/10 backdrop-blur-sm p-8 rounded-xl mb-8 border border-white/20">
+              <motion.div 
+                className="bg-white/15 backdrop-blur-lg p-8 rounded-2xl mb-10 border border-white/20 shadow-xl"
+                variants={pulse}
+                initial="initial"
+                animate="animate"
+              >
                 <h3 className="text-xl font-bold mb-4 text-white">ĐẶT CHỖ SỚM - ƯU ĐÃI LỚN</h3>
-                <p className="mb-6 text-yellow-200 font-medium">DÀNH CHO {100 - remainingSeats} / 100 HỌC SINH ĐẶT CHỖ SỚM NHẤT</p>
-                <CountdownTimer days={3} hours={12} minutes={30} seconds={0} />
-              </div>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse"></div>
+                  <p className="text-yellow-200 font-medium">DÀNH CHO {100 - remainingSeats} / 100 HỌC SINH ĐẶT CHỖ SỚM NHẤT</p>
+                </div>
+                
+                <CountdownTimer 
+                  title="Thời gian ưu đãi còn lại" 
+                  targetDate={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000 + 30 * 60 * 1000)} 
+                  expiredMessage="Ưu đãi đã kết thúc!" 
+                />
+              </motion.div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button className="bg-red-600 hover:bg-red-700 py-3 px-8 text-lg rounded-full shadow-lg hover:shadow-xl hover:shadow-red-700/20 transition-all duration-300 hover:-translate-y-1">
-                  Đăng ký ngay
-                </Button>
-                <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 py-3 px-8 text-lg rounded-full transition-all duration-300 hover:-translate-y-1">
-                  Tư vấn lộ trình
-                </Button>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button className="bg-red-600 hover:bg-red-700 py-3 px-8 text-lg rounded-full shadow-xl hover:shadow-2xl hover:shadow-red-700/20 transition-all duration-300 w-full sm:w-auto">
+                    Đăng ký ngay
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white/15 py-3 px-8 text-lg rounded-full transition-all duration-300 w-full sm:w-auto">
+                    Tư vấn lộ trình
+                  </Button>
+                </motion.div>
               </div>
-            </div>
-            <div className="relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-blue-600 rounded-xl blur-md opacity-70"></div>
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-900 to-red-900 p-1">
-                <div className="w-full h-[500px] bg-gray-800 flex items-center justify-center text-white">
-                  <div className="text-center">
-                    <div className="text-4xl font-bold mb-4">2K8</div>
-                    <div className="text-xl">Chinh phục đại học</div>
-                  </div>
-                </div>
-                <div className="absolute bottom-4 left-4 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-full shadow-lg">
+            </motion.div>
+            
+            <motion.div 
+              className="relative"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-blue-600 rounded-2xl blur-xl opacity-70 animate-pulse"></div>
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-blue-600 rounded-xl blur-xl opacity-70 animate-pulse"></div>
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-900 to-red-900 p-1 shadow-2xl">
+                <motion.div 
+                  className="w-full h-[500px] bg-gray-800 flex items-center justify-center text-white overflow-hidden"
+                  initial="hidden"
+                  animate="visible"
+                  variants={staggerContainer}
+                >
+                  {/* Dynamic particle background */}
+                  {isClient && Array.from({ length: 30 }).map((_, index) => {
+                    const size = Math.random() * 5 + 2;
+                    const delay = Math.random() * 5;
+                    const duration = Math.random() * 20 + 10;
+                    const initialX = Math.random() * 100;
+                    const initialY = Math.random() * 100;
+                    
+                    return (
+                      <div
+                        key={`particle-${index}`}
+                        className="absolute rounded-full bg-white/20"
+                        style={{
+                          width: `${size}px`,
+                          height: `${size}px`,
+                          left: `${initialX}%`,
+                          top: `${initialY}%`,
+                          animation: `floatParticle ${duration}s linear infinite`,
+                          animationDelay: `${delay}s`
+                        }}
+                      />
+                    );
+                  })}
+                  
+                  <motion.div 
+                    className="text-center relative z-10"
+                    variants={fadeIn}
+                  >
+                    <motion.div 
+                      className="text-6xl font-bold mb-4"
+                      animate={{ 
+                        scale: [1, 1.1, 1],
+                        textShadow: ["0 0 10px rgba(255,255,255,0.5)", "0 0 20px rgba(255,255,255,0.8)", "0 0 10px rgba(255,255,255,0.5)"]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    >
+                      2K8
+                    </motion.div>
+                    <motion.div 
+                      className="text-2xl"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, duration: 0.6 }}
+                    >
+                      Chinh phục đại học
+                    </motion.div>
+                  </motion.div>
+                </motion.div>
+                <motion.div 
+                  className="absolute bottom-4 left-4 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-full shadow-lg"
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    boxShadow: ["0 10px 25px -5px rgba(239, 68, 68, 0.4)", "0 20px 25px -5px rgba(239, 68, 68, 0.7)", "0 10px 25px -5px rgba(239, 68, 68, 0.4)"]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                >
                   <p className="font-bold text-sm">Sắp hết, chỉ còn {remainingSeats} suất!</p>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -464,7 +676,11 @@ export default function TopuniPage() {
                   GIẢM GIÁ ĐẾN 30% CHỈ TRONG HÔM NAY
                 </div>
               </div>
-              <CountdownTimer days={3} hours={12} minutes={30} seconds={0} />
+              <CountdownTimer 
+                title="Thời gian ưu đãi còn lại" 
+                targetDate={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000 + 30 * 60 * 1000)} 
+                expiredMessage="Ưu đãi đã kết thúc!" 
+              />
             </div>
             
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
@@ -623,100 +839,7 @@ export default function TopuniPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white pt-16 pb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 opacity-10">
-          <svg width="400" height="400" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="40" fill="white" />
-          </svg>
-        </div>
-        <div className="absolute bottom-0 left-0 opacity-10">
-          <svg width="300" height="300" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <rect width="70" height="70" x="15" y="15" fill="white" />
-          </svg>
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-3 gap-12">
-            <div>
-              <div className="mb-8">
-                <div className="w-[150px] h-[40px] bg-red-600 text-white flex items-center justify-center font-bold mb-4">
-                  HOCMAI
-                </div>
-                <h3 className="text-2xl font-bold mb-4">HOCMAI</h3>
-                <p className="text-gray-400 mb-4">Nền tảng học trực tuyến số 1 Việt Nam<br />Đồng hành cùng hàng nghìn sĩ tử chinh phục ĐH TOP mỗi năm</p>
-              </div>
-              
-              <div className="flex space-x-4 mb-6">
-                <a href="#" className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center hover:bg-blue-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
-                  </svg>
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center hover:bg-blue-500 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
-                  </svg>
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center hover:bg-pink-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                  </svg>
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-700 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Văn phòng Hà Nội
-              </h3>
-              <p className="text-gray-400 mb-4 pl-7">Tòa 25T1 Nguyễn Thị Thâp, Phường Trung Hòa, Quận Cầu Giấy</p>
-              
-              <h3 className="text-xl font-bold mb-6 mt-8 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Email liên hệ
-              </h3>
-              <p className="text-gray-400 mb-2 pl-7">hotro@hocmai.vn</p>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-bold mb-6 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Văn phòng Hồ Chí Minh
-              </h3>
-              <p className="text-gray-400 mb-4 pl-7">Lầu 8, Tòa nhà Giày Việt Plaza 180-182 Lý Chính Thắng P9, Q3, TP. Hồ Chí Minh</p>
-              
-              <h3 className="text-xl font-bold mb-6 mt-8 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                Hotline
-              </h3>
-              <p className="text-gray-400 mb-2 pl-7">0967.180.038 / 0901.726.798</p>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
-            <p className="mb-2">Giấy phép cung cấp dịch vụ mạng xã hội trực tuyến số 597/GP-BTTTT Bộ Thông tin và Truyền thông cấp ngày 30/12/2016.</p>
-            <p className="mb-2">Cơ quan chủ quản: Công ty Cổ phần Đầu tư và Dịch vụ Giáo dục</p>
-            <p>MST: 0102183602 do Sở kế hoạch và Đầu tư thành phố Hà Nội cấp ngày 13 tháng 03 năm 2007</p>
-            <p className="mt-4 text-sm">© 2024 HOCMAI. Tất cả quyền được bảo lưu.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Đăng ký thành công modal */}
       {isModalOpen && (

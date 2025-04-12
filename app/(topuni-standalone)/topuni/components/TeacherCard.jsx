@@ -1,160 +1,200 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import { motion } from 'framer-motion';
+import { FaStar, FaQuoteLeft, FaQuoteRight, FaChalkboardTeacher } from 'react-icons/fa';
+import { FiUser } from 'react-icons/fi';
 
-export default function TeacherCard({ name, image, achievement, description }) {
+const TeacherCard = ({ name, image, achievement, description }) => {
   const [isClient, setIsClient] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isActive, setIsActive] = useState(false);
-  const [stars, setStars] = useState(Array(5).fill(0).map((_, i) => i < 5));
-
-  const safeBase64Encode = (str) => {
-    // Lấy viết tắt tên người dùng một cách an toàn
-    const initials = name?.split(' ')
-      .map(n => n[0])
-      .slice(0, 2)
-      .join('') || 'GV';
-    
-    // Dùng SVG cố định thay vì tạo động với btoa
-    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23777'/%3E%3Ctext x='50%25' y='50%25' font-size='20' text-anchor='middle' dominant-baseline='middle' fill='white'%3E${initials}%3C/text%3E%3C/svg%3E`;
-  };
 
   useEffect(() => {
     setIsClient(true);
-    
-    // Hiệu ứng xuất hiện khi component load
-    const timer = setTimeout(() => {
-      setIsActive(true);
-    }, 300);
-    
-    return () => clearTimeout(timer);
   }, []);
 
-  // Tạo initials từ tên giáo viên
-  const getInitials = (name) => {
-    return name
+  // Generate avatar từ tên
+  const getInitialsAvatar = (name) => {
+    const initials = name
       .split(' ')
-      .map((n) => n[0])
-      .join('');
+      .map(word => word[0])
+      .slice(-2) // Lấy 2 chữ cái cuối (thường là tên)
+      .join('')
+      .toUpperCase();
+    
+    // Generate a random pastel color based on the name
+    const hue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+    const color = `hsl(${hue}, 85%, 85%)`;
+    
+    // Create an SVG with the initials
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${color};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:hsl(${(hue + 40) % 360}, 85%, 75%);stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#grad)" rx="50" ry="50" />
+        <text x="50" y="52" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central" style="text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+          ${initials}
+        </text>
+      </svg>
+    `;
+    
+    // Convert SVG to base64 data URL - handle Unicode characters safely
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+  };
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
   };
 
-  // Tránh hydration mismatch bằng cách không render nội dung phức tạp cho đến khi client-side hydration hoàn tất
+  // Placeholder when not client-side rendered
   if (!isClient) {
-    return <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-8 h-[300px] flex items-center justify-center">
-      <div className="animate-pulse w-3/4 h-4 bg-gray-200 rounded"></div>
-    </div>;
+    return (
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse h-[400px]">
+        <div className="h-full w-full flex items-center justify-center bg-gray-50">
+          <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div
-      className={`rounded-xl overflow-hidden shadow-lg transition-all duration-500 bg-white border border-gray-100 transform ${
-        isActive ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-      } ${isHovered ? 'shadow-2xl -translate-y-2 border-blue-100' : ''}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <motion.div 
+      className="h-full"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={containerVariants}
     >
-      <div className="relative h-64 bg-gradient-to-r from-indigo-100 to-blue-100 overflow-hidden">
-        {isClient ? (
-          image ? (
-            <div className="relative w-full h-full">
-              <Image
-                src={image}
-                fill
-                alt={name}
-                className={`object-cover transition-all duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.style.display = 'none';
-                  e.target.parentNode.style.backgroundColor = '#4F46E5';
-                  e.target.parentNode.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white text-5xl font-bold">${getInitials(name)}</div>`;
-                }}
-              />
-              {isHovered && (
-                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/70 to-transparent flex items-end justify-center pb-6">
-                  <div className="text-white text-center">
-                    <span className="bg-indigo-600 text-xs px-3 py-1 rounded-full uppercase font-bold tracking-wide inline-block animate-pulse">
-                      Giáo viên 5 sao
-                    </span>
-                  </div>
+      <div className="relative h-full">
+        {/* Subtle gradient backdrop for the card */}
+        <div className={`absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl blur opacity-60 transition-opacity duration-500 ${isHovered ? 'opacity-80' : 'opacity-60'}`}></div>
+        
+        <div 
+          className={`relative h-full flex flex-col bg-white dark:bg-slate-800 rounded-2xl transition-all duration-500 ${isHovered ? 'shadow-xl translate-y-[-8px] shadow-indigo-500/20' : 'shadow-lg'}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Card top accent */}
+          <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-2xl"></div>
+          
+          <div className="p-6 sm:p-8 flex-1 flex flex-col">
+            {/* Teacher info section */}
+            <div className="flex items-start gap-5 mb-6">
+              {/* Avatar with subtle shadow */}
+              <div className="relative flex-shrink-0">
+                <div className={`absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full ${isHovered ? 'opacity-90 blur-sm' : 'opacity-70 blur-[2px]'} transition-all duration-300`}></div>
+                <div 
+                  className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-inner"
+                  style={{
+                    backgroundImage: `url("${image || getInitialsAvatar(name)}")`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                >
+                  {/* Overlay on hover */}
+                  {isHovered && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end justify-center"
+                    >
+                      <div className="text-white text-xs font-medium pb-2 flex items-center">
+                        <FiUser className="mr-1" />
+                        Profile
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="relative w-full h-full flex items-center justify-center bg-indigo-600">
-              <div className={`text-6xl font-bold text-white transform transition-all duration-500 ${isHovered ? 'scale-125' : ''}`}>
-                {getInitials(name)}
               </div>
-              {isHovered && (
-                <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/70 to-transparent"></div>
-              )}
+              
+              <div className="flex-1">
+                <h3 className={`text-xl font-bold mb-1 transition-all duration-300 ${isHovered ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-800 dark:text-white'}`}>
+                  {name}
+                </h3>
+                
+                {/* Rating stars with animation */}
+                <div className="flex space-x-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ scale: 1 }}
+                      animate={{ 
+                        scale: isHovered ? [1, 1.2, 1] : 1,
+                      }}
+                      transition={{ 
+                        duration: 0.4, 
+                        delay: i * 0.06,
+                        repeat: isHovered ? Infinity : 0,
+                        repeatDelay: 2
+                      }}
+                    >
+                      <FaStar 
+                        className="text-yellow-400 w-4 h-4"
+                      />
+                    </motion.div>
+                  ))}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 mt-0.5">(5.0)</span>
+                </div>
+                
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                    <FaChalkboardTeacher className="mr-1" />
+                    Giáo viên
+                  </span>
+                  <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{achievement}</p>
+                </div>
+              </div>
             </div>
-          )
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-indigo-600">
-            <div className="text-6xl font-bold text-white">{getInitials(name)}</div>
-          </div>
-        )}
-        
-        {/* Floating Decorative Elements that move on hover */}
-        <div className={`absolute right-2 top-2 w-8 h-8 rounded-full bg-blue-400/20 backdrop-blur-sm transition-all duration-700 ${isHovered ? 'transform translate-x-3 -translate-y-1 scale-150' : ''}`}></div>
-        <div className={`absolute left-3 bottom-6 w-5 h-5 rounded-full bg-indigo-400/20 backdrop-blur-sm transition-all duration-700 ${isHovered ? 'transform -translate-x-2 translate-y-3 scale-150' : ''}`}></div>
-      </div>
-
-      <div className="p-6 relative overflow-hidden">
-        {/* Decorative background line */}
-        <div className={`absolute right-0 bottom-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mb-16 transition-all duration-500 ${isHovered ? 'scale-125' : ''}`}></div>
-        
-        <div className="relative z-10">
-          <h3 className={`text-xl font-bold mb-3 transition-all duration-300 ${isHovered ? 'text-indigo-700' : 'text-gray-800'}`}>
-            {name}
-          </h3>
-          
-          <div className={`inline-block px-2 py-1 rounded-md text-xs font-semibold mb-3 transition-all duration-300 ${isHovered ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-indigo-600'}`}>
-            {achievement.split(',')[0]}
-          </div>
-          
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{description}</p>
-          
-          <div className="flex items-center space-x-1 mb-4">
-            {stars.map((isFilled, index) => (
-              <svg 
-                key={index}
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-4 w-4 ${isFilled ? 'text-yellow-400 animate-star' : 'text-yellow-500'}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-                viewBox="0 0 20 20" 
-                fill="currentColor"
+            
+            {/* Quote/Description with elegant styling */}
+            <div className="relative flex-1 flex flex-col justify-center">
+              <div className="bg-gradient-to-br from-gray-50 to-white dark:from-slate-800 dark:to-slate-900 flex-1 p-5 rounded-xl border border-gray-100 dark:border-slate-700 mt-2">
+                <FaQuoteLeft className="absolute text-indigo-200 dark:text-indigo-800 w-5 h-5 opacity-80 top-2 left-3" />
+                
+                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed px-5 pb-1">
+                  {description}
+                </p>
+                
+                <FaQuoteRight className="absolute text-indigo-200 dark:text-indigo-800 w-5 h-5 opacity-80 bottom-2 right-3" />
+              </div>
+            </div>
+            
+            {/* Footer with call-to-action */}
+            <div className="mt-6 flex justify-between items-center">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center">
+                <svg className="w-3 h-3 mr-1 text-indigo-500" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 0L7.854 4.146L12 6L7.854 7.854L6 12L4.146 7.854L0 6L4.146 4.146L6 0Z" fill="currentColor"/>
+                </svg>
+                TopUni Expert
+              </span>
+              
+              <motion.button 
+                className="px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
+                Xem profile
+                <svg className="w-3 h-3 ml-1" viewBox="0 0 16 16" fill="none">
+                  <path d="M6.66667 4L11.3333 8L6.66667 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
-      
-      <div className={`transition-all duration-500 relative overflow-hidden ${isHovered ? 'h-14' : 'h-12'}`}>
-        <div className={`absolute inset-0 transition-all duration-500 ${isHovered ? 'opacity-0' : 'opacity-100'} bg-indigo-100 p-3 flex justify-center`}>
-          <span className="text-indigo-700 font-medium">Xem thông tin</span>
-        </div>
-        <div className={`absolute inset-0 transition-all duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'} bg-gradient-to-r from-indigo-600 to-blue-600 p-3 flex justify-center`}>
-          <span className="text-white font-medium flex items-center">
-            <span>Xem chi tiết</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </span>
-        </div>
-      </div>
-      
-      <style jsx global>{`
-        @keyframes star-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); }
-        }
-        .animate-star {
-          animation: star-pulse 1s ease-in-out infinite;
-        }
-      `}</style>
-    </div>
+    </motion.div>
   );
-} 
+};
+
+export default TeacherCard; 

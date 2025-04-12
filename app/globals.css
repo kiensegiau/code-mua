@@ -838,6 +838,27 @@ select {
   box-shadow: var(--card-shadow) !important;
 }
 
+/* Grid pattern backgrounds */
+.bg-grid-pattern {
+  background-size: 30px 30px;
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+[data-theme="dark"] .bg-grid-pattern {
+  background-size: 30px 30px;
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
 /* Cải thiện màu trắng trong welcome banner cho theme sáng */
 [data-theme="light"] .WelcomeBanner {
   --welcome-bg-from: #ffffff;

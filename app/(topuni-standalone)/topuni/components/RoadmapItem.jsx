@@ -1,137 +1,265 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaChevronRight, FaCheckCircle, FaRegCircle, FaInfoCircle } from 'react-icons/fa';
+import { IoTimeOutline, IoPeople, IoSchool, IoDocumentText } from 'react-icons/io5';
+import { GoArrowRight } from 'react-icons/go';
+import { BiRightArrowAlt } from 'react-icons/bi';
 
-const RoadmapItem = ({ title, description, color }) => {
+const RoadmapItem = ({ title, description, duration, index, active, setActive, total, icon }) => {
+  const [isClient, setIsClient] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [steps] = useState(description.split('\n'));
-  
+  const itemRef = useRef(null);
+  const contentRef = useRef(null);
+
   useEffect(() => {
-    setIsClient(true);
-    
-    // Thêm hiệu ứng xuất hiện
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 300);
-    
+    const timer = setTimeout(() => setIsClient(true), 0);
     return () => clearTimeout(timer);
   }, []);
 
-  const colorMap = {
-    blue: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-100',
-      hoverBorder: 'border-blue-300',
-      text: 'text-blue-700',
-      gradientFrom: 'from-blue-400',
-      gradientTo: 'to-blue-600',
-      numberBg: 'bg-blue-100',
-      numberText: 'text-blue-600',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    green: {
-      bg: 'bg-green-50',
-      border: 'border-green-100',
-      hoverBorder: 'border-green-300',
-      text: 'text-green-700',
-      gradientFrom: 'from-green-400',
-      gradientTo: 'to-green-600',
-      numberBg: 'bg-green-100',
-      numberText: 'text-green-600',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      )
-    },
-    red: {
-      bg: 'bg-red-50',
-      border: 'border-red-100',
-      hoverBorder: 'border-red-300',
-      text: 'text-red-700',
-      gradientFrom: 'from-red-400',
-      gradientTo: 'to-red-600',
-      numberBg: 'bg-red-100',
-      numberText: 'text-red-600',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-      )
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.3 }
+    );
+
+    if (itemRef.current) {
+      observer.observe(itemRef.current);
+    }
+
+    return () => {
+      if (itemRef.current) {
+        observer.unobserve(itemRef.current);
+      }
+    };
+  }, []);
+
+  // Animation variants
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        delay: index * 0.1 + 0.3
+      }
     }
   };
 
-  const colors = colorMap[color] || colorMap.blue;
-  
-  // Nếu không phải client-side, hiển thị placeholder để tránh hydration mismatch
-  if (!isClient) {
-    return (
-      <div className="bg-gray-50 rounded-2xl border border-gray-100 h-[300px] flex items-center justify-center">
-        <div className="animate-pulse w-3/4 h-4 bg-gray-200 rounded"></div>
-      </div>
-    );
-  }
+  const contentVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: { 
+      opacity: 1, 
+      height: "auto",
+      transition: { duration: 0.3 }
+    },
+    exit: { 
+      opacity: 0, 
+      height: 0,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  // Calculate status
+  let status = "pending";
+  if (index < active) status = "completed";
+  if (index === active) status = "current";
+
+  const handleClick = () => {
+    setActive(index);
+  };
+
+  // Get status icon
+  const getStatusIcon = () => {
+    if (status === "completed") {
+      return <FaCheckCircle className="text-lg" />;
+    } else if (status === "current") {
+      return <div className="relative">
+        <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-30"></div>
+        <FaInfoCircle className="text-lg relative z-10" />
+      </div>;
+    } else {
+      return <FaRegCircle className="text-lg" />;
+    }
+  };
+
+  // Get appropriate icon based on title or index
+  const getIconByTitle = () => {
+    // Nếu đã có icon từ props, sử dụng icon đó
+    if (icon) return <span className="text-xl">{icon}</span>;
+    
+    // Nếu không, dựa vào title hoặc index để chọn icon phù hợp
+    if (title.includes("Nhận thức") || index === 0) return <IoSchool className="text-xl" />;
+    if (title.includes("Nghiên cứu") || index === 1) return <IoDocumentText className="text-xl" />;
+    if (title.includes("Chuẩn bị") || index === 2) return <IoPeople className="text-xl" />;
+    if (title.includes("Nộp đơn") || index === 3) return <IoDocumentText className="text-xl" />;
+    
+    // Default icon
+    return <IoSchool className="text-xl" />;
+  };
+
+  if (!isClient) return null;
 
   return (
-    <div 
-      className={`relative rounded-2xl overflow-hidden transition-all duration-500 ${colors.bg} border ${isHovered ? `shadow-xl ${colors.hoverBorder} transform -translate-y-2` : `shadow-md ${colors.border}`} 
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+    <motion.div
+      ref={itemRef}
+      className={`flex items-start space-x-4 ${isHovered ? 'z-10' : 'z-0'} relative group cursor-pointer`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
+      variants={itemVariants}
+      initial="hidden"
+      animate={isVisible ? "visible" : "hidden"}
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.2 }}
     >
-      {/* Decorative elements */}
-      <div className={`absolute top-0 right-0 w-20 h-20 rounded-full bg-white/50 -mr-10 -mt-10 transition-all duration-500 ${isHovered ? 'scale-125' : 'scale-100'}`}></div>
-      <div className={`absolute bottom-0 left-0 w-16 h-16 rounded-full bg-white/50 -ml-8 -mb-8 transition-all duration-500 ${isHovered ? 'scale-125' : 'scale-100'}`}></div>
-      
-      {/* Badge on top */}
-      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold ${colors.numberBg} ${colors.text} transition-all duration-300 ${isHovered ? 'scale-110' : ''}`}>
-        Bước {color === 'blue' ? '1' : color === 'green' ? '2' : '3'}
+      {/* Status indicator and connecting line */}
+      <div className="relative flex flex-col items-center">
+        {/* Top connecting line */}
+        {index > 0 && (
+          <div 
+            className={`absolute top-0 -translate-y-full left-1/2 transform -translate-x-1/2 w-0.5 h-12 
+              ${status === "pending" 
+                ? "bg-gray-200 dark:bg-gray-700" 
+                : "bg-gradient-to-t from-blue-500 to-indigo-600"
+              }`}
+          ></div>
+        )}
+        
+        {/* Status Circle */}
+        <div 
+          className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
+            status === "pending"
+              ? "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 group-hover:border-gray-400 dark:group-hover:border-gray-500"
+              : status === "current"
+                ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30 ring-4 ring-blue-100 dark:ring-blue-900/20"
+                : "border-green-500 bg-green-50 dark:border-green-400 dark:bg-green-900/30"
+          }`}
+        >
+          <div 
+            className={`transition-all duration-300 ${
+              status === "pending" ? "text-gray-400 dark:text-gray-500" : 
+              status === "current" ? "text-blue-500 dark:text-blue-400" : 
+              "text-green-500 dark:text-green-400"
+            }`}
+          >
+            {getIconByTitle()}
+          </div>
+        </div>
+        
+        {/* Bottom connecting line */}
+        {index < total - 1 && (
+          <motion.div 
+            className={`absolute bottom-0 translate-y-full left-1/2 transform -translate-x-1/2 w-0.5 h-12 
+              ${index < active
+                ? "bg-gradient-to-b from-blue-500 to-indigo-600"
+                : "bg-gray-200 dark:bg-gray-700"
+              }`}
+            initial={{ height: 0 }}
+            animate={{ height: "3rem" }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          ></motion.div>
+        )}
       </div>
       
-      <div className="p-8 relative z-10">
-        {/* Icon */}
-        <div className={`transition-all duration-500 ${isHovered ? 'transform -translate-y-1' : ''}`}>
-          {colors.icon}
-        </div>
-        
-        {/* Title */}
-        <div className="mb-3 relative">
-          <h3 className={`text-xl font-bold mb-1 ${colors.text}`}>{title}</h3>
-          <div className={`h-1 w-16 rounded-full bg-gradient-to-r ${colors.gradientFrom} ${colors.gradientTo} transition-all duration-500 ${isHovered ? 'w-20' : ''}`}></div>
-        </div>
-        
-        {/* Description List */}
-        <div className="space-y-2 mt-4">
-          {steps.map((step, index) => (
-            <div 
-              key={index} 
-              className={`flex items-start transition-all duration-500 transform ${isHovered ? 'translate-x-1' : ''}`}
-              style={{ transitionDelay: `${index * 100}ms` }}
-            >
-              <div className={`w-5 h-5 ${colors.numberBg} rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 transition-all duration-300 ${isHovered ? 'scale-125' : ''}`}>
-                <span className={`text-xs font-bold ${colors.numberText}`}>{index + 1}</span>
-              </div>
-              <p className="text-gray-700">{step}</p>
+      {/* Content */}
+      <div 
+        ref={contentRef}
+        className={`flex-1 p-4 rounded-lg transition-all duration-300 
+          ${status === "current"
+            ? "bg-white dark:bg-slate-800 shadow-lg border border-blue-100 dark:border-blue-900/30"
+            : status === "completed"
+              ? "bg-gray-50 dark:bg-slate-800/50 group-hover:bg-white dark:group-hover:bg-slate-800 group-hover:shadow-md"
+              : "bg-gray-50 dark:bg-slate-800/30 group-hover:bg-white dark:group-hover:bg-slate-800/80 group-hover:shadow-sm"
+          }
+          ${isHovered ? "shadow-md transform -translate-y-0.5" : ""}
+        `}
+      >
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-center">
+            <div className={`mr-2 ${
+              status === "pending" 
+                ? "text-gray-400 dark:text-gray-500" 
+                : status === "current"
+                  ? "text-blue-500 dark:text-blue-400"
+                  : "text-green-500 dark:text-green-400"
+            }`}>
+              {getStatusIcon()}
             </div>
-          ))}
+            <h3 
+              className={`font-medium transition-colors duration-300 ${
+                status === "pending" 
+                  ? "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300" 
+                  : status === "current"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-800 dark:text-gray-200"
+              }`}
+            >
+              {title}
+            </h3>
+          </div>
+          
+          <span 
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+              status === "pending" 
+                ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" 
+                : status === "current"
+                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                  : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+            }`}
+          >
+            {status === "pending" 
+              ? <><IoTimeOutline className="mr-1" /> {duration} tuần</> 
+              : status === "current" 
+                ? "Đang thực hiện" 
+                : "Hoàn thành"}
+          </span>
         </div>
+        
+        <AnimatePresence mode="wait">
+          {(status === "current" || isHovered) && (
+            <motion.div 
+              variants={contentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="mt-3"
+            >
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                {description.split('\n').map((item, idx) => (
+                  <motion.li 
+                    key={idx} 
+                    className="flex items-start"
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: idx * 0.1 }}
+                  >
+                    <BiRightArrowAlt className="flex-shrink-0 mt-0.5 mr-1.5 text-blue-500 dark:text-blue-400" />
+                    {item}
+                  </motion.li>
+                ))}
+              </ul>
+              
+              <button 
+                className={`mt-4 inline-flex items-center text-xs font-medium px-3 py-1 rounded-full transition-all ${
+                  status === "pending" 
+                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700" 
+                    : status === "current"
+                      ? "bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-800/60"
+                      : "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300 dark:hover:bg-green-800/60"
+                }`}
+              >
+                Chi tiết <GoArrowRight className="ml-1" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      
-      {/* Sliding Panel at Bottom */}
-      <div className={`p-3 text-center transition-all duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 -translate-y-full absolute'}`}>
-        <div className={`flex items-center justify-center font-medium text-sm text-white rounded-full py-2 px-4 bg-gradient-to-r ${colors.gradientFrom} ${colors.gradientTo}`}>
-          <span>Khám phá lộ trình</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </div>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 
