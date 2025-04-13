@@ -1,419 +1,315 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  IoSchoolOutline, 
-  IoTimeOutline, 
-  IoCheckmarkCircleOutline, 
-  IoPeopleOutline,
-  IoDocumentTextOutline,
-  IoStarOutline,
-  IoGlobeOutline
-} from "react-icons/io5";
-import { GiRoad } from "react-icons/gi";
-import { FaArrowRight, FaArrowLeft, FaPlay } from "react-icons/fa";
-import RoadmapItem from "./RoadmapItem";
+import React, { useState } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import Image from 'next/image';
+import RoadmapItem from './RoadmapItem';
+import { FaRoad, FaCalendarAlt, FaAward, FaTrophy, FaChevronDown, FaChevronUp, FaCheckCircle } from 'react-icons/fa';
 
-const ROADMAP_DATA = [
-  {
-    title: "Nhận thức & định hướng",
-    description: "Tìm hiểu về các lựa chọn du học\nXác định mục tiêu và điểm đến\nĐánh giá khả năng tài chính\nTìm hiểu về các học bổng tiềm năng",
-    duration: "4-6",
-    icon: <IoSchoolOutline />
-  },
-  {
-    title: "Nghiên cứu & chọn trường",
-    description: "Tìm kiếm các trường phù hợp với chuyên ngành\nKiểm tra yêu cầu đầu vào và học phí\nTìm hiểu về thời hạn nộp đơn\nBắt đầu chuẩn bị bài luận và hồ sơ",
-    duration: "6-8",
-    icon: <IoDocumentTextOutline />
-  },
-  {
-    title: "Chuẩn bị hồ sơ & kỹ năng",
-    description: "Luyện thi IELTS/TOEFL/SAT\nChuẩn bị CV và thư giới thiệu\nHoàn thiện bài luận cá nhân\nChuẩn bị portfolio nếu cần thiết",
-    duration: "8-12",
-    icon: <IoPeopleOutline />
-  },
-  {
-    title: "Nộp đơn & phỏng vấn",
-    description: "Nộp đơn xin học vào các trường\nChuẩn bị và tham gia phỏng vấn\nXin visa du học\nChuẩn bị tài chính và các giấy tờ cần thiết",
-    duration: "4-6",
-    icon: <IoDocumentTextOutline />
-  },
-  {
-    title: "Chuẩn bị trước khi đi",
-    description: "Đặt vé máy bay và chỗ ở\nMua bảo hiểm du học\nTìm hiểu về cuộc sống ở nước ngoài\nChuẩn bị tâm lý và kỹ năng sống độc lập",
-    duration: "2-3",
-    icon: <IoGlobeOutline />
-  },
-  {
-    title: "Bắt đầu cuộc sống mới",
-    description: "Ổn định chỗ ở và sinh hoạt\nTham gia các hoạt động định hướng\nLàm quen với môi trường học tập\nXây dựng mạng lưới bạn bè và hỗ trợ",
-    duration: "4-8",
-    icon: <IoStarOutline />
-  },
-];
+const Roadmap = () => {
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [0.7, 1]);
+  const scale = useTransform(scrollYProgress, [0, 0.2], [0.95, 1]);
 
-const MENTORS = [
-  {
-    name: "TS. Nguyễn Văn A",
-    role: "Cố vấn du học Anh",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    rating: 4.9,
-    reviews: 127,
-    yearsOfExperience: 8
-  },
-  {
-    name: "TS. Trần Thị B",
-    role: "Chuyên gia học bổng",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    rating: 4.8,
-    reviews: 98,
-    yearsOfExperience: 6
-  },
-  {
-    name: "ThS. Lê Minh C",
-    role: "Cố vấn du học Úc",
-    avatar: "https://randomuser.me/api/portraits/men/62.jpg",
-    rating: 4.7,
-    reviews: 85,
-    yearsOfExperience: 5
-  }
-];
-
-export default function Roadmap() {
-  const [activeStep, setActiveStep] = useState(0);
-  const [isClient, setIsClient] = useState(false);
-  const containerRef = useRef(null);
-  const [currentMentor, setCurrentMentor] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const intervalRef = useRef(null);
-
-  // Hydration check
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Animation for auto-advancing steps
-  useEffect(() => {
-    if (isPlaying) {
-      intervalRef.current = setInterval(() => {
-        setActiveStep((prev) => (prev < ROADMAP_DATA.length - 1 ? prev + 1 : 0));
-      }, 5000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isPlaying]);
-
-  // Handle step navigation
-  const handlePrevStep = () => {
-    if (activeStep > 0) {
-      setActiveStep(activeStep - 1);
+  const toggleExpand = (index) => {
+    if (expandedIndex === index) {
+      setExpandedIndex(null);
+    } else {
+      setExpandedIndex(index);
     }
   };
 
-  const handleNextStep = () => {
-    if (activeStep < ROADMAP_DATA.length - 1) {
-      setActiveStep(activeStep + 1);
+  const roadmapData = [
+    {
+      title: "Giai đoạn 1: Lớp 10 - Xây nền tảng",
+      desc: "Tăng tốc ngay từ đầu với kiến thức nền và lộ trình chinh phục đề thi THPTQG 2026",
+      period: "2023 - 2024",
+      features: [
+        "Học chắc chương trình lớp 10 theo CTGDPT 2018",
+        "Lấp đầy lỗ hổng kiến thức từ THCS còn thiếu",
+        "Phát triển phương pháp học chủ động, tư duy phản biện",
+        "Định hướng sơ bộ về năng lực, nhóm ngành phù hợp",
+        "Xây dựng thói quen học tập hiệu quả, kỹ năng tự học"
+      ],
+      advanced: [
+        "Tham gia các kỳ thi đánh giá năng lực (định hướng)",
+        "Bắt đầu xây dựng hồ sơ năng lực cá nhân",
+        "Tham gia các hoạt động ngoại khóa, phát triển kỹ năng mềm",
+        "Làm quen với đề thi thử THPTQG để hiểu rõ định hướng"
+      ],
+      level: 1,
+      image: "/images/roadmap-stage1.png"
+    },
+    {
+      title: "Giai đoạn 2: Lớp 11 - Phát triển toàn diện",
+      desc: "Mở rộng kiến thức và phát triển toàn diện các kỹ năng cần thiết",
+      period: "2024 - 2025",
+      features: [
+        "Nắm vững chương trình lớp 11 theo CTGDPT 2018",
+        "Tập trung vào các môn định hướng ngành nghề tương lai",
+        "Rèn luyện kỹ năng làm bài thi, quản lý thời gian",
+        "Xác định rõ ràng hơn về năng lực bản thân và định hướng nghề nghiệp",
+        "Tham gia các kỳ thi thử để đánh giá năng lực cá nhân"
+      ],
+      advanced: [
+        "Tham gia các chương trình học thuật nâng cao",
+        "Phát triển dự án cá nhân liên quan đến định hướng ngành nghề",
+        "Tham gia các hoạt động tình nguyện và phát triển cộng đồng",
+        "Nghiên cứu kỹ về các trường đại học, ngành học mục tiêu"
+      ],
+      level: 2,
+      image: "/images/roadmap-stage2.png"
+    },
+    {
+      title: "Giai đoạn 3: Lớp 12 - Chinh phục đỉnh cao",
+      desc: "Bứt phá trong năm học cuối cấp và sẵn sàng cho kỳ thi THPTQG",
+      period: "2025 - 2026",
+      features: [
+        "Hoàn thiện chương trình lớp 12 theo CTGDPT 2018",
+        "Ôn luyện chuyên sâu, tổng hợp kiến thức 3 năm THPT",
+        "Luyện đề thi thử THPTQG và kỳ thi đánh giá năng lực chuyên biệt",
+        "Chiến lược ôn thi hiệu quả với phương pháp luyện đề chuyên sâu",
+        "Xây dựng kế hoạch ôn tập cá nhân hóa theo từng giai đoạn"
+      ],
+      advanced: [
+        "Chiến lược điền nguyện vọng thông minh, tối ưu cơ hội trúng tuyển",
+        "Hoàn thiện hồ sơ xét tuyển đặc biệt (nếu có)",
+        "Tư vấn chọn trường, chọn ngành phù hợp với năng lực",
+        "Chuẩn bị cho các phương thức xét tuyển đa dạng"
+      ],
+      level: 3,
+      image: "/images/roadmap-stage3.png"
     }
-  };
+  ];
 
-  // Toggle auto-play
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  // UI elements animation variants
-  const titleVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.6, ease: "easeOut" } 
-    }
-  };
-
+  // Hiệu ứng xuất hiện cho các thành phần
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.3
+      transition: {
+        staggerChildren: 0.2
       }
     }
   };
 
-  const cardVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 0.5, ease: "easeOut" }
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { 
+        type: "spring", 
+        stiffness: 60, 
+        damping: 20 
+      }
     }
   };
 
-  if (!isClient) {
-    return <div className="h-96 w-full flex items-center justify-center">
-      <div className="animate-pulse flex space-x-4">
-        <div className="rounded-full bg-slate-200 dark:bg-slate-700 h-12 w-12"></div>
-        <div className="flex-1 space-y-6 py-1">
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded"></div>
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded col-span-2"></div>
-              <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded col-span-1"></div>
-            </div>
-            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded"></div>
-          </div>
-        </div>
-      </div>
-    </div>;
-  }
-
   return (
-    <div className="w-full py-12 px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl">
-      {/* Header */}
-      <div className="text-center mb-16 relative">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 mb-3"
-        >
-          <GiRoad className="w-4 h-4 mr-2" />
-          Lộ trình du học
-        </motion.div>
-        
-        <motion.h2
-          variants={titleVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl"
-        >
-          Hành trình chinh phục ước mơ du học
-        </motion.h2>
-        
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-4 max-w-2xl mx-auto text-xl text-gray-600 dark:text-gray-300"
-        >
-          Từng bước chuẩn bị chu đáo để bạn tự tin trên con đường du học
-        </motion.p>
-        
-        {/* Decorative element */}
-        <div className="absolute w-64 h-64 top-0 right-0 -mt-16 -mr-20 opacity-20 dark:opacity-10">
-          <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#4F46E5" d="M29.6,-49.1C39.2,-40.9,48.7,-33.8,55.9,-23.7C63.2,-13.6,68.1,-0.5,66.6,11.8C65.1,24.1,57.2,35.5,47.2,45.2C37.2,54.9,25.1,62.8,11.2,66.3C-2.8,69.7,-18.5,68.7,-33.1,63.3C-47.7,57.9,-61.1,48.1,-65.7,35.4C-70.3,22.8,-66.1,7.4,-63.5,-8.2C-60.9,-23.9,-59.9,-39.7,-51.3,-48.8C-42.7,-57.9,-26.4,-60.3,-12.7,-57.5C1,-54.7,20,-57.4,29.6,-49.1Z" transform="translate(100 100)" />
-          </svg>
-        </div>
+    <section id="roadmap" className="py-16 relative">
+      {/* Background với pattern và gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(#4338ca 1px,transparent 1px)] [background-size:24px_24px]"></div>
       </div>
       
-      {/* Main roadmap section */}
-      <div className="relative z-10 bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden">
-        {/* Grid background pattern */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
-        
-        <div className="relative pt-8 px-4 sm:px-6 lg:px-8 pb-12">
-          {/* Roadmap navigation and controls */}
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handlePrevStep}
-                disabled={activeStep === 0}
-                className={`inline-flex items-center justify-center p-2 rounded-full ${
-                  activeStep === 0 
-                    ? "text-gray-500 bg-gray-100 cursor-not-allowed dark:text-gray-500 dark:bg-gray-800" 
-                    : "text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70"
-                }`}
-              >
-                <FaArrowLeft className="w-4 h-4" />
-              </button>
-              
-              <button
-                onClick={togglePlayPause}
-                className={`inline-flex items-center justify-center p-2 rounded-full ${
-                  isPlaying
-                    ? "text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70"
-                    : "text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70"
-                }`}
-              >
-                <FaPlay className={`w-4 h-4 ${isPlaying ? "animate-pulse" : ""}`} />
-              </button>
-              
-              <button
-                onClick={handleNextStep}
-                disabled={activeStep === ROADMAP_DATA.length - 1}
-                className={`inline-flex items-center justify-center p-2 rounded-full ${
-                  activeStep === ROADMAP_DATA.length - 1 
-                    ? "text-gray-500 bg-gray-100 cursor-not-allowed dark:text-gray-500 dark:bg-gray-800" 
-                    : "text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-300 dark:bg-blue-900/50 dark:hover:bg-blue-900/70"
-                }`}
-              >
-                <FaArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Bước {activeStep + 1} / {ROADMAP_DATA.length}
-            </div>
-          </div>
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ 
+            duration: 0.8,
+            type: "spring"
+          }}
+          className="mb-12 text-center max-w-3xl mx-auto"
+        >
+          <motion.div 
+            className="inline-flex items-center justify-center p-1 px-4 mb-4 rounded-full bg-gradient-to-r from-indigo-50 to-blue-100 text-indigo-700 border border-indigo-200"
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <FaRoad className="text-indigo-600 mr-2 text-sm" />
+            <span className="font-medium text-sm">Lộ trình 3 năm</span>
+          </motion.div>
           
-          {/* Roadmap timeline */}
+          <h2 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-blue-600 mb-4">
+            LỘ TRÌNH CHINH PHỤC ĐẠI HỌC TOP
+          </h2>
+          
+          <p className="text-slate-600 max-w-2xl mx-auto">
+            Chúng tôi đã thiết kế lộ trình học tập toàn diện trong 3 năm THPT, giúp học sinh 2k8 
+            phát triển vượt trội và tự tin bước vào kỳ thi quan trọng nhất đời học.
+          </p>
+        </motion.div>
+
+        {/* Road map visual */}
+        <div className="relative">
+          {/* Đường kẻ nối các giai đoạn */}
+          <div className="absolute left-1/2 top-10 bottom-0 w-1 bg-gradient-to-b from-blue-400 to-indigo-600 hidden md:block" style={{ transform: 'translateX(-50%)' }}></div>
+          
           <motion.div
-            ref={containerRef}
+            style={{ opacity, scale }}
             variants={containerVariants}
             initial="hidden"
-            animate="visible"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
             className="space-y-12 relative"
           >
-            {ROADMAP_DATA.map((step, index) => (
-              <RoadmapItem
+            {roadmapData.map((item, index) => (
+              <motion.div 
                 key={index}
-                title={step.title}
-                description={step.description}
-                duration={step.duration}
-                index={index}
-                active={activeStep}
-                setActive={setActiveStep}
-                total={ROADMAP_DATA.length}
-                icon={step.icon}
-              />
+                variants={itemVariants}
+                className="relative z-10"
+              >
+                <div className={`flex flex-col md:flex-row items-center ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                  {/* Timeline marker */}
+                  <div className="hidden md:flex w-12 h-12 bg-white rounded-full border-4 border-indigo-500 shadow-lg absolute left-1/2 transform -translate-x-1/2 z-20 items-center justify-center">
+                    <span className="text-indigo-600 font-bold">{item.level}</span>
+                  </div>
+                  
+                  {/* Content container */}
+                  <div className="w-full md:w-5/12"></div>
+                  
+                  <div className="w-full md:w-5/12 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl shadow-xl border border-indigo-100 overflow-hidden transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 text-white relative overflow-hidden">
+                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-white opacity-10 rounded-full"></div>
+                      <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-white opacity-10 rounded-full"></div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <FaCalendarAlt className="mr-2" />
+                          <span className="font-medium">{item.period}</span>
+                        </div>
+                        <div className="flex items-center px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs">
+                          <FaTrophy className="mr-1" />
+                          <span>Giai đoạn {item.level}/3</span>
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-xl font-bold mt-2">{item.title}</h3>
+                      <p className="text-blue-100 mt-1">{item.desc}</p>
+                    </div>
+                    
+                    {/* Body */}
+                    <div className="p-4">
+                      <div className="flex flex-wrap items-center mb-3">
+                        <div className="flex items-center mr-3 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
+                          <span className="text-sm text-gray-600">Mục tiêu cơ bản</span>
+                        </div>
+                        <div className="flex items-center mb-2">
+                          <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
+                          <span className="text-sm text-gray-600">Phát triển nâng cao</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1 mb-4">
+                        {item.features.map((feature, featureIndex) => (
+                          <div key={featureIndex} className="flex items-start">
+                            <FaCheckCircle className="text-green-500 mt-1 mr-2 flex-shrink-0" />
+                            <p className="text-gray-700 text-sm">{feature}</p>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Nút mở rộng */}
+                      <div 
+                        className="flex items-center justify-center py-2 cursor-pointer text-indigo-600 hover:text-indigo-800 transition-colors"
+                        onClick={() => toggleExpand(index)}
+                      >
+                        <span className="text-sm font-medium mr-1">
+                          {expandedIndex === index ? 'Thu gọn' : 'Xem chi tiết nâng cao'}
+                        </span>
+                        {expandedIndex === index ? <FaChevronUp /> : <FaChevronDown />}
+                      </div>
+                      
+                      {/* Phần mở rộng */}
+                      {expandedIndex === index && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="pt-2 border-t border-gray-100"
+                        >
+                          <div className="space-y-1">
+                            {item.advanced.map((adv, advIndex) => (
+                              <div key={advIndex} className="flex items-start">
+                                <FaCheckCircle className="text-blue-500 mt-1 mr-2 flex-shrink-0" />
+                                <p className="text-gray-700 text-sm">{adv}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                    
+                    {/* Footer */}
+                    <div className="px-4 py-3 bg-indigo-50 flex justify-between items-center">
+                      <div className="text-sm text-indigo-700 font-medium">
+                        Lớp {item.level + 9}
+                      </div>
+                      <div className="text-sm text-indigo-600">
+                        {expandedIndex === index ? (
+                          <span className="flex items-center">
+                            <FaAward className="mr-1" /> 
+                            Mục tiêu toàn diện
+                          </span>
+                        ) : (
+                          `${item.features.length + item.advanced.length} mục tiêu`
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
-      </div>
-      
-      {/* Current step details */}
-      <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden"
-        >
-          <div className="px-6 py-8">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-              {ROADMAP_DATA[activeStep].icon && (
-                <span className="mr-3 text-blue-700 dark:text-blue-300">{ROADMAP_DATA[activeStep].icon}</span>
-              )}
-              {ROADMAP_DATA[activeStep].title}
-            </h3>
-            
-            <div className="flex items-center mt-2 text-sm text-gray-600 dark:text-gray-300">
-              <IoTimeOutline className="w-4 h-4 mr-1" />
-              <span>Thời gian: {ROADMAP_DATA[activeStep].duration} tuần</span>
-            </div>
-            
-            <div className="mt-6 prose dark:prose-invert prose-blue max-w-none">
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Mô tả chi tiết</h4>
-              <ul className="space-y-3">
-                {ROADMAP_DATA[activeStep].description.split('\n').map((item, idx) => (
-                  <motion.li 
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: idx * 0.1 }}
-                    className="flex items-start"
-                  >
-                    <IoCheckmarkCircleOutline className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5 mr-2" />
-                    <span className="text-gray-700 dark:text-gray-300">{item}</span>
-                  </motion.li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="mt-8">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200">
-                Tìm hiểu thêm
-                <FaArrowRight className="ml-2 -mr-1 w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </motion.div>
         
-        {/* Mentor section */}
         <motion.div
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-700 dark:to-indigo-900 rounded-xl shadow-lg overflow-hidden text-white"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-16 text-center"
         >
-          <div className="px-6 py-8">
-            <h3 className="text-xl font-bold mb-6">Cố vấn chuyên môn</h3>
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-xl p-6 max-w-3xl mx-auto shadow-xl relative overflow-hidden">
+            {/* Decorative elements */}
+            <div className="absolute -right-6 -top-6 w-24 h-24 bg-white opacity-10 rounded-full"></div>
+            <div className="absolute left-1/2 -bottom-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
             
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentMentor}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col items-center text-center"
+            <h4 className="text-xl font-bold text-white mb-3 relative">
+              Hãy bắt đầu hành trình của bạn ngay hôm nay!
+            </h4>
+            
+            <p className="text-blue-100 mb-6 relative">
+              Đừng để thời gian trôi qua một cách lãng phí. Lộ trình 3 năm với TopUni 
+              sẽ giúp bạn chuẩn bị đầy đủ những kiến thức và kỹ năng cần thiết để chinh phục 
+              kỳ thi THPTQG 2026 và bước vào cánh cửa đại học mơ ước.
+            </p>
+            
+            <motion.div 
+              className="inline-block"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <a 
+                href="#dang-ky" 
+                className="inline-block text-indigo-700 bg-white hover:bg-blue-50 font-semibold px-6 py-3 rounded-full shadow-lg transition-all duration-300"
               >
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/40">
-                    <img
-                      src={MENTORS[currentMentor].avatar}
-                      alt={MENTORS[currentMentor].name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-800 rounded-full px-2 py-1 text-xs font-bold flex items-center">
-                    <IoStarOutline className="w-3 h-3 mr-1" />
-                    {MENTORS[currentMentor].rating}
-                  </div>
-                </div>
-                
-                <h4 className="mt-4 font-bold text-lg text-white">{MENTORS[currentMentor].name}</h4>
-                <p className="text-blue-50">{MENTORS[currentMentor].role}</p>
-                
-                <div className="mt-4 flex items-center text-sm text-blue-50">
-                  <span className="flex items-center">
-                    <IoPeopleOutline className="w-4 h-4 mr-1" />
-                    {MENTORS[currentMentor].reviews} đánh giá
-                  </span>
-                  <span className="mx-2">•</span>
-                  <span className="flex items-center">
-                    <IoTimeOutline className="w-4 h-4 mr-1" />
-                    {MENTORS[currentMentor].yearsOfExperience} năm kinh nghiệm
-                  </span>
-                </div>
-                
-                <div className="mt-6 flex space-x-1">
-                  {MENTORS.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentMentor(idx)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        idx === currentMentor
-                          ? "bg-white w-6"
-                          : "bg-white/50 hover:bg-white/80"
-                      }`}
-                      aria-label={`View mentor ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-            
-            <div className="mt-8 pt-6 border-t border-white/20">
-              <button className="w-full py-3 px-4 bg-white text-blue-700 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center">
-                Tư vấn miễn phí
-                <FaArrowRight className="ml-2 w-4 h-4" />
-              </button>
-            </div>
+                Đăng ký tư vấn lộ trình cá nhân hóa
+              </a>
+            </motion.div>
           </div>
         </motion.div>
       </div>
-    </div>
+    </section>
   );
-} 
+};
+
+export default Roadmap; 
