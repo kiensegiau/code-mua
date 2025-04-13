@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { IoTimeOutline } from 'react-icons/io5';
-import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock, FaLaptop, FaMobileAlt, FaCertificate, FaGlobe } from 'react-icons/fa';
+import { IoTimeOutline, IoClose } from 'react-icons/io5';
+import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock, FaLaptop, FaMobileAlt, FaCertificate, FaGlobe, FaPlay, FaLock, FaCheckCircle, FaRegStar, FaStar } from 'react-icons/fa';
 
 const HeroSection = () => {
   // Countdown timer state
@@ -13,6 +13,9 @@ const HeroSection = () => {
     minutes: 0,
     seconds: 0
   });
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Set deadline to end of current day (23:59:59)
   useEffect(() => {
@@ -223,8 +226,8 @@ const HeroSection = () => {
               </motion.p>
               
               {/* Nút học thử ngay */}
-              <motion.a
-                href="#hoc-thu"
+              <motion.button
+                onClick={() => setIsModalOpen(true)}
                 className="block w-full mt-4 bg-green-600 hover:bg-green-700 text-white text-center font-semibold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -244,7 +247,7 @@ const HeroSection = () => {
                   whileHover={{ x: 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 />
-              </motion.a>
+              </motion.button>
             </motion.div>
           </motion.div>
           
@@ -341,6 +344,155 @@ const HeroSection = () => {
           </motion.div>
         </div>
       </div>
+      
+      {/* Modal học thử */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Overlay */}
+            <motion.div 
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+            />
+            
+            {/* Modal Content */}
+            <motion.div
+              className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25 }}
+            >
+              {/* Close button */}
+              <button 
+                className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-sm rounded-full p-2 text-gray-700 hover:text-red-500 transition-colors duration-200"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <IoClose className="w-6 h-6" />
+              </button>
+              
+              {/* Header với background gradient */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-t-2xl p-6 text-white">
+                <div className="flex items-center mb-2">
+                  <span className="px-2 py-1 bg-yellow-500 text-xs font-bold rounded mr-2">VIP</span>
+                  <h3 className="text-xl font-bold">Khóa học luyện thi Đại học 2025</h3>
+                </div>
+                <p className="opacity-80 text-sm">Nâng cao kiến thức và kỹ năng làm bài thi với đội ngũ giảng viên chất lượng cao</p>
+              </div>
+              
+              {/* Modal Body */}
+              <div className="p-6">
+                <div className="mb-6">
+                  <div className="flex items-center mb-3">
+                    <div className="flex text-yellow-400 mr-2">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar key={i} className="text-sm" />
+                      ))}
+                    </div>
+                    <span className="text-gray-600 text-sm">5.0 (2,305 đánh giá)</span>
+                  </div>
+                </div>
+                
+                {/* Bảng giá */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="border border-gray-200 rounded-xl p-4 relative">
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                      Gói 1 tháng
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 text-center mt-2 mb-2">150.000đ</h3>
+                    <p className="text-gray-500 text-sm text-center mb-4">Sử dụng trong 30 ngày</p>
+                    <ul className="space-y-2">
+                      {[
+                        "Toàn bộ bài giảng & tài liệu",
+                        "Kho đề thi mẫu & đáp án",
+                        "Hỗ trợ kỹ thuật 24/7",
+                        "Forum học tập trực tuyến"
+                      ].map((feature, idx) => (
+                        <li key={idx} className="flex items-center">
+                          <FaCheckCircle className="text-blue-500 mr-2 text-sm" />
+                          <span className="text-gray-700 text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <div className="border-2 border-yellow-500 rounded-xl p-4 relative bg-gradient-to-b from-yellow-50 to-white shadow-md">
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                      Gói 1 năm - Tiết kiệm 78%
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 text-center mt-2 mb-1">400.000đ</h3>
+                    <p className="text-center line-through text-gray-500 text-sm mb-2">1.800.000đ</p>
+                    <p className="text-yellow-600 text-sm font-medium text-center mb-3">Chỉ 33.000đ/tháng</p>
+                    <ul className="space-y-2">
+                      {[
+                        "Toàn bộ bài giảng & tài liệu",
+                        "Kho đề thi mẫu & đáp án",
+                        "Hỗ trợ kỹ thuật 24/7",
+                        "Forum học tập trực tuyến"
+                      ].map((feature, idx) => (
+                        <li key={idx} className="flex items-center">
+                          <FaCheckCircle className="text-yellow-600 mr-2 text-sm" />
+                          <span className="text-gray-800 text-sm font-medium">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-4 bg-yellow-100 p-2 rounded-lg text-center">
+                      <span className="text-yellow-700 text-xs font-medium">💰 Tiết kiệm 1.4 triệu đồng so với mua từng tháng</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* CTA buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-5">
+                  <button 
+                    className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Đăng ký gói 1 năm - Tiết kiệm 78%
+                  </button>
+                  <button 
+                    className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-full shadow border-2 border-gray-200 hover:border-gray-300 transition-all duration-300"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Chọn gói 1 tháng
+                  </button>
+                </div>
+                
+                {/* Countdown timer */}
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-gray-700 font-medium flex items-center">
+                      <FaRegClock className="mr-2 text-yellow-500" />
+                      Ưu đãi kết thúc vào 23:59 hôm nay
+                    </p>
+                    <div className="flex space-x-2">
+                      <div className="bg-gray-200 text-gray-800 font-mono rounded px-2 py-1 text-sm">
+                        {timeLeft.hours < 10 ? `0${timeLeft.hours}` : timeLeft.hours}
+                      </div>
+                      <div className="text-gray-500">:</div>
+                      <div className="bg-gray-200 text-gray-800 font-mono rounded px-2 py-1 text-sm">
+                        {timeLeft.minutes < 10 ? `0${timeLeft.minutes}` : timeLeft.minutes}
+                      </div>
+                      <div className="text-gray-500">:</div>
+                      <div className="bg-gray-200 text-gray-800 font-mono rounded px-2 py-1 text-sm">
+                        {timeLeft.seconds < 10 ? `0${timeLeft.seconds}` : timeLeft.seconds}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
