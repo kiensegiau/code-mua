@@ -165,11 +165,6 @@ const Roadmap = () => {
                 className="relative z-10"
               >
                 <div className={`flex flex-col md:flex-row items-center ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
-                  {/* Timeline marker */}
-                  <div className="hidden md:flex w-12 h-12 bg-white rounded-full border-4 border-indigo-500 shadow-lg absolute left-1/2 transform -translate-x-1/2 z-20 items-center justify-center">
-                    <span className="text-indigo-600 font-bold">{item.level}</span>
-                  </div>
-                  
                   {/* Content container */}
                   <div className="w-full md:w-5/12"></div>
                   
