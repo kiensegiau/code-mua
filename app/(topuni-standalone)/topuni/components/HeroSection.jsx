@@ -14,26 +14,35 @@ const HeroSection = () => {
     seconds: 0
   });
 
-  // Set deadline 10 days from now
+  // Set deadline to end of current day (23:59:59)
   useEffect(() => {
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 10);
-    
-    const intervalId = setInterval(() => {
+    const calculateTimeLeft = () => {
       const now = new Date();
+      // Set deadline to end of current day (23:59:59)
+      const deadline = new Date(now);
+      deadline.setHours(23, 59, 59, 999);
+      
       const difference = deadline - now;
       
       if (difference <= 0) {
-        clearInterval(intervalId);
-        return;
+        // If it's already past midnight, set deadline to next day's 23:59:59
+        deadline.setDate(deadline.getDate() + 1);
+        deadline.setHours(23, 59, 59, 999);
       }
       
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const days = 0; // Hiển thị cố định là 0 ngày
       const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((difference / (1000 * 60)) % 60);
       const seconds = Math.floor((difference / 1000) % 60);
       
-      setTimeLeft({ days, hours, minutes, seconds });
+      return { days, hours, minutes, seconds };
+    };
+
+    // Initialize time left immediately
+    setTimeLeft(calculateTimeLeft());
+    
+    const intervalId = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
     
     return () => clearInterval(intervalId);
@@ -194,7 +203,7 @@ const HeroSection = () => {
             >
               <div className="flex items-center space-x-2 text-blue-600 mb-2">
                 <IoTimeOutline className="text-lg animate-pulse" />
-                <p className="font-medium">Ưu đãi đặc biệt - Còn lại</p>
+                <p className="font-medium">Ưu đãi kết thúc vào 23:59 hôm nay</p>
               </div>
               
               <div className="grid grid-cols-4 gap-2 text-center">
@@ -210,7 +219,7 @@ const HeroSection = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
               >
-                <span className="font-medium text-yellow-600">Giảm giá 50%!</span> Áp dụng cho 100 học viên đăng ký sớm nhất
+                <span className="font-medium text-yellow-600">Giảm giá 50%!</span> Áp dụng cho học viên đăng ký trong hôm nay
               </motion.p>
             </motion.div>
           </motion.div>
@@ -329,7 +338,7 @@ const CountdownBox = ({ value, label }) => (
       style={{ zIndex: 0 }}
     />
     <div className="relative z-10">
-      <div className="text-2xl md:text-3xl font-bold text-blue-600">{value}</div>
+      <div className="text-2xl md:text-3xl font-bold text-blue-600">{value < 10 ? `0${value}` : value}</div>
       <div className="text-xs text-gray-600">{label}</div>
     </div>
   </motion.div>

@@ -25,26 +25,35 @@ const Registration = () => {
     seconds: 0
   });
 
-  // Set deadline 10 days from now
+  // Set deadline to end of current day (23:59:59)
   useEffect(() => {
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 10);
-    
-    const intervalId = setInterval(() => {
+    const calculateTimeLeft = () => {
       const now = new Date();
+      // Set deadline to end of current day (23:59:59)
+      const deadline = new Date(now);
+      deadline.setHours(23, 59, 59, 999);
+      
       const difference = deadline - now;
       
       if (difference <= 0) {
-        clearInterval(intervalId);
-        return;
+        // If it's already past midnight, set deadline to next day's 23:59:59
+        deadline.setDate(deadline.getDate() + 1);
+        deadline.setHours(23, 59, 59, 999);
       }
       
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const days = 0; // Hiển thị cố định là 0 ngày
       const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((difference / (1000 * 60)) % 60);
       const seconds = Math.floor((difference / 1000) % 60);
       
-      setTimeLeft({ days, hours, minutes, seconds });
+      return { days, hours, minutes, seconds };
+    };
+
+    // Initialize time left immediately
+    setTimeLeft(calculateTimeLeft());
+    
+    const intervalId = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
     
     return () => clearInterval(intervalId);
@@ -143,32 +152,32 @@ const Registration = () => {
           </h2>
           
           <div className="max-w-md mx-auto mb-8">
-            <div className="flex items-center justify-center space-x-2 text-blue-600 mb-3">
+            <div className="flex items-center space-x-2 text-blue-600 mb-3">
               <IoTimeOutline className="text-xl" />
-              <p className="font-medium">Thời gian ưu đãi còn lại</p>
+              <p className="font-medium">Ưu đãi kết thúc vào 23:59 hôm nay</p>
             </div>
             
             <div className="grid grid-cols-4 gap-2 text-center">
               <div className="bg-white rounded-lg p-2 shadow">
-                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.days}</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.days < 10 ? `0${timeLeft.days}` : timeLeft.days}</div>
                 <div className="text-xs text-gray-600">NGÀY</div>
               </div>
               <div className="bg-white rounded-lg p-2 shadow">
-                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.hours}</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.hours < 10 ? `0${timeLeft.hours}` : timeLeft.hours}</div>
                 <div className="text-xs text-gray-600">GIỜ</div>
               </div>
               <div className="bg-white rounded-lg p-2 shadow">
-                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.minutes}</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.minutes < 10 ? `0${timeLeft.minutes}` : timeLeft.minutes}</div>
                 <div className="text-xs text-gray-600">PHÚT</div>
               </div>
               <div className="bg-white rounded-lg p-2 shadow">
-                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.seconds}</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{timeLeft.seconds < 10 ? `0${timeLeft.seconds}` : timeLeft.seconds}</div>
                 <div className="text-xs text-gray-600">GIÂY</div>
               </div>
             </div>
             
             <p className="text-center text-sm text-gray-600 mt-4 bg-yellow-50 p-2 rounded border border-yellow-100">
-              Chỉ còn 19 suất ưu đãi! Nhanh tay đăng ký!
+              Ưu đãi kết thúc vào 23:59 hôm nay! Nhanh tay đăng ký!
             </p>
           </div>
         </motion.div>
@@ -358,7 +367,7 @@ const Registration = () => {
               <div className="mt-8 pt-6 border-t border-blue-500">
                 <div className="flex items-center space-x-2 text-yellow-300 mb-2">
                   <IoTimeOutline className="text-lg" />
-                  <p className="font-medium">Chỉ còn 19 suất ưu đãi!</p>
+                  <p className="font-medium">Ưu đãi kết thúc trong: {timeLeft.days < 10 ? `0${timeLeft.days}` : timeLeft.days}d {timeLeft.hours < 10 ? `0${timeLeft.hours}` : timeLeft.hours}h {timeLeft.minutes < 10 ? `0${timeLeft.minutes}` : timeLeft.minutes}p {timeLeft.seconds < 10 ? `0${timeLeft.seconds}` : timeLeft.seconds}s</p>
                 </div>
                 <p className="text-sm text-blue-100">
                   Đừng bỏ lỡ cơ hội cuối cùng để nhận trọn bộ ưu đãi cho khóa học 2026!
