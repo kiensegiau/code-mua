@@ -401,6 +401,46 @@ const HeroSection = () => {
                   </div>
                 </div>
                 
+                {/* Học thử VIP */}
+                <div className="mb-6 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl overflow-hidden">
+                  <div className="p-5 relative">
+                    <div className="absolute top-0 right-0">
+                      <div className="bg-yellow-400 text-xs font-bold text-gray-900 px-3 py-1 rounded-bl-xl">
+                        MIỄN PHÍ
+                      </div>
+                    </div>
+                    <div className="flex flex-col md:flex-row items-center">
+                      <div className="mb-4 md:mb-0 md:mr-6 flex-shrink-0">
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                          <FaPlay className="text-white text-xl" />
+                        </div>
+                      </div>
+                      <div className="text-white text-center md:text-left">
+                        <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 ngày</h3>
+                        <p className="text-white/80 text-sm mb-3">
+                          Trải nghiệm đầy đủ tính năng VIP trong 24 giờ - không cần thẻ tín dụng
+                        </p>
+                        <motion.button
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="bg-white text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg"
+                        >
+                          <span className="flex items-center justify-center">
+                            <FaRegLightbulb className="mr-2" />
+                            Kích hoạt học thử ngay
+                          </span>
+                        </motion.button>
+                      </div>
+                    </div>
+                    <div className="mt-3 bg-white/10 rounded-lg p-2 text-white/90 text-xs text-center">
+                      <span className="flex items-center justify-center">
+                        <FaRegClock className="mr-1" />
+                        Tài khoản học thử tự động hết hạn sau 24 giờ, không cần hủy!
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Bảng giá */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="border border-gray-200 rounded-xl p-4 relative">
