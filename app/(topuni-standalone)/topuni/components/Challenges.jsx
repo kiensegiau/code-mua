@@ -85,7 +85,7 @@ const Fields = () => {
     <section id="linh-vuc" className="py-16 relative">
       {/* Background với pattern và gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-200/50 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.15] bg-[radial-gradient(#3b82f6 1px,transparent 1px)] [background-size:20px_20px]"></div>
+        <div className="absolute inset-0 opacity-[0.15] [background-image:radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:20px_20px]"></div>
       </div>
 
       <div className="container mx-auto px-4 md:px-6 relative">

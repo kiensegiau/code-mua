@@ -110,7 +110,7 @@ const Roadmap = () => {
     <section id="roadmap" className="py-16 relative">
       {/* Background với pattern và gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(#4338ca 1px,transparent 1px)] [background-size:24px_24px]"></div>
+        <div className="absolute inset-0 opacity-[0.08] [background-image:radial-gradient(#4338ca_1px,transparent_1px)] [background-size:24px_24px]"></div>
       </div>
       
       <div className="container mx-auto px-4 md:px-6 relative z-10">
