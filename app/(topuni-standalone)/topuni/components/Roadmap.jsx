@@ -25,7 +25,7 @@ const Roadmap = () => {
       desc: "Tăng tốc ngay từ đầu với kiến thức nền và lộ trình chinh phục đề thi THPTQG 2026",
       period: "2023 - 2024",
       features: [
-        "Học chắc chương trình lớp 10 theo CTGDPT 2018",
+        "Học chắc chương trình lớp 10 theo quy định mới nhất của Bộ GD&ĐT",
         "Lấp đầy lỗ hổng kiến thức từ THCS còn thiếu",
         "Phát triển phương pháp học chủ động, tư duy phản biện",
         "Định hướng sơ bộ về năng lực, nhóm ngành phù hợp",
@@ -45,7 +45,7 @@ const Roadmap = () => {
       desc: "Mở rộng kiến thức và phát triển toàn diện các kỹ năng cần thiết",
       period: "2024 - 2025",
       features: [
-        "Nắm vững chương trình lớp 11 theo CTGDPT 2018",
+        "Nắm vững chương trình lớp 11 theo quy định cập nhật mới nhất 2025",
         "Tập trung vào các môn định hướng ngành nghề tương lai",
         "Rèn luyện kỹ năng làm bài thi, quản lý thời gian",
         "Xác định rõ ràng hơn về năng lực bản thân và định hướng nghề nghiệp",
@@ -65,14 +65,14 @@ const Roadmap = () => {
       desc: "Bứt phá trong năm học cuối cấp và sẵn sàng cho kỳ thi THPTQG",
       period: "2025 - 2026",
       features: [
-        "Hoàn thiện chương trình lớp 12 theo CTGDPT 2018",
+        "Hoàn thiện chương trình lớp 12 theo CTGDPT 2018 và cập nhật theo quy định mới nhất 2025",
         "Ôn luyện chuyên sâu, tổng hợp kiến thức 3 năm THPT",
-        "Luyện đề thi thử THPTQG và kỳ thi đánh giá năng lực chuyên biệt",
+        "Luyện đề thi thử THPTQG theo hướng dẫn ôn thi mới 2025 của Bộ GD&ĐT",
         "Chiến lược ôn thi hiệu quả với phương pháp luyện đề chuyên sâu",
         "Xây dựng kế hoạch ôn tập cá nhân hóa theo từng giai đoạn"
       ],
       advanced: [
-        "Chiến lược điền nguyện vọng thông minh, tối ưu cơ hội trúng tuyển",
+        "Chiến lược điền nguyện vọng thông minh theo Thông tư 06/2025/TT-BGDĐT",
         "Hoàn thiện hồ sơ xét tuyển đặc biệt (nếu có)",
         "Tư vấn chọn trường, chọn ngành phù hợp với năng lực",
         "Chuẩn bị cho các phương thức xét tuyển đa dạng"

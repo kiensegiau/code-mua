@@ -73,7 +73,7 @@ function Grade12Courses() {
               <div>
                 <p className="text-white font-medium">Luyện thi THPT QG</p>
                 <p className="text-gray-400 text-sm">
-                  Ôn luyện chuyên sâu theo cấu trúc đề thi mới
+                  Ôn luyện chuyên sâu theo hướng dẫn mới 2025 của Bộ GD&ĐT
                 </p>
               </div>
             </motion.div>

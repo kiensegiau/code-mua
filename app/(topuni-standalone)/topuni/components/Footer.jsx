@@ -82,7 +82,7 @@ const Footer = () => {
             transition={{ duration: 0.5 }}
           >
             <p className="text-gray-500 text-sm">
-              &copy; {currentYear} KhoaHoc.live - Nền tảng học trực tuyến. Bản quyền thuộc về Công ty TNHH Giáo Dục KHL.
+              &copy; {currentYear} KhoaHoc.live - Nền tảng học trực tuyến.
             </p>
           </motion.div>
         </div>

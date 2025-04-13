@@ -263,7 +263,7 @@ const Registration = () => {
                         <option value="ĐGNL">Luyện thi ĐGNL ĐHQG HN</option>
                         <option value="ĐGTD">Luyện thi ĐGNL ĐGTD ĐHBK</option>
                         <option value="HCM">Luyện thi ĐGNL ĐHQG HCM</option>
-                        <option value="THPT">Luyện thi THPT QG</option>
+                        <option value="THPT">Luyện thi THPT QG 2025</option>
                       </select>
                       {formErrors.subject && <p className="text-red-500 text-xs mt-1">{formErrors.subject}</p>}
                     </div>
@@ -334,7 +334,7 @@ const Registration = () => {
                   <span className="flex-shrink-0 w-5 h-5 bg-white rounded-full flex items-center justify-center text-blue-600 mr-3 mt-0.5">3</span>
                   <div>
                     <p className="font-medium">Tặng khóa học Phân tích đề thi</p>
-                    <p className="text-sm text-blue-100">Giá trị 1.200.000đ, giúp bạn nắm vững cấu trúc đề thi</p>
+                    <p className="text-sm text-blue-100">Giá trị 1.200.000đ, giúp bạn nắm vững cấu trúc đề thi mới 2025</p>
                   </div>
                 </li>
                 

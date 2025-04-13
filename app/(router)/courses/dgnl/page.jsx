@@ -61,8 +61,8 @@ function DGNLCourses() {
       description: "Kỳ thi ĐGNL do Đại học Sư Phạm Hà Nội tổ chức",
       icon: <Brain size={18} />,
       features: [
-        "Điểm ưu tiên áp dụng theo quy chế tuyển sinh hiện hành",
-        "Kết quả có giá trị trong năm tuyển sinh",
+        "Điểm ưu tiên áp dụng theo quy chế tuyển sinh mới (Thông tư 06/2025/TT-BGDĐT)",
+        "Kết quả có giá trị trong năm tuyển sinh 2025-2026",
         "Gồm 3 phần: Ngôn ngữ, Toán học & tư duy khoa học, Giải quyết vấn đề"
       ]
     }

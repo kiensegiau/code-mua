@@ -171,7 +171,7 @@ export default function AboutPage() {
       icon: CheckCircle2,
       title: "Luyện đề sát thực",
       description:
-        "Kho đề thi thử phong phú, cập nhật theo cấu trúc mới nhất của Bộ GD&ĐT.",
+        "Kho đề thi thử phong phú, cập nhật theo cấu trúc mới nhất của Bộ GD&ĐT (Thông tư 06/2025/TT-BGDĐT).",
     },
     {
       icon: Trophy,
