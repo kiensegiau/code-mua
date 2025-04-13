@@ -1,21 +1,40 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { IoTimeOutline, IoClose } from 'react-icons/io5';
-import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock, FaLaptop, FaMobileAlt, FaCertificate, FaGlobe, FaPlay, FaLock, FaCheckCircle, FaRegStar, FaStar } from 'react-icons/fa';
+import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock, FaLaptop, FaMobileAlt, FaCertificate, FaGlobe, FaPlay, FaLock, FaCheckCircle, FaRegStar, FaStar, FaUnlock, FaKey } from 'react-icons/fa';
+import { useAuth } from "../../../_context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const HeroSection = () => {
-  // Countdown timer state
+  // Sử dụng các states và functions từ AuthContext
+  const { 
+    isVip, 
+    vipExpiresAt, 
+    activateVipWithKey, 
+    isActivatingVip, 
+    vipActivationError,
+    getVipTimeRemaining,
+    isAuthenticated 
+  } = useAuth();
+  
+  const router = useRouter();
+  
+  // Các states cho UI
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showTrialSuccess, setShowTrialSuccess] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [keyError, setKeyError] = useState("");
+  const keyInputRef = useRef(null);
+  
+  // Countdown timer từ phiên bản cũ
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0
   });
-
-  // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Set deadline to end of current day (23:59:59)
   useEffect(() => {
@@ -50,6 +69,68 @@ const HeroSection = () => {
     
     return () => clearInterval(intervalId);
   }, []);
+  
+  // Xử lý kích hoạt VIP với key
+  const handleActivateWithKey = async () => {
+    // Reset error message
+    setKeyError("");
+    
+    // Kiểm tra đã nhập key chưa
+    if (!keyInput.trim()) {
+      setKeyError("Vui lòng nhập key");
+      keyInputRef.current?.focus();
+      return;
+    }
+    
+    // Kiểm tra đã đăng nhập chưa
+    if (!isAuthenticated) {
+      router.push(`/sign-in?redirect=${encodeURIComponent(window.location.pathname)}&key=${keyInput}`);
+      return;
+    }
+    
+    try {
+      setShowTrialSuccess(false);
+      
+      // Gọi function kích hoạt VIP từ context
+      const result = await activateVipWithKey(keyInput.trim());
+      
+      if (result.success) {
+        setShowTrialSuccess(true);
+        
+        // Xóa key input sau khi thành công
+        setKeyInput("");
+        
+        setTimeout(() => {
+          setShowTrialSuccess(false);
+          setIsModalOpen(false);
+          router.push('/khoa-hoc-vip');
+        }, 3000);
+      } else {
+        setKeyError(result.error || "Không thể kích hoạt key. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      setKeyError("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      console.error(error);
+    }
+  };
+  
+  // Cập nhật useState hiển thị thời gian còn lại của VIP
+  const [vipTimeRemaining, setVipTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  
+  // Cập nhật thời gian VIP còn lại
+  useEffect(() => {
+    if (isVip) {
+      // Lấy thời gian còn lại ban đầu
+      setVipTimeRemaining(getVipTimeRemaining());
+      
+      // Cập nhật mỗi giây
+      const intervalId = setInterval(() => {
+        setVipTimeRemaining(getVipTimeRemaining());
+      }, 1000);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [isVip, getVipTimeRemaining]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -409,35 +490,126 @@ const HeroSection = () => {
                         MIỄN PHÍ
                       </div>
                     </div>
-                    <div className="flex flex-col md:flex-row items-center">
-                      <div className="mb-4 md:mb-0 md:mr-6 flex-shrink-0">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                          <FaPlay className="text-white text-xl" />
+                    
+                    {showTrialSuccess ? (
+                      <div className="py-10">
+                        <div className="flex flex-col items-center justify-center text-white">
+                          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4">
+                            <FaCheckCircle className="text-white text-3xl" />
+                          </div>
+                          <h3 className="text-xl font-bold mb-2">Kích hoạt thành công!</h3>
+                          <p className="text-white/80 text-center mb-2">
+                            Tài khoản VIP của bạn đã được kích hoạt
+                          </p>
+                          <div className="animate-pulse">
+                            <p className="text-sm text-white/90">Đang chuyển hướng...</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-white text-center md:text-left">
-                        <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 ngày</h3>
-                        <p className="text-white/80 text-sm mb-3">
-                          Trải nghiệm đầy đủ tính năng VIP trong 24 giờ - không cần thẻ tín dụng
-                        </p>
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          className="bg-white text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg"
-                        >
-                          <span className="flex items-center justify-center">
-                            <FaRegLightbulb className="mr-2" />
-                            Kích hoạt học thử ngay
-                          </span>
-                        </motion.button>
+                    ) : isVip ? (
+                      <div className="py-5">
+                        <div className="flex flex-col items-center text-white">
+                          <div className="mb-3 flex items-center">
+                            <FaUnlock className="text-yellow-400 text-xl mr-2" />
+                            <h3 className="text-xl font-bold">Tài khoản VIP đang hoạt động</h3>
+                          </div>
+                          <p className="text-white/80 text-center mb-4">
+                            Bạn đang trải nghiệm đầy đủ quyền lợi của gói VIP
+                          </p>
+                          <div className="bg-white/10 rounded-xl p-3 w-full">
+                            <p className="text-sm text-white mb-2 text-center">Thời gian còn lại:</p>
+                            <div className="flex justify-center space-x-4">
+                              <div className="text-center">
+                                <div className="bg-white/20 rounded px-3 py-2 text-xl font-mono font-bold">
+                                  {vipTimeRemaining.hours < 10 ? `0${vipTimeRemaining.hours}` : vipTimeRemaining.hours}
+                                </div>
+                                <div className="text-xs mt-1">Giờ</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="bg-white/20 rounded px-3 py-2 text-xl font-mono font-bold">
+                                  {vipTimeRemaining.minutes < 10 ? `0${vipTimeRemaining.minutes}` : vipTimeRemaining.minutes}
+                                </div>
+                                <div className="text-xs mt-1">Phút</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="bg-white/20 rounded px-3 py-2 text-xl font-mono font-bold">
+                                  {vipTimeRemaining.seconds < 10 ? `0${vipTimeRemaining.seconds}` : vipTimeRemaining.seconds}
+                                </div>
+                                <div className="text-xs mt-1">Giây</div>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 px-6 rounded-full text-sm shadow-lg"
+                            onClick={() => {
+                              setIsModalOpen(false);
+                              router.push('/khoa-hoc-vip');
+                            }}
+                          >
+                            Tiếp tục học ngay
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-3 bg-white/10 rounded-lg p-2 text-white/90 text-xs text-center">
-                      <span className="flex items-center justify-center">
-                        <FaRegClock className="mr-1" />
-                        Tài khoản học thử tự động hết hạn sau 24 giờ, không cần hủy!
-                      </span>
-                    </div>
+                    ) : (
+                      <div className="flex flex-col md:flex-row items-center">
+                        <div className="mb-4 md:mb-0 md:mr-6 flex-shrink-0">
+                          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                            <FaKey className="text-white text-xl" />
+                          </div>
+                        </div>
+                        <div className="text-white text-center md:text-left w-full">
+                          <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 ngày</h3>
+                          <p className="text-white/80 text-sm mb-3">
+                            Nhập key học thử để trải nghiệm đầy đủ tính năng VIP trong 24 giờ
+                          </p>
+                          
+                          <div className="flex flex-col space-y-3">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                ref={keyInputRef}
+                                value={keyInput}
+                                onChange={(e) => setKeyInput(e.target.value)}
+                                placeholder="Nhập key học thử VIP"
+                                className={`w-full bg-white/20 backdrop-blur-sm text-white placeholder-white/60 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
+                                  keyError ? 'border border-red-400' : ''
+                                }`}
+                              />
+                              {keyError && (
+                                <p className="text-red-300 text-xs mt-1">{keyError}</p>
+                              )}
+                            </div>
+                            
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              className="bg-white text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg flex items-center justify-center"
+                              onClick={handleActivateWithKey}
+                              disabled={isActivatingVip}
+                            >
+                              {isActivatingVip ? (
+                                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                              ) : (
+                                <FaUnlock className="mr-2" />
+                              )}
+                              {isActivatingVip ? 'Đang kích hoạt...' : 'Kích hoạt học thử ngay'}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!isVip && !showTrialSuccess && (
+                      <div className="mt-3 bg-white/10 rounded-lg p-2 text-white/90 text-xs text-center">
+                        <span className="flex items-center justify-center">
+                          <FaRegClock className="mr-1" />
+                          Tài khoản học thử tự động hết hạn sau 24 giờ, không cần hủy!
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
