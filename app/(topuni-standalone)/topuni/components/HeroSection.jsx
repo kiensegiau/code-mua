@@ -71,6 +71,8 @@ const HeroSection = () => {
       {/* Background pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white -z-10">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:20px_20px]"></div>
+        {/* Thêm background image */}
+        <div className="absolute inset-0 opacity-5 bg-cover bg-center" style={{ backgroundImage: 'url("/images/khoahoc-bg.jpg")' }}></div>
       </div>
       
       {/* Floating particles - decorative */}

@@ -13,7 +13,7 @@ const outfit = Outfit({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-export default function TopUniLayout({ children }) {
+export default function KhoaHocLiveLayout({ children }) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,

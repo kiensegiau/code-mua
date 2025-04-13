@@ -107,7 +107,7 @@ const Roadmap = () => {
   };
 
   return (
-    <section id="roadmap" className="py-16 relative">
+    <section id="khoa-hoc" className="py-16 relative">
       {/* Background với pattern và gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
         <div className="absolute inset-0 opacity-[0.08] [background-image:radial-gradient(#4338ca_1px,transparent_1px)] [background-size:24px_24px]"></div>
@@ -132,16 +132,16 @@ const Roadmap = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <FaRoad className="text-indigo-600 mr-2 text-sm" />
-            <span className="font-medium text-sm">Lộ trình 3 năm</span>
+            <span className="font-medium text-sm">Phát triển bản thân</span>
           </motion.div>
           
           <h2 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-blue-600 mb-4">
-            LỘ TRÌNH CHINH PHỤC ĐẠI HỌC TOP
+            LỘ TRÌNH HỌC TẬP HIỆU QUẢ
           </h2>
           
           <p className="text-slate-600 max-w-2xl mx-auto">
-            Chúng tôi đã thiết kế lộ trình học tập toàn diện trong 3 năm THPT, giúp học sinh 2k8 
-            phát triển vượt trội và tự tin bước vào kỳ thi quan trọng nhất đời học.
+            KhoaHoc.live cung cấp lộ trình học tập được thiết kế khoa học, 
+            giúp bạn phát triển bản thân một cách toàn diện và đạt được mục tiêu trong sự nghiệp.
           </p>
         </motion.div>
 

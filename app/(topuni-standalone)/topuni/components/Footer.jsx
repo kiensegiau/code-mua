@@ -1,124 +1,120 @@
 "use client";
 import React from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaYoutube, FaInstagram, FaLinkedin } from 'react-icons/fa';
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="container mx-auto px-4 md:px-6 py-10">
+    <footer className="bg-gray-900 text-white pt-12 pb-6">
+      <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Column 1 - About */}
+          {/* Logo và giới thiệu */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <span className="text-2xl font-bold text-white">TopUni</span>
-              <span className="text-sm bg-blue-600 text-white px-2 py-0.5 rounded">2026</span>
+            <div className="flex items-center mb-4">
+              <span className="text-2xl font-bold text-white">KhoaHoc</span>
+              <span className="text-sm bg-blue-600 text-white px-2 py-0.5 rounded ml-1">.live</span>
             </div>
-            <p className="text-sm mb-4">
-              Nền tảng luyện thi đại học hàng đầu Việt Nam, đồng hành cùng hàng nghìn sĩ tử chinh phục đại học top mỗi năm.
+            <p className="text-gray-400 mb-4">
+              Nền tảng học trực tuyến hàng đầu Việt Nam với hơn 1000+ khóa học 
+              chất lượng từ các chuyên gia trong nhiều lĩnh vực.
             </p>
-            <div className="flex space-x-4 text-lg">
-              <a href="https://facebook.com" className="text-blue-400 hover:text-blue-300 transition-colors">
-                <FaFacebook />
-              </a>
-              <a href="https://youtube.com" className="text-red-500 hover:text-red-400 transition-colors">
-                <FaYoutube />
-              </a>
-              <a href="https://tiktok.com" className="text-gray-200 hover:text-white transition-colors">
-                <FaTiktok />
-              </a>
+            <div className="flex space-x-3">
+              <SocialIcon icon={<FaFacebook />} href="https://www.facebook.com/khoahoc6.0" />
+              <SocialIcon icon={<FaTwitter />} href="https://twitter.com" />
+              <SocialIcon icon={<FaYoutube />} href="https://youtube.com" />
+              <SocialIcon icon={<FaInstagram />} href="https://instagram.com" />
+              <SocialIcon icon={<FaLinkedin />} href="https://linkedin.com" />
             </div>
           </div>
           
-          {/* Column 2 - Links */}
+          {/* Danh mục */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Liên kết nhanh</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="#lo-trinh" className="hover:text-blue-400 transition-colors">Lộ trình học</Link>
-              </li>
-              <li>
-                <Link href="#giao-vien" className="hover:text-blue-400 transition-colors">Đội ngũ giáo viên</Link>
-              </li>
-              <li>
-                <Link href="#hoc-sinh" className="hover:text-blue-400 transition-colors">Học sinh xuất sắc</Link>
-              </li>
-              <li>
-                <Link href="#challenges" className="hover:text-blue-400 transition-colors">Thách thức kỳ thi</Link>
-              </li>
-              <li>
-                <Link href="#dang-ky" className="hover:text-blue-400 transition-colors">Đăng ký tư vấn</Link>
-              </li>
+            <h3 className="text-lg font-semibold mb-4 text-white">Khóa học</h3>
+            <ul className="space-y-2">
+              <FooterLink href="#khoa-hoc">Khóa học nổi bật</FooterLink>
+              <FooterLink href="#linh-vuc">Lĩnh vực học tập</FooterLink>
+              <FooterLink href="#roadmap">Lộ trình học tập</FooterLink>
+              <FooterLink href="#giang-vien">Giảng viên</FooterLink>
+              <FooterLink href="#dang-ky">Đăng ký khóa học</FooterLink>
             </ul>
           </div>
           
-          {/* Column 3 - Courses */}
+          {/* Hỗ trợ */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Khóa học</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="#" className="hover:text-blue-400 transition-colors">Luyện thi ĐGNL ĐHQG HN</Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-blue-400 transition-colors">Luyện thi ĐGTD ĐHBK</Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-blue-400 transition-colors">Luyện thi ĐGNL ĐHQG HCM</Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-blue-400 transition-colors">Luyện thi THPT QG</Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-blue-400 transition-colors">Luyện thi IELTS</Link>
-              </li>
+            <h3 className="text-lg font-semibold mb-4 text-white">Hỗ trợ</h3>
+            <ul className="space-y-2">
+              <FooterLink href="#">Trung tâm hỗ trợ</FooterLink>
+              <FooterLink href="#">FAQ</FooterLink>
+              <FooterLink href="#">Liên hệ</FooterLink>
+              <FooterLink href="#">Chính sách bảo mật</FooterLink>
+              <FooterLink href="#">Điều khoản sử dụng</FooterLink>
             </ul>
           </div>
           
-          {/* Column 4 - Contact */}
+          {/* Liên hệ */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Liên hệ</h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start">
-                <FaMapMarkerAlt className="text-blue-400 text-lg mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-white mb-1">Văn phòng Hà Nội</p>
-                  <p>Tòa 25T1 Nguyễn Thị Thâp, Phường Trung Hòa, Quận Cầu Giấy</p>
-                </div>
+            <h3 className="text-lg font-semibold mb-4 text-white">Liên hệ</h3>
+            <ul className="space-y-2 text-gray-400">
+              <li>
+                <a 
+                  href="https://www.facebook.com/khoahoc6.0" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center hover:text-blue-400 transition-colors"
+                >
+                  <FaFacebook className="mr-2" />
+                  Facebook: khoahoc6.0
+                </a>
               </li>
-              <li className="flex items-start">
-                <FaMapMarkerAlt className="text-blue-400 text-lg mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-white mb-1">Văn phòng Hồ Chí Minh</p>
-                  <p>Lầu 8, Tòa nhà Giày Việt Plaza 180-182 Lý Chính Thắng P9, Q3</p>
-                </div>
-              </li>
-              <li className="flex items-center">
-                <FaPhone className="text-blue-400 text-lg mr-3 flex-shrink-0" />
-                <a href="tel:0967180038" className="hover:text-blue-400 transition-colors">0967.180.038 / 0901.726.798</a>
-              </li>
-              <li className="flex items-center">
-                <FaEnvelope className="text-blue-400 text-lg mr-3 flex-shrink-0" />
-                <a href="mailto:hotro@hocmai.vn" className="hover:text-blue-400 transition-colors">hotro@hocmai.vn</a>
-              </li>
+              <li className="pt-2">Email: support@khoahoc.live</li>
             </ul>
           </div>
         </div>
         
-        <div className="pt-6 mt-6 border-t border-gray-800 text-sm">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p>© 2023 TopUni. Bản quyền thuộc về Công ty Cổ phần Đầu tư và Dịch vụ Giáo dục</p>
-              <p className="mt-1">MST: 0102183602 do Sở kế hoạch và Đầu tư thành phố Hà Nội cấp ngày 13/03/2007</p>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="#" className="hover:text-blue-400 transition-colors">Điều khoản sử dụng</Link>
-              <Link href="#" className="hover:text-blue-400 transition-colors">Chính sách bảo mật</Link>
-            </div>
-          </div>
+        <div className="text-center pt-6 border-t border-gray-800">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-gray-500 text-sm">
+              &copy; {currentYear} KhoaHoc.live - Nền tảng học trực tuyến. Bản quyền thuộc về Công ty TNHH Giáo Dục KHL.
+            </p>
+          </motion.div>
         </div>
       </div>
     </footer>
   );
 };
+
+// Component link footer
+const FooterLink = ({ href, children }) => (
+  <li>
+    <Link 
+      href={href} 
+      className="text-gray-400 hover:text-blue-400 transition-colors"
+    >
+      {children}
+    </Link>
+  </li>
+);
+
+// Component icon mạng xã hội
+const SocialIcon = ({ icon, href }) => (
+  <motion.a 
+    href={href} 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all"
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.95 }}
+  >
+    {icon}
+  </motion.a>
+);
 
 export default Footer; 
