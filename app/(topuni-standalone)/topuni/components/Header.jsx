@@ -87,36 +87,36 @@ const Header = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <span className="text-2xl font-bold text-blue-600">TopUni</span>
-              <span className="text-sm bg-blue-600 text-white px-2 py-0.5 rounded ml-1">2026</span>
+              <span className="text-2xl font-bold text-blue-600">KhoaHoc</span>
+              <span className="text-sm bg-blue-600 text-white px-2 py-0.5 rounded ml-1">.live</span>
             </motion.div>
           </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <NavLink 
-              href="#lo-trinh" 
-              onHover={() => setHoveredItem('lo-trinh')}
+              href="#khoa-hoc" 
+              onHover={() => setHoveredItem('khoa-hoc')}
               onLeave={() => setHoveredItem(null)}
-              isHovered={hoveredItem === 'lo-trinh'}
+              isHovered={hoveredItem === 'khoa-hoc'}
             >
-              Lộ trình
+              Khóa học
             </NavLink>
             <NavLink 
-              href="#giao-vien" 
-              onHover={() => setHoveredItem('giao-vien')}
+              href="#giang-vien" 
+              onHover={() => setHoveredItem('giang-vien')}
               onLeave={() => setHoveredItem(null)}
-              isHovered={hoveredItem === 'giao-vien'}
+              isHovered={hoveredItem === 'giang-vien'}
             >
-              Giáo viên
+              Giảng viên
             </NavLink>
             <NavLink 
-              href="#hoc-sinh" 
-              onHover={() => setHoveredItem('hoc-sinh')}
+              href="#linh-vuc" 
+              onHover={() => setHoveredItem('linh-vuc')}
               onLeave={() => setHoveredItem(null)}
-              isHovered={hoveredItem === 'hoc-sinh'}
+              isHovered={hoveredItem === 'linh-vuc'}
             >
-              Học sinh
+              Lĩnh vực
             </NavLink>
             <NavLink 
               href="#dang-ky" 
@@ -144,7 +144,7 @@ const Header = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Nhận tư vấn
+              Tìm hiểu thêm
             </motion.a>
           </div>
 
@@ -197,9 +197,9 @@ const Header = () => {
             transition={{ duration: 0.3 }}
           >
             <nav className="flex flex-col space-y-4 py-2">
-              <MobileNavLink href="#lo-trinh" onClick={() => setMobileMenuOpen(false)}>Lộ trình</MobileNavLink>
-              <MobileNavLink href="#giao-vien" onClick={() => setMobileMenuOpen(false)}>Giáo viên</MobileNavLink>
-              <MobileNavLink href="#hoc-sinh" onClick={() => setMobileMenuOpen(false)}>Học sinh</MobileNavLink>
+              <MobileNavLink href="#khoa-hoc" onClick={() => setMobileMenuOpen(false)}>Khóa học</MobileNavLink>
+              <MobileNavLink href="#giang-vien" onClick={() => setMobileMenuOpen(false)}>Giảng viên</MobileNavLink>
+              <MobileNavLink href="#linh-vuc" onClick={() => setMobileMenuOpen(false)}>Lĩnh vực</MobileNavLink>
               <MobileNavLink href="#dang-ky" onClick={() => setMobileMenuOpen(false)}>Đăng ký</MobileNavLink>
               
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -217,7 +217,7 @@ const Header = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Nhận tư vấn
+                  Tìm hiểu thêm
                 </motion.a>
               </div>
             </nav>

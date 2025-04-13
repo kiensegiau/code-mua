@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { IoTimeOutline } from 'react-icons/io5';
-import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock } from 'react-icons/fa';
+import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock, FaLaptop, FaMobileAlt, FaCertificate, FaGlobe } from 'react-icons/fa';
 
 const HeroSection = () => {
   // Countdown timer state
@@ -58,19 +58,19 @@ const HeroSection = () => {
     }
   };
 
-  // Các mục tiêu xu hướng
+  // Các điểm nổi bật của nền tảng
   const trends = [
-    { icon: <FaGraduationCap />, text: "95% đạt kết quả cao" },
-    { icon: <FaRegLightbulb />, text: "Tư duy tiếp cận mới" },
-    { icon: <FaUserGraduate />, text: "Giáo viên kinh nghiệm" },
-    { icon: <FaRegClock />, text: "Tiết kiệm thời gian" },
+    { icon: <FaLaptop />, text: "Học mọi lúc, mọi nơi" },
+    { icon: <FaRegLightbulb />, text: "Nội dung chất lượng cao" },
+    { icon: <FaUserGraduate />, text: "Giảng viên hàng đầu" },
+    { icon: <FaCertificate />, text: "Chứng chỉ được công nhận" },
   ];
 
   return (
     <section className="relative mt-16 md:mt-20 pt-12 pb-16 md:py-16 overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white -z-10">
-        <div className="absolute inset-0 opacity-20 bg-grid-pattern"></div>
+        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:20px_20px]"></div>
       </div>
       
       {/* Floating particles - decorative */}
@@ -114,7 +114,7 @@ const HeroSection = () => {
             >
               <span className="flex items-center">
                 <span className="w-2 h-2 bg-blue-600 rounded-full mr-2 animate-pulse"></span>
-                HỌC SINH 2K8 CHÚ Ý
+                TRỞ THÀNH CHUYÊN GIA
               </span>
             </motion.div>
             
@@ -122,19 +122,20 @@ const HeroSection = () => {
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
               variants={itemVariants}
             >
-              Lộ trình học <span className="text-blue-600 relative">
-                toàn diện
+              Nền tảng học trực tuyến <span className="text-blue-600 relative">
+                hàng đầu
                 <svg className="absolute bottom-1 left-0 w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10" width="100%" height="10" preserveAspectRatio="none">
                   <path d="M0,5 C20,0 80,10 100,5" fill="none" stroke="#3B82F6" strokeWidth="2" />
                 </svg>
-              </span> đảm bảo đỗ Đại học top
+              </span> Việt Nam
             </motion.h1>
             
             <motion.p 
               className="text-lg text-gray-700 mb-8"
               variants={itemVariants}
             >
-              Lộ trình học được thiết kế chuyên sâu bởi đội ngũ giáo viên 18+ năm kinh nghiệm, giúp bạn chinh phục điểm cao nhất trong kỳ thi đại học 2026.
+              Khám phá hơn 1000+ khóa học từ các chuyên gia hàng đầu. Nâng cao kỹ năng, 
+              mở rộng kiến thức và phát triển sự nghiệp của bạn với KhoaHoc.live.
             </motion.p>
             
             {/* Xu hướng */}
@@ -175,12 +176,12 @@ const HeroSection = () => {
                 />
               </motion.a>
               <motion.a 
-                href="#lo-trinh" 
+                href="#khoa-hoc" 
                 className="bg-white hover:bg-gray-50 text-blue-600 text-center font-semibold px-6 py-3 rounded-full shadow border-2 border-blue-100 hover:border-blue-200 transition-all duration-300"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                Xem lộ trình học
+                Khám phá khóa học
               </motion.a>
             </motion.div>
             
@@ -207,7 +208,7 @@ const HeroSection = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
               >
-                <span className="font-medium text-yellow-600">Chỉ còn 19 suất!</span> Dành cho 100 học sinh đăng ký sớm nhất
+                <span className="font-medium text-yellow-600">Giảm giá 50%!</span> Áp dụng cho 100 học viên đăng ký sớm nhất
               </motion.p>
             </motion.div>
           </motion.div>
@@ -225,27 +226,11 @@ const HeroSection = () => {
                 <div className="w-full h-full">
                   <Image
                     src="/images/student-success.jpg"
-                    alt="Học sinh thành công cùng TopUni"
+                    alt="Học viên thành công cùng KhoaHoc.live"
                     className="object-cover"
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
-                    onError={(e) => {
-                      // Fallback khi hình ảnh không load được
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement.innerHTML = `
-                        <div class="w-full h-full flex items-center justify-center text-blue-600 text-lg bg-blue-50">
-                          <div class="text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-5-9-5-9 5 9 5z" />
-                            </svg>
-                            <p>Học sinh xuất sắc cùng TopUni</p>
-                          </div>
-                        </div>
-                      `;
-                    }}
                   />
                   {/* Overlay gradient */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent"></div>
@@ -276,11 +261,11 @@ const HeroSection = () => {
             >
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-full text-white flex items-center justify-center font-semibold">
-                  18+
+                  100+
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Giáo viên kinh nghiệm</p>
-                  <p className="text-xs text-gray-600">Đội ngũ giảng dạy hàng đầu</p>
+                  <p className="font-semibold text-gray-900">Giảng viên hàng đầu</p>
+                  <p className="text-xs text-gray-600">Chuyên gia trong nhiều lĩnh vực</p>
                 </div>
               </div>
             </motion.div>
@@ -294,16 +279,16 @@ const HeroSection = () => {
             >
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-green-600 rounded-full text-white flex items-center justify-center font-semibold">
-                  95%
+                  1K+
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Tỷ lệ đỗ đại học</p>
-                  <p className="text-xs text-gray-600">Từ các khóa trước</p>
+                  <p className="font-semibold text-gray-900">Khóa học chất lượng</p>
+                  <p className="text-xs text-gray-600">Đa dạng lĩnh vực</p>
                 </div>
               </div>
             </motion.div>
             
-            {/* Kết quả thi rơi xuống */}
+            {/* Thống kê nổi bật rơi xuống */}
             <motion.div 
               className="absolute -bottom-5 left-1/4 bg-white px-3 py-2 rounded-lg shadow-lg"
               initial={{ opacity: 0, y: -50 }}
@@ -315,8 +300,8 @@ const HeroSection = () => {
                 stiffness: 100
               }}
             >
-              <p className="text-xs text-gray-500">Điểm ĐGNL đạt được</p>
-              <p className="text-lg font-bold text-blue-600">122/150</p>
+              <p className="text-xs text-gray-500">Học viên đã đăng ký</p>
+              <p className="text-lg font-bold text-blue-600">50.000+</p>
             </motion.div>
           </motion.div>
         </div>

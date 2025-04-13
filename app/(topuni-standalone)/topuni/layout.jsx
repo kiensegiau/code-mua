@@ -36,13 +36,13 @@ export default function TopUniLayout({ children }) {
   return (
     <>
       <Head>
-        <title>TopUni 2026 - Lộ trình học toàn diện đảm bảo đỗ Đại học top</title>
-        <meta name="description" content="Lộ trình học được thiết kế chuyên sâu bởi đội ngũ giáo viên 18+ năm kinh nghiệm, giúp bạn chinh phục điểm cao nhất trong kỳ thi đại học 2026." />
-        <meta name="keywords" content="luyện thi đại học, 2k8, đại học top, ĐGNL, ĐGTD, THPT" />
-        <meta property="og:title" content="TopUni 2026 - Lộ trình học toàn diện" />
-        <meta property="og:description" content="Lộ trình học được thiết kế chuyên sâu bởi đội ngũ giáo viên 18+ năm kinh nghiệm." />
+        <title>KhoaHoc.live - Nền tảng học trực tuyến hàng đầu</title>
+        <meta name="description" content="Nền tảng học trực tuyến với đa dạng khóa học chất lượng cao từ các giảng viên hàng đầu, giúp bạn nâng cao kỹ năng và phát triển sự nghiệp." />
+        <meta name="keywords" content="khóa học online, học trực tuyến, e-learning, khoahoc.live, phát triển kỹ năng" />
+        <meta property="og:title" content="KhoaHoc.live - Nền tảng học trực tuyến hàng đầu" />
+        <meta property="og:description" content="Nền tảng học trực tuyến với đa dạng khóa học chất lượng cao từ các giảng viên hàng đầu." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://topuni.hocmai.vn/2026/" />
+        <meta property="og:url" content="https://khoahoc.live/" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -65,8 +65,8 @@ export default function TopUniLayout({ children }) {
                 className="flex flex-col items-center"
               >
                 <div className="text-3xl font-bold flex items-center text-blue-600 mb-4">
-                  <span>TopUni</span>
-                  <span className="text-sm bg-blue-600 text-white px-2 py-0.5 rounded ml-2">2026</span>
+                  <span>KhoaHoc</span>
+                  <span className="text-sm bg-blue-600 text-white px-2 py-0.5 rounded ml-2">.live</span>
                 </div>
                 <div className="w-24 h-1 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div 
