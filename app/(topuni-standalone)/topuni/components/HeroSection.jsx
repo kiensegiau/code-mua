@@ -536,7 +536,7 @@ const HeroSection = () => {
                           </div>
                           <h3 className="text-xl font-bold mb-2">Kích hoạt thành công!</h3>
                           <p className="text-white/80 text-center mb-4">
-                            Tài khoản VIP của bạn đã được kích hoạt
+                            Đăng nhập thành công
                           </p>
                           {trialAccountInfo && (
                             <div className="bg-white/10 rounded-lg p-3 mb-3 text-white/90 text-xs">
