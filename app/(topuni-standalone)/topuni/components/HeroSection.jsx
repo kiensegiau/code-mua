@@ -294,7 +294,9 @@ const HeroSection = () => {
               variants={itemVariants}
             >
               <motion.a 
-                href="#dang-ky" 
+                href="https://m.me/khoahoc6.0" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-blue-600 hover:bg-blue-700 text-white text-center font-semibold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -607,23 +609,25 @@ const HeroSection = () => {
                             Trải nghiệm đầy đủ tính năng VIP trong 24 giờ - không cần đăng ký tài khoản!
                           </p>
                           
-                          <motion.button
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            className="bg-white text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg flex items-center justify-center w-full"
-                            onClick={handleCreateTrialAccount}
-                            disabled={isCreatingAccount}
-                          >
-                            {isCreatingAccount ? (
-                              <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                              </svg>
-                            ) : (
-                              <FaUnlock className="mr-2" />
-                            )}
-                            {isCreatingAccount ? 'Đang tạo tài khoản...' : 'Học thử ngay không cần đăng ký'}
-                          </motion.button>
+                          <div className="rounded-full overflow-hidden">
+                            <motion.button
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              className="bg-[#ffffff] text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg flex items-center justify-center w-full"
+                              onClick={handleCreateTrialAccount}
+                              disabled={isCreatingAccount}
+                            >
+                              {isCreatingAccount ? (
+                                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                              ) : (
+                                <FaUnlock className="mr-2" />
+                              )}
+                              {isCreatingAccount ? 'Đang tạo tài khoản...' : 'Học thử ngay không cần đăng ký'}
+                            </motion.button>
+                          </div>
                           
                           {keyError && (
                             <p className="text-red-300 text-xs mt-2 text-center">{keyError}</p>
