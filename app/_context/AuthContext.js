@@ -31,7 +31,7 @@ const VIP_TRIAL_PERIOD = 24 * 60 * 60 * 1000; // 24 giờ tính bằng ms
 
 // Danh sách các đường dẫn công khai
 const PUBLIC_PATHS = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password', '/sign-out'];
-const EXCLUDED_PATHS = ['/api', '/_next', '/static', '/favicon.ico', '/public', '/assets'];
+const EXCLUDED_PATHS = ['/api', '/_next', '/static', '/favicon.ico', '/public', '/assets', '/topuni'];
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

@@ -348,41 +348,23 @@ function HomePage() {
     []
   );
 
-  const productCategories = [
+  const studentTestimonials = [
     {
-      title: "Đồ Cúng Truyền Thống",
-      image: "/images/traditional.jpg",
-      description: "Đầy đủ vật phẩm cúng lễ truyền thống với chất lượng cao cấp",
-      items: ["Hương trầm", "Đèn cầy", "Nhang sạch", "Đồ cúng tinh khiết"]
-    },
-    {
-      title: "Vật Phẩm Phong Thủy",
-      image: "/images/fengshui.jpg",
-      description: "Các vật phẩm phong thủy mang lại may mắn, tài lộc cho gia chủ",
-      items: ["Tượng Phật", "Linh vật", "Đá phong thủy", "Vòng tay may mắn"]
-    },
-    {
-      title: "Đồ Cúng Hiện Đại",
-      image: "/images/modern.jpg",
-      description: "Sản phẩm đồ cúng hiện đại, tiện lợi phù hợp với không gian sống mới",
-      items: ["Bếp điện đốt trầm", "Đèn thờ điện", "Nhang không khói", "Đồ cúng mini"]
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Nguyễn Văn A",
-      content: "Sản phẩm chất lượng, giao hàng nhanh chóng. Tôi rất hài lòng với đồ cúng từ An Thành Phát.",
+      name: "Nguyễn Hoàng Minh",
+      school: "THPT Chu Văn An",
+      content: "Hệ thống đánh giá năng lực giúp em hiểu rõ điểm mạnh, điểm yếu của bản thân. Sau 6 tháng học theo lộ trình được đề xuất, em đã đạt 8.5/10 trong kỳ thi đánh giá năng lực.",
       rating: 5
     },
     {
-      name: "Trần Thị B",
-      content: "Đồ cúng tinh xảo, mẫu mã đẹp. Nhân viên tư vấn nhiệt tình. Sẽ tiếp tục ủng hộ.",
+      name: "Trần Mai Anh",
+      school: "THPT Lê Hồng Phong",
+      content: "Phương pháp đánh giá 4D Framework giúp em phát triển toàn diện cả về kiến thức lẫn kỹ năng. Em đã tự tin hơn rất nhiều khi tham gia các kỳ thi và hoạt động ngoại khóa.",
       rating: 5
     },
     {
-      name: "Lê Văn C",
-      content: "Giá cả hợp lý, sản phẩm đa dạng. Đặc biệt là hương trầm rất thơm và cháy lâu.",
+      name: "Lê Thành Nam",
+      school: "THPT Nguyễn Huệ",
+      content: "Nhờ hệ thống đánh giá tư duy, em đã khám phá ra năng khiếu của mình trong lĩnh vực STEM và đã định hướng được ngành học đại học phù hợp.",
       rating: 4
     }
   ];
@@ -473,27 +455,6 @@ function HomePage() {
       description: "Phát triển các kỹ năng mềm cần thiết cho học tập và tương lai",
       items: ["Quản lý thời gian", "Phương pháp học tập hiệu quả", "Kỹ năng làm bài thi", "Kỹ năng thuyết trình"]
     },
-  ];
-
-  const testimonials = [
-    {
-      name: "Nguyễn Hoàng Minh",
-      school: "THPT Chu Văn An",
-      content: "Hệ thống đánh giá năng lực giúp em hiểu rõ điểm mạnh, điểm yếu của bản thân. Sau 6 tháng học theo lộ trình được đề xuất, em đã đạt 8.5/10 trong kỳ thi đánh giá năng lực.",
-      rating: 5
-    },
-    {
-      name: "Trần Mai Anh",
-      school: "THPT Lê Hồng Phong",
-      content: "Phương pháp đánh giá 4D Framework giúp em phát triển toàn diện cả về kiến thức lẫn kỹ năng. Em đã tự tin hơn rất nhiều khi tham gia các kỳ thi và hoạt động ngoại khóa.",
-      rating: 5
-    },
-    {
-      name: "Lê Thành Nam",
-      school: "THPT Nguyễn Huệ",
-      content: "Nhờ hệ thống đánh giá tư duy, em đã khám phá ra năng khiếu của mình trong lĩnh vực STEM và đã định hướng được ngành học đại học phù hợp.",
-      rating: 4
-    }
   ];
 
   return (
@@ -620,21 +581,19 @@ function HomePage() {
           </div>
         </motion.div>
 
+        {/* Stats Section */}
+        <section className="py-16 bg-gray-900">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {stats.map((stat, index) => (
+                <StatItem key={index} value={stat.value} label={stat.label} />
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Các phần còn lại sử dụng content-visibility: auto để tối ưu hiệu suất render */}
         <div className="content-visibility-auto">
-          {/* Stats Section */}
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-8 sm:mb-12 px-2 sm:px-0"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            {stats.map((stat, index) => (
-              <StatItem key={index} {...stat} />
-            ))}
-          </motion.div>
-
           {/* Features Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 px-2 sm:px-0">
             {features.map((feature, index) => (
@@ -672,201 +631,6 @@ function HomePage() {
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </motion.div>
-
-          {/* About An Thành Phát */}
-          <section className="py-20 bg-gradient-to-r from-amber-900/20 to-amber-800/20">
-            <div className="container mx-auto px-4">
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                  className="relative"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-lg transform rotate-3"></div>
-                  <div className="relative bg-amber-900/40 p-8 rounded-lg backdrop-blur-sm border border-amber-500/30">
-                    <h2 className="text-3xl font-bold mb-6 text-amber-400">Về An Thành Phát</h2>
-                    <p className="text-gray-300 mb-4">
-                      Thành lập từ năm 2012, An Thành Phát tự hào là đơn vị tiên phong trong lĩnh vực cung cấp đồ cúng và vật phẩm phong thủy chất lượng cao tại Việt Nam.
-                    </p>
-                    <p className="text-gray-300 mb-4">
-                      Với phương châm "Tâm linh tinh khiết - Phụng sự chân thành", chúng tôi cam kết mang đến những sản phẩm chất lượng nhất, góp phần gìn giữ nét đẹp văn hóa tâm linh của dân tộc.
-                    </p>
-                    <div className="space-y-3 mt-6">
-                      <div className="flex items-start">
-                        <div className="bg-amber-500/20 p-2 rounded-full mr-4">
-                          <CheckCircle2 className="h-5 w-5 text-amber-400" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-300">Sứ mệnh</h4>
-                          <p className="text-gray-400">Nâng cao trải nghiệm tâm linh với sản phẩm chất lượng</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="bg-amber-500/20 p-2 rounded-full mr-4">
-                          <CheckCircle2 className="h-5 w-5 text-amber-400" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-300">Tầm nhìn</h4>
-                          <p className="text-gray-400">Trở thành đơn vị hàng đầu về đồ cúng và phong thủy</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="bg-amber-500/20 p-2 rounded-full mr-4">
-                          <CheckCircle2 className="h-5 w-5 text-amber-400" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-amber-300">Giá trị cốt lõi</h4>
-                          <p className="text-gray-400">Chất lượng - Uy tín - Tận tâm - Sáng tạo</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-                
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-4">
-                      <div className="bg-amber-900/40 p-4 rounded-lg backdrop-blur-sm border border-amber-500/30 h-40">
-                        <h3 className="text-xl font-semibold text-amber-400 mb-2">10+</h3>
-                        <p className="text-gray-300">Năm kinh nghiệm trong ngành</p>
-                      </div>
-                      <div className="bg-amber-900/40 p-4 rounded-lg backdrop-blur-sm border border-amber-500/30 h-40">
-                        <h3 className="text-xl font-semibold text-amber-400 mb-2">5000+</h3>
-                        <p className="text-gray-300">Khách hàng tin tưởng sử dụng</p>
-                      </div>
-                    </div>
-                    <div className="space-y-4 mt-8">
-                      <div className="bg-amber-900/40 p-4 rounded-lg backdrop-blur-sm border border-amber-500/30 h-40">
-                        <h3 className="text-xl font-semibold text-amber-400 mb-2">200+</h3>
-                        <p className="text-gray-300">Mẫu sản phẩm đa dạng</p>
-                      </div>
-                      <div className="bg-amber-900/40 p-4 rounded-lg backdrop-blur-sm border border-amber-500/30 h-40">
-                        <h3 className="text-xl font-semibold text-amber-400 mb-2">30+</h3>
-                        <p className="text-gray-300">Cửa hàng và đại lý trên toàn quốc</p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </section>
-
-          {/* Product Categories */}
-          <section className="py-16 bg-gradient-to-b from-amber-100 to-amber-50">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center mb-12 text-amber-900">Danh Mục Sản Phẩm</h2>
-              
-              <div className="grid md:grid-cols-3 gap-8">
-                {productCategories.map((category, index) => (
-                  <motion.div 
-                    key={index}
-                    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <div className="h-48 bg-amber-200 relative">
-                      {isClient && (
-                        <Image 
-                          src={category.image || `/images/placeholder-${index + 1}.jpg`}
-                          alt={category.title}
-                          fill
-                          className="object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-3 text-amber-800">{category.title}</h3>
-                      <p className="text-amber-700 mb-4">{category.description}</p>
-                      <ul className="space-y-2 mb-4">
-                        {category.items.map((item, i) => (
-                          <li key={i} className="flex items-start">
-                            <CheckCircle2 className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
-                            <span className="text-amber-700">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Link href={`/products/${category.title.toLowerCase().replace(/\s+/g, '-')}`} className="text-amber-600 font-medium hover:text-amber-700 inline-flex items-center">
-                        Xem thêm
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Testimonials */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center mb-12 text-amber-900">Khách Hàng Nói Gì</h2>
-              
-              <div className="grid md:grid-cols-3 gap-8">
-                {testimonials.map((testimonial, index) => (
-                  <motion.div 
-                    key={index}
-                    className="bg-white p-6 rounded-lg shadow-md"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-800 font-bold mr-4">
-                        {testimonial.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-amber-800">{testimonial.name}</h4>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <svg 
-                              key={i} 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className={`h-4 w-4 ${i < testimonial.rating ? 'text-amber-500' : 'text-gray-300'}`}
-                              viewBox="0 0 20 20" 
-                              fill="currentColor"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-amber-700 italic">{testimonial.content}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* CTA Section */}
-          <section className="py-16 bg-gradient-to-r from-amber-500 to-amber-600">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-3xl font-bold mb-6 text-white">Sẵn sàng nâng tầm trải nghiệm tâm linh của bạn?</h2>
-                <p className="text-amber-100 mb-8">
-                  Khám phá bộ sưu tập đồ cúng chất lượng cao và vật phẩm phong thủy độc đáo tại An Thành Phát ngay hôm nay.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/products" className="bg-white text-amber-600 hover:bg-amber-100 font-medium py-3 px-6 rounded-lg transition-colors">
-                    Xem sản phẩm
-                  </Link>
-                  <Link href="/contact" className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-medium py-3 px-6 rounded-lg transition-colors">
-                    Liên hệ tư vấn
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
 
           {/* 4D Framework Categories */}
           <section className="py-16 bg-gray-900">
@@ -1013,75 +777,6 @@ function HomePage() {
                     </div>
                   </motion.div>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Testimonials */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white mb-4">Học Sinh Nói Gì</h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Chia sẻ từ các học sinh đã sử dụng hệ thống đánh giá năng lực của chúng tôi
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-8">
-                {testimonials.map((testimonial, index) => (
-                  <motion.div 
-                    key={index}
-                    className="bg-gray-800 p-6 rounded-xl border border-gray-700"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-[#3b82f6]/20 rounded-full flex items-center justify-center text-[#3b82f6] font-bold mr-4">
-                        {testimonial.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                        <p className="text-gray-400 text-sm">{testimonial.school}</p>
-                      </div>
-                    </div>
-                    <div className="flex mb-4">
-                      {[...Array(5)].map((_, i) => (
-                        <svg 
-                          key={i} 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className={`h-4 w-4 ${i < testimonial.rating ? 'text-[#3b82f6]' : 'text-gray-600'}`}
-                          viewBox="0 0 20 20" 
-                          fill="currentColor"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <p className="text-gray-300 italic">{testimonial.content}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* CTA Section */}
-          <section className="py-16 bg-gradient-to-r from-amber-500 to-amber-600">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-3xl font-bold mb-6 text-white">Sẵn sàng phát triển toàn diện?</h2>
-                <p className="text-amber-100 mb-8">
-                  Đánh giá năng lực và tiếp cận lộ trình học tập cá nhân hóa giúp bạn phát triển tối đa tiềm năng
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/assessment" className="bg-white text-[#3b82f6] hover:bg-blue-50 font-medium py-3 px-6 rounded-lg transition-colors">
-                    Đánh giá năng lực
-                  </Link>
-                  <Link href="/courses" className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-medium py-3 px-6 rounded-lg transition-colors">
-                    Xem khóa học
-                  </Link>
-                </div>
               </div>
             </div>
           </section>
