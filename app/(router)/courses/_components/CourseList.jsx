@@ -139,6 +139,11 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
       icon: <BookOpen className="w-4 h-4" />,
     },
     {
+      value: "japanese",
+      label: "Tiếng Nhật",
+      icon: <BookOpen className="w-4 h-4" />,
+    },
+    {
       value: "history",
       label: "Lịch sử",
       icon: <BookOpen className="w-4 h-4" />,
@@ -189,7 +194,7 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
       // md
       setItemsPerPage(3);
     } else {
-      setItemsPerPage(2);
+      setItemsPerPage(1); // Chỉ hiển thị 1 khóa học trên điện thoại
     }
   }, []);
 
@@ -240,6 +245,14 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
           enhancedCourse.subject = 'literature';
         } else if (title.match(/\bANH\b/i) || title.match(/\bENGLISH\b/i)) {
           enhancedCourse.subject = 'english';
+        } else if (title.match(/\bNHẬT\b/i) || title.match(/\bJAPANESE\b/i)) {
+          enhancedCourse.subject = 'japanese';
+        } else if (title.match(/\bPHÁP\b/i) || title.match(/\bFRENCH\b/i) || 
+                   title.match(/\bHÀN\b/i) || title.match(/\bKOREAN\b/i) || 
+                   title.match(/\bTRUNG\b/i) || title.match(/\bCHINESE\b/i) || 
+                   title.match(/\bNGOẠI NGỮ\b/i) || title.match(/\bFOREIGN LANGUAGE\b/i) ||
+                   title.match(/\bRIKI\b/i)) {
+          enhancedCourse.subject = 'others';
         } else if (title.match(/\bSỬ\b/i) || title.match(/\bLỊCH SỬ\b/i) || title.match(/\bHISTORY\b/i)) {
           enhancedCourse.subject = 'history';
         } else if (title.match(/\bĐỊA\b/i) || title.match(/\bĐỊA LÝ\b/i) || title.match(/\bGEOGRAPHY\b/i)) {
@@ -328,10 +341,11 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
     }));
   }, [courses, subjects]);
 
-  // Chỉ hiển thị các môn có khóa học
+  // Hiển thị các môn có khóa học và môn ngoại ngữ (luôn hiển thị)
   const subjectsWithCourses = useMemo(
     () =>
       subjects.filter((subject) =>
+        subject.value === "foreign_languages" || 
         coursesBySubject.some(
           (category) =>
             category.id === subject.value && category.courses.length > 0
@@ -423,7 +437,13 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
         const category = coursesBySubject.find(
           (cat) => cat.id === subject.value
         );
-        if (!category || !category.courses.length) return null;
+        
+        // Special handling for foreign_languages to ensure it displays even without courses
+        if (!category) return null;
+        
+        const isEmptyForeignLanguages = subject.value === "foreign_languages" && (!category.courses || category.courses.length === 0);
+        
+        if (category.courses.length === 0 && !isEmptyForeignLanguages) return null;
 
         const isExpanded = expandedSubjects[subject.value];
         const displayedCourses = isExpanded
@@ -466,13 +486,25 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
             </div>
 
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-5">
-              {displayedCourses.map((course, courseIndex) => (
-                <LazyLoadedCourseItem
-                  key={course.id}
-                  course={course}
-                  index={courseIndex}
-                />
-              ))}
+              {isEmptyForeignLanguages ? (
+                <div className="col-span-full py-8 text-center">
+                  <div className="w-16 h-16 bg-[#ff4d4f]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-8 h-8 text-[#ff4d4f]" />
+                  </div>
+                  <h3 className="text-white font-medium mb-2">Chưa có khóa học ngoại ngữ</h3>
+                  <p className="text-gray-400 max-w-lg mx-auto">
+                    Chúng tôi đang cập nhật thêm khóa học ngoại ngữ. Vui lòng quay lại sau!
+                  </p>
+                </div>
+              ) : (
+                displayedCourses.map((course, courseIndex) => (
+                  <LazyLoadedCourseItem
+                    key={course.id}
+                    course={course}
+                    index={courseIndex}
+                  />
+                ))
+              )}
             </div>
 
             {hasMore && !isExpanded && (

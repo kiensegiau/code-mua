@@ -434,9 +434,6 @@ const CourseItem = ({
                         <BookOpen className="w-8 h-8 text-[#ff4d4f]/50" />
                       </div>
                       <div className="space-y-1.5">
-                        <p className="text-[#ff4d4f]/70 font-medium text-sm tracking-wider uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#ff4d4f]/90 to-[#ff7875]/90">
-                          Hoc Mai
-                        </p>
                         <p className="text-xs text-gray-500 px-4">
                           {title}
                         </p>
