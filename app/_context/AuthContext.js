@@ -29,7 +29,7 @@ const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 năm tính bằng giây
 
 // Danh sách các đường dẫn công khai
 const PUBLIC_PATHS = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password', '/sign-out'];
-const EXCLUDED_PATHS = ['/api', '/_next', '/static', '/favicon.ico', '/public', '/assets', '/topuni'];
+const EXCLUDED_PATHS = ['/api', '/_next', '/static', '/favicon.ico', '/public', '/assets', '/hoc-thu-free'];
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

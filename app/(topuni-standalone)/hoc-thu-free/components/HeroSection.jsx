@@ -30,6 +30,7 @@ const HeroSection = () => {
   const [keyError, setKeyError] = useState("");
   const keyInputRef = useRef(null);
   const [hasTriedVip, setHasTriedVip] = useState(false);
+  const [trialCountLeft, setTrialCountLeft] = useState(3);
   
   // Countdown timer từ phiên bản cũ
   const [timeLeft, setTimeLeft] = useState({
@@ -42,11 +43,36 @@ const HeroSection = () => {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [trialAccountInfo, setTrialAccountInfo] = useState(null);
 
+  // Thêm state cho các particle để tránh hydration mismatch
+  const [particles, setParticles] = useState([]);
+
+  // Khởi tạo particles chỉ ở phía client để tránh hydration mismatch
+  useEffect(() => {
+    const generateParticles = () => {
+      return [...Array(15)].map((_, i) => ({
+        id: i,
+        width: Math.random() > 0.7 ? 4 : 3,
+        height: Math.random() > 0.7 ? 4 : 3,
+        color: Math.random() > 0.7 ? 'bg-yellow-400/20' : 'bg-blue-600/20',
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        duration: 3 + Math.random() * 5,
+        delay: Math.random() * 2
+      }));
+    };
+
+    setParticles(generateParticles());
+  }, []);
+
   // Kiểm tra xem người dùng đã từng học thử chưa
   useEffect(() => {
     // Kiểm tra localStorage khi component được mount
     const triedVipBefore = localStorage.getItem('has_tried_vip') === 'true';
-    setHasTriedVip(triedVipBefore);
+    const trialCount = localStorage.getItem('trial_count') ? parseInt(localStorage.getItem('trial_count')) : 0;
+    const remainingTrials = 3 - trialCount;
+    
+    setHasTriedVip(triedVipBefore && remainingTrials <= 0);
+    setTrialCountLeft(remainingTrials > 0 ? remainingTrials : 0);
   }, []);
 
   // Set deadline to end of current day (23:59:59)
@@ -88,83 +114,167 @@ const HeroSection = () => {
     try {
       setShowTrialSuccess(false);
       setIsCreatingAccount(true);
+      setKeyError("");
       
       // Kiểm tra xem người dùng đã có tài khoản VIP test chưa
       // Kiểm tra thông qua localStorage hoặc cookie
-      const hasTriedVip = localStorage.getItem('has_tried_vip');
+      const trialCount = localStorage.getItem('trial_count') ? parseInt(localStorage.getItem('trial_count')) : 0;
       
-      if (hasTriedVip === 'true') {
-        throw new Error("Bạn đã sử dụng tính năng học thử trước đó. Mỗi người dùng chỉ được dùng thử 1 lần.");
+      if (trialCount >= 3) {
+        throw new Error("Bạn đã sử dụng hết 3 lần học thử. Vui lòng đăng ký gói VIP để tiếp tục.");
       }
       
       // Tạo tài khoản học thử tự động
-      const response = await fetch("/api/auth/create-trial-account", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        }
-      });
+      let accountCreated = false;
+      let retryCount = 0;
+      const maxRetries = 3;
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Không thể tạo tài khoản học thử");
-      }
-      
-      const data = await response.json();
-      
-      // Đánh dấu người dùng đã sử dụng tính năng học thử
-      localStorage.setItem('has_tried_vip', 'true');
-      
-      // Lưu thông tin tài khoản đã tạo
-      setTrialAccountInfo(data.user);
-      
-      // Tự động đăng nhập vào tài khoản mới tạo
-      await signInWithCustomToken(auth, data.customToken);
-      
-      // Lấy ID token từ người dùng đã đăng nhập và lưu vào cookie
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        // Lấy ID token từ tài khoản đã đăng nhập
-        const idToken = await currentUser.getIdToken(true);
-        
-        // Lưu token vào cookie thông qua API
-        const tokenResponse = await fetch('/api/auth/set-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ idToken })
-        });
-        
-        if (!tokenResponse.ok) {
-          console.error('Lỗi khi lưu token vào cookie');
-        } else {
-          console.log('Token đã được lưu vào cookie thành công');
-        }
-      }
-      
-      // Hiển thị thông báo thành công
-      setShowTrialSuccess(true);
-      
-      // Chuyển hướng sau khi đăng nhập thành công
-      setTimeout(() => {
-        setShowTrialSuccess(false);
-        setIsModalOpen(false);
-        
+      while (!accountCreated && retryCount < maxRetries) {
         try {
-          console.log('🔄 Chuyển hướng đến trang chủ');
-          // Sử dụng window.location.href thay vì router để đảm bảo trang được tải lại hoàn toàn
-          window.location.href = '/';
-        } catch (navigateError) {
-          console.error('❌ Lỗi khi chuyển hướng:', navigateError);
-          // Phương án dự phòng
-          router.push('/');
+          console.log(`Đang tạo tài khoản học thử (lần thử ${retryCount + 1})...`);
+          
+          const response = await fetch("/api/auth/create-trial-account", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            }
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Không thể tạo tài khoản học thử");
+          }
+          
+          const data = await response.json();
+          
+          // Xác minh tài khoản đã được tạo
+          if (!data.user || !data.user.uid || !data.customToken) {
+            throw new Error("Dữ liệu tài khoản không hợp lệ");
+          }
+          
+          // Đánh dấu người dùng đã sử dụng tính năng học thử
+          const newTrialCount = trialCount + 1;
+          localStorage.setItem('trial_count', newTrialCount.toString());
+          if (newTrialCount >= 3) {
+            localStorage.setItem('has_tried_vip', 'true');
+          }
+          
+          // Lưu thông tin tài khoản đã tạo
+          setTrialAccountInfo(data.user);
+          
+          // Tự động đăng nhập vào tài khoản mới tạo
+          console.log("Đăng nhập với token...");
+          await signInWithCustomToken(auth, data.customToken);
+          
+          // Lấy ID token từ người dùng đã đăng nhập và lưu vào cookie
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            let tokenSaved = false;
+            let tokenRetries = 0;
+            const maxTokenRetries = 3;
+            
+            while (!tokenSaved && tokenRetries < maxTokenRetries) {
+              try {
+                // Lấy ID token từ tài khoản đã đăng nhập
+                console.log(`Lấy và lưu token (lần thử ${tokenRetries + 1})...`);
+                const idToken = await currentUser.getIdToken(true);
+                
+                // Lưu token vào cookie thông qua API
+                const tokenResponse = await fetch('/api/auth/set-token', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ idToken }),
+                  // Tăng timeout để tránh lỗi mạng
+                  timeout: 10000
+                });
+                
+                if (!tokenResponse.ok) {
+                  const tokenError = await tokenResponse.json();
+                  throw new Error(tokenError.message || 'Lỗi khi lưu token');
+                }
+                
+                // Xác minh token đã được lưu
+                console.log("Xác minh token đã được lưu...");
+                try {
+                  const verifyTokenResponse = await fetch('/api/auth/verify-token', {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    }
+                  });
+                  
+                  if (!verifyTokenResponse.ok) {
+                    console.warn('Không thể xác minh token qua API - Bỏ qua bước này');
+                  } else {
+                    console.log('Xác minh token thành công qua API');
+                  }
+                } catch (verifyError) {
+                  console.warn('Lỗi khi xác minh token - Bỏ qua bước này:', verifyError);
+                }
+                
+                console.log('Token đã được lưu vào cookie thành công');
+                tokenSaved = true;
+              } catch (tokenError) {
+                console.error(`Lỗi khi lưu token (lần ${tokenRetries + 1}):`, tokenError);
+                tokenRetries++;
+                if (tokenRetries < maxTokenRetries) {
+                  // Chờ 1 giây trước khi thử lại
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                } else {
+                  throw new Error("Không thể lưu token sau nhiều lần thử");
+                }
+              }
+            }
+          } else {
+            throw new Error("Đăng nhập thất bại - Không thể lấy thông tin người dùng");
+          }
+          
+          accountCreated = true;
+          
+          // Hiển thị thông báo thành công
+          setShowTrialSuccess(true);
+          
+          // Chuyển hướng sau khi đăng nhập thành công
+          setTimeout(() => {
+            setShowTrialSuccess(false);
+            setIsModalOpen(false);
+            
+            try {
+              console.log('🔄 Đang làm mới trang để cập nhật trạng thái đăng nhập...');
+              // Sử dụng window.location.href thay vì router để đảm bảo trang được tải lại hoàn toàn
+              window.location.href = '/';
+            } catch (navigateError) {
+              console.error('❌ Lỗi khi chuyển hướng:', navigateError);
+              // Phương án dự phòng
+              router.push('/');
+            }
+          }, 5000); // Tăng thời gian lên 5 giây để đảm bảo token đã được lưu
+          
+        } catch (tryError) {
+          console.error(`Lỗi trong lần thử ${retryCount + 1}:`, tryError);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log(`Thử lại tạo tài khoản lần thứ ${retryCount + 1} sau 2 giây...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else {
+            throw new Error(`Không thể tạo tài khoản sau ${maxRetries} lần thử: ${tryError.message}`);
+          }
         }
-      }, 5000); // Tăng thời gian lên 5 giây để đảm bảo token đã được lưu
+      }
       
     } catch (error) {
       console.error("Lỗi khi tạo tài khoản học thử:", error);
       setKeyError(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      
+      // Nếu đã tạo tài khoản nhưng lỗi trong các bước tiếp theo, thử làm mới trang
+      if (localStorage.getItem('has_tried_vip') === 'true') {
+        setTimeout(() => {
+          console.log('Tài khoản có thể đã được tạo. Thử làm mới trang...');
+          window.location.reload();
+        }, 3000);
+      }
     } finally {
       setIsCreatingAccount(false);
     }
@@ -220,31 +330,29 @@ const HeroSection = () => {
       {/* Background pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white -z-10">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        {/* Thêm background image */}
-        <div className="absolute inset-0 opacity-5 bg-cover bg-center" style={{ backgroundImage: 'url("/images/khoahoc-bg.jpg")' }}></div>
+        {/* Thêm background pattern thay vì dùng hình ảnh */}
+        <div className="absolute inset-0 opacity-5 bg-gradient-to-tr from-blue-200 to-purple-100"></div>
       </div>
       
       {/* Floating particles - decorative */}
       <div className="absolute inset-0 -z-10">
-        {[...Array(15)].map((_, i) => (
+        {particles.map((particle) => (
           <motion.div
-            key={i}
-            className={`absolute w-${Math.random() > 0.7 ? 4 : 3} h-${Math.random() > 0.7 ? 4 : 3} rounded-full ${
-              Math.random() > 0.7 ? 'bg-yellow-400/20' : 'bg-blue-600/20'
-            }`}
+            key={particle.id}
+            className={`absolute w-${particle.width} h-${particle.height} rounded-full ${particle.color}`}
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`
+              top: particle.top,
+              left: particle.left
             }}
             animate={{
               y: [0, -15, 0],
               opacity: [0.4, 0.8, 0.4]
             }}
             transition={{
-              duration: 3 + Math.random() * 5,
+              duration: particle.duration,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: Math.random() * 2
+              delay: particle.delay
             }}
           />
         ))}
@@ -408,6 +516,7 @@ const HeroSection = () => {
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
+                    unoptimized={true}
                   />
                   {/* Overlay gradient */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent"></div>
@@ -556,18 +665,18 @@ const HeroSection = () => {
                             <FaCheckCircle className="text-white text-3xl" />
                           </div>
                           <h3 className="text-xl font-bold mb-2">Kích hoạt thành công!</h3>
-                          <p className="text-white/80 text-center mb-4">
+                          <p className="text-white text-center mb-4">
                             Đăng nhập thành công
                           </p>
                           {trialAccountInfo && (
-                            <div className="bg-white/10 rounded-lg p-3 mb-3 text-white/90 text-xs">
+                            <div className="bg-white/10 rounded-lg p-3 mb-3 text-white">
                               <p className="mb-1">Thông tin tài khoản (lưu lại nếu muốn đăng nhập lại):</p>
                               <p>Email: {trialAccountInfo.email}</p>
                               <p>Mật khẩu: ******** (đã lưu vào trình duyệt)</p>
                             </div>
                           )}
                           <div className="animate-pulse">
-                            <p className="text-sm text-white/90">Đang chuyển hướng...</p>
+                            <p className="text-sm text-white">Đang chuyển hướng...</p>
                           </div>
                         </div>
                       </div>
@@ -578,7 +687,7 @@ const HeroSection = () => {
                             <FaUnlock className="text-yellow-400 text-xl mr-2" />
                             <h3 className="text-xl font-bold">Tài khoản VIP đang hoạt động</h3>
                           </div>
-                          <p className="text-white/80 text-center mb-4">
+                          <p className="text-white text-center mb-4">
                             Bạn đang trải nghiệm đầy đủ quyền lợi của gói VIP
                           </p>
                           <div className="bg-white/10 rounded-xl p-3 w-full">
@@ -620,19 +729,19 @@ const HeroSection = () => {
                         <div className="flex flex-col items-center text-white">
                           <div className="mb-3 flex items-center">
                             <FaLock className="text-red-400 text-xl mr-2" />
-                            <h3 className="text-xl font-bold">Đã sử dụng tính năng học thử</h3>
+                            <h3 className="text-xl font-bold">Đã sử dụng hết lượt học thử</h3>
                           </div>
-                          <p className="text-white/80 text-center mb-4">
-                            Bạn đã sử dụng tính năng học thử trước đó. Mỗi thiết bị chỉ được dùng thử 1 lần.
+                          <p className="text-white text-center mb-4">
+                            Bạn đã sử dụng hết 3 lần học thử. Mỗi thiết bị chỉ được dùng thử tối đa 3 lần.
                           </p>
                           <div className="bg-white/10 rounded-lg p-4 w-full">
-                            <p className="text-sm mb-3">Để tiếp tục truy cập đầy đủ tính năng, vui lòng chọn một trong các gói sau:</p>
+                            <p className="text-white text-sm mb-3">Để tiếp tục truy cập đầy đủ tính năng, vui lòng chọn một trong các gói sau:</p>
                             <div className="flex justify-center space-x-3">
                               <a
                                 href="https://m.me/khoahoc6.0"
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 px-4 rounded-full text-sm shadow-lg flex items-center"
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-full text-sm shadow-lg flex items-center"
                               >
                                 <FaGlobe className="mr-2" />
                                 Đăng ký ngay
@@ -650,8 +759,13 @@ const HeroSection = () => {
                         </div>
                         <div className="text-white text-center md:text-left w-full">
                           <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 giờ</h3>
-                          <p className="text-white/80 text-sm mb-4">
+                          <p className="text-white text-sm mb-4">
                             Trải nghiệm đầy đủ tính năng VIP trong 1 giờ - không cần đăng ký tài khoản!
+                            {trialCountLeft < 3 && (
+                              <span className="block mt-1 text-yellow-300">
+                                Bạn còn {trialCountLeft} lần học thử.
+                              </span>
+                            )}
                           </p>
                           
                           <div className="rounded-full overflow-hidden">
@@ -682,7 +796,7 @@ const HeroSection = () => {
                     )}
                     
                     {!isVip && !showTrialSuccess && (
-                      <div className="mt-3 bg-white/10 rounded-lg p-2 text-white/90 text-xs text-center">
+                      <div className="mt-3 bg-white/10 rounded-lg p-2 text-white text-xs text-center">
                         <span className="flex items-center justify-center">
                           <FaRegClock className="mr-1" />
                           Tài khoản học thử tự động hết hạn sau 1 giờ, không cần hủy!

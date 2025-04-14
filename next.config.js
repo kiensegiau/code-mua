@@ -79,7 +79,7 @@ const nextConfig = {
     return [
       // Thay thế middleware bằng cách dùng redirects để bảo vệ routes
       {
-        source: '/((?!sign-in|sign-up|forgot-password|reset-password|api|_next|favicon.ico|static|public|topuni).*)',
+        source: '/((?!sign-in|sign-up|forgot-password|reset-password|api|_next|favicon.ico|static|public|hoc-thu-free).*)',
         missing: [
           {
             type: 'cookie',
