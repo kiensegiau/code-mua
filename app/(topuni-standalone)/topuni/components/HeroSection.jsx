@@ -6,6 +6,8 @@ import { IoTimeOutline, IoClose } from 'react-icons/io5';
 import { FaGraduationCap, FaRegLightbulb, FaUserGraduate, FaRegClock, FaLaptop, FaMobileAlt, FaCertificate, FaGlobe, FaPlay, FaLock, FaCheckCircle, FaRegStar, FaStar, FaUnlock, FaKey } from 'react-icons/fa';
 import { useAuth } from "../../../_context/AuthContext";
 import { useRouter } from "next/navigation";
+import { auth } from "../../../_utils/firebase";
+import { signInWithCustomToken } from "firebase/auth";
 
 const HeroSection = () => {
   // Sử dụng các states và functions từ AuthContext
@@ -35,6 +37,9 @@ const HeroSection = () => {
     minutes: 0,
     seconds: 0
   });
+
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [trialAccountInfo, setTrialAccountInfo] = useState(null);
 
   // Set deadline to end of current day (23:59:59)
   useEffect(() => {
@@ -70,47 +75,47 @@ const HeroSection = () => {
     return () => clearInterval(intervalId);
   }, []);
   
-  // Xử lý kích hoạt VIP với key
-  const handleActivateWithKey = async () => {
-    // Reset error message
-    setKeyError("");
-    
-    // Kiểm tra đã nhập key chưa
-    if (!keyInput.trim()) {
-      setKeyError("Vui lòng nhập key");
-      keyInputRef.current?.focus();
-      return;
-    }
-    
-    // Kiểm tra đã đăng nhập chưa
-    if (!isAuthenticated) {
-      router.push(`/sign-in?redirect=${encodeURIComponent(window.location.pathname)}&key=${keyInput}`);
-      return;
-    }
-    
+  // Xử lý tạo tài khoản học thử tự động - không cần key
+  const handleCreateTrialAccount = async () => {
     try {
       setShowTrialSuccess(false);
+      setIsCreatingAccount(true);
       
-      // Gọi function kích hoạt VIP từ context
-      const result = await activateVipWithKey(keyInput.trim());
+      // Tạo tài khoản học thử tự động
+      const response = await fetch("/api/auth/create-trial-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        }
+      });
       
-      if (result.success) {
-        setShowTrialSuccess(true);
-        
-        // Xóa key input sau khi thành công
-        setKeyInput("");
-        
-        setTimeout(() => {
-          setShowTrialSuccess(false);
-          setIsModalOpen(false);
-          router.push('/khoa-hoc-vip');
-        }, 3000);
-      } else {
-        setKeyError(result.error || "Không thể kích hoạt key. Vui lòng thử lại.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Không thể tạo tài khoản học thử");
       }
+      
+      const data = await response.json();
+      
+      // Lưu thông tin tài khoản đã tạo
+      setTrialAccountInfo(data.user);
+      
+      // Tự động đăng nhập vào tài khoản mới tạo
+      await signInWithCustomToken(auth, data.customToken);
+      
+      // Hiển thị thông báo thành công
+      setShowTrialSuccess(true);
+      
+      setTimeout(() => {
+        setShowTrialSuccess(false);
+        setIsModalOpen(false);
+        router.push('/khoa-hoc-vip');
+      }, 3000);
+      
     } catch (error) {
-      setKeyError("Đã xảy ra lỗi. Vui lòng thử lại sau.");
-      console.error(error);
+      console.error("Lỗi khi tạo tài khoản học thử:", error);
+      setKeyError(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+    } finally {
+      setIsCreatingAccount(false);
     }
   };
   
@@ -498,9 +503,16 @@ const HeroSection = () => {
                             <FaCheckCircle className="text-white text-3xl" />
                           </div>
                           <h3 className="text-xl font-bold mb-2">Kích hoạt thành công!</h3>
-                          <p className="text-white/80 text-center mb-2">
+                          <p className="text-white/80 text-center mb-4">
                             Tài khoản VIP của bạn đã được kích hoạt
                           </p>
+                          {trialAccountInfo && (
+                            <div className="bg-white/10 rounded-lg p-3 mb-3 text-white/90 text-xs">
+                              <p className="mb-1">Thông tin tài khoản (lưu lại nếu muốn đăng nhập lại):</p>
+                              <p>Email: {trialAccountInfo.email}</p>
+                              <p>Mật khẩu: ******** (đã lưu vào trình duyệt)</p>
+                            </div>
+                          )}
                           <div className="animate-pulse">
                             <p className="text-sm text-white/90">Đang chuyển hướng...</p>
                           </div>
@@ -559,45 +571,31 @@ const HeroSection = () => {
                         </div>
                         <div className="text-white text-center md:text-left w-full">
                           <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 ngày</h3>
-                          <p className="text-white/80 text-sm mb-3">
-                            Nhập key học thử để trải nghiệm đầy đủ tính năng VIP trong 24 giờ
+                          <p className="text-white/80 text-sm mb-4">
+                            Trải nghiệm đầy đủ tính năng VIP trong 24 giờ - không cần đăng ký tài khoản!
                           </p>
                           
-                          <div className="flex flex-col space-y-3">
-                            <div className="relative">
-                              <input
-                                type="text"
-                                ref={keyInputRef}
-                                value={keyInput}
-                                onChange={(e) => setKeyInput(e.target.value)}
-                                placeholder="Nhập key học thử VIP"
-                                className={`w-full bg-white/20 backdrop-blur-sm text-white placeholder-white/60 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
-                                  keyError ? 'border border-red-400' : ''
-                                }`}
-                              />
-                              {keyError && (
-                                <p className="text-red-300 text-xs mt-1">{keyError}</p>
-                              )}
-                            </div>
-                            
-                            <motion.button
-                              whileHover={{ scale: 1.03 }}
-                              whileTap={{ scale: 0.97 }}
-                              className="bg-white text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg flex items-center justify-center"
-                              onClick={handleActivateWithKey}
-                              disabled={isActivatingVip}
-                            >
-                              {isActivatingVip ? (
-                                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                </svg>
-                              ) : (
-                                <FaUnlock className="mr-2" />
-                              )}
-                              {isActivatingVip ? 'Đang kích hoạt...' : 'Kích hoạt học thử ngay'}
-                            </motion.button>
-                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            className="bg-white text-indigo-700 font-semibold py-3 px-6 rounded-full shadow-lg flex items-center justify-center w-full"
+                            onClick={handleCreateTrialAccount}
+                            disabled={isCreatingAccount}
+                          >
+                            {isCreatingAccount ? (
+                              <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                            ) : (
+                              <FaUnlock className="mr-2" />
+                            )}
+                            {isCreatingAccount ? 'Đang tạo tài khoản...' : 'Học thử ngay không cần đăng ký'}
+                          </motion.button>
+                          
+                          {keyError && (
+                            <p className="text-red-300 text-xs mt-2 text-center">{keyError}</p>
+                          )}
                         </div>
                       </div>
                     )}
