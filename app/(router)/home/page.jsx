@@ -19,13 +19,9 @@ import {
   TrendingUp,
   DollarSign,
   CheckCircle2,
-  Target,
-  Heart,
-  Brain,
 } from "lucide-react";
 import Link from "next/link";
 import Head from "next/head";
-import Image from "next/image";
 
 // Lazy load Particles để tăng hiệu suất tải trang ban đầu
 const ParticlesBackground = lazy(() =>
@@ -348,117 +344,8 @@ function HomePage() {
     []
   );
 
-  const studentTestimonials = [
-    {
-      name: "Nguyễn Hoàng Minh",
-      school: "THPT Chu Văn An",
-      content: "Hệ thống đánh giá năng lực giúp em hiểu rõ điểm mạnh, điểm yếu của bản thân. Sau 6 tháng học theo lộ trình được đề xuất, em đã đạt 8.5/10 trong kỳ thi đánh giá năng lực.",
-      rating: 5
-    },
-    {
-      name: "Trần Mai Anh",
-      school: "THPT Lê Hồng Phong",
-      content: "Phương pháp đánh giá 4D Framework giúp em phát triển toàn diện cả về kiến thức lẫn kỹ năng. Em đã tự tin hơn rất nhiều khi tham gia các kỳ thi và hoạt động ngoại khóa.",
-      rating: 5
-    },
-    {
-      name: "Lê Thành Nam",
-      school: "THPT Nguyễn Huệ",
-      content: "Nhờ hệ thống đánh giá tư duy, em đã khám phá ra năng khiếu của mình trong lĩnh vực STEM và đã định hướng được ngành học đại học phù hợp.",
-      rating: 4
-    }
-  ];
-
-  // 4D Framework theo CCR (Center for Curriculum Redesign)
-  const frameworkCategories = [
-    {
-      title: "Kiến Thức",
-      icon: BookOpen,
-      color: "bg-blue-600",
-      description: "Nội dung kiến thức trọng tâm cho kỳ thi THPT Quốc Gia",
-      items: ["Kiến thức nền tảng", "Kiến thức liên môn", "Kiến thức chuyên sâu", "Ứng dụng thực tiễn"]
-    },
-    {
-      title: "Kỹ Năng",
-      icon: Target,
-      color: "bg-green-600",
-      description: "Phát triển kỹ năng cần thiết cho học tập và thi cử",
-      items: ["Tư duy phản biện", "Sáng tạo", "Giao tiếp", "Hợp tác"]
-    },
-    {
-      title: "Phẩm Chất",
-      icon: Heart,
-      color: "bg-red-600",
-      description: "Rèn luyện đức tính cá nhân và phẩm chất học tập",
-      items: ["Chánh niệm", "Tò mò", "Can đảm", "Kiên trì"]
-    },
-    {
-      title: "Tư Duy Meta",
-      icon: Brain,
-      color: "bg-purple-600",
-      description: "Phát triển năng lực tự nhận thức và điều chỉnh",
-      items: ["Tư duy phát triển", "Tự điều chỉnh", "Học cách học", "Siêu nhận thức"]
-    }
-  ];
-
-  // Dữ liệu đánh giá năng lực
-  const assessmentFrameworks = [
-    {
-      title: "Đánh Giá Năng Lực",
-      description: "Hệ thống đánh giá toàn diện theo chuẩn 4D Framework",
-      features: [
-        "Đánh giá toàn diện kiến thức, kỹ năng, phẩm chất và tư duy meta",
-        "Phân tích điểm mạnh, điểm yếu của học sinh",
-        "Đề xuất lộ trình phát triển cá nhân hóa",
-        "Báo cáo chi tiết và trực quan"
-      ]
-    },
-    {
-      title: "Đánh Giá Tư Duy",
-      description: "Công cụ đánh giá và phát triển tư duy bậc cao",
-      features: [
-        "Đánh giá khả năng tư duy phản biện",
-        "Đo lường năng lực giải quyết vấn đề",
-        "Phân tích tư duy sáng tạo",
-        "Đánh giá khả năng tư duy hệ thống"
-      ]
-    },
-    {
-      title: "Đánh Giá Sẵn Sàng Đại Học",
-      description: "Hệ thống đánh giá mức độ sẵn sàng cho giáo dục đại học",
-      features: [
-        "Đánh giá năng lực học thuật cốt lõi",
-        "Phân tích kỹ năng tự học và nghiên cứu",
-        "Đo lường khả năng thích ứng với môi trường đại học",
-        "Gợi ý ngành học phù hợp dựa trên năng lực"
-      ]
-    }
-  ];
-
-  // Các khóa học theo chủ đề
-  const courseCategories = [
-    {
-      title: "Khóa Học Theo Môn",
-      image: "/images/subjects.jpg",
-      description: "Các khóa học chuyên sâu theo từng môn học trong chương trình THPT",
-      items: ["Toán học", "Ngữ văn", "Tiếng Anh", "Vật lý", "Hóa học", "Sinh học", "Lịch sử", "Địa lý"]
-    },
-    {
-      title: "Khóa Luyện Thi Đánh Giá Năng Lực",
-      image: "/images/competency.jpg",
-      description: "Luyện thi đánh giá năng lực đại học quốc gia và các kỳ thi năng lực khác",
-      items: ["Tư duy định lượng", "Tư duy định tính", "Ngôn ngữ", "Giải quyết vấn đề"]
-    },
-    {
-      title: "Khóa Học Kỹ Năng",
-      image: "/images/skills.jpg",
-      description: "Phát triển các kỹ năng mềm cần thiết cho học tập và tương lai",
-      items: ["Quản lý thời gian", "Phương pháp học tập hiệu quả", "Kỹ năng làm bài thi", "Kỹ năng thuyết trình"]
-    },
-  ];
-
   return (
-    <div className={`${isClient ? "bg-[#141414]" : "bg-black"} min-h-screen`}>
+    <div className="overflow-hidden">
       {/* Preload font quan trọng và font icon */}
       <Head>
         <link
@@ -520,19 +407,19 @@ function HomePage() {
       <div className="relative z-10 w-full max-w-full overflow-x-hidden">
         {/* Hero Section luôn hiển thị ngay lập tức */}
         <motion.div
-          className="relative h-[250px] xs:h-[300px] md:h-[400px] bg-gradient-to-r from-[#3b82f6]/20 to-[#141414] flex items-center overflow-hidden mb-8 sm:mb-12"
+          className="relative h-[250px] xs:h-[300px] md:h-[400px] bg-gradient-to-r from-[#ff4d4f]/20 to-[#141414] flex items-center overflow-hidden mb-8 sm:mb-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           <motion.div
-            className="absolute inset-0 bg-[#3b82f6]/5"
+            className="absolute inset-0 bg-[#ff4d4f]/5"
             animate={{
-              scale: [1, 1.05, 1],
+              scale: [1, 1.05, 1], // Giảm khoảng cách scale
               opacity: [0.3, 0.2, 0.3],
             }}
             transition={{
-              duration: 6,
+              duration: 6, // Giảm thời gian animation
               repeat: Infinity,
               repeatType: "reverse",
             }}
@@ -544,14 +431,14 @@ function HomePage() {
               initial="initial"
               animate="animate"
             >
-              Đánh Giá Năng Lực{" "}
-              <span className="text-[#3b82f6] relative">
-                Toàn Diện
+              Nền Tảng Học Trực Tuyến{" "}
+              <span className="text-[#ff4d4f] relative">
+                Hàng Đầu
                 <motion.span
-                  className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3b82f6]"
+                  className="absolute bottom-0 left-0 w-full h-[2px] bg-[#ff4d4f]"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
+                  transition={{ duration: 0.8, delay: 0.3 }} // Giảm thời gian animation
                 />
               </span>
             </motion.h1>
@@ -562,38 +449,41 @@ function HomePage() {
               animate="animate"
               transition={{ delay: 0.2 }}
             >
-              Phát triển toàn diện theo khung năng lực 4D, chuẩn bị tốt nhất cho kỳ thi THPT Quốc Gia và Đánh giá năng lực đại học
+              Khóa học online chất lượng cao dành cho học sinh THPT, giúp nâng
+              cao điểm số và tự tin trong kỳ thi Đại học
             </motion.p>
             <motion.div
               variants={fadeInUp}
               initial="initial"
               animate="animate"
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.3 }} // Giảm thời gian delay
             >
               <Link
-                href="/assessment"
-                className="bg-[#3b82f6] hover:bg-[#2563eb] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
+                href="/courses"
+                className="bg-[#ff4d4f] hover:bg-[#f5222d] text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-medium inline-flex items-center gap-2 transition-colors"
               >
-                Đánh giá năng lực ngay
+                Khám phá khóa học
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </motion.div>
           </div>
         </motion.div>
 
-        {/* Stats Section */}
-        <section className="py-16 bg-gray-900">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-              {stats.map((stat, index) => (
-                <StatItem key={index} value={stat.value} label={stat.label} />
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Các phần còn lại sử dụng content-visibility: auto để tối ưu hiệu suất render */}
         <div className="content-visibility-auto">
+          {/* Stats Section */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-8 sm:mb-12 px-2 sm:px-0"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            {stats.map((stat, index) => (
+              <StatItem key={index} {...stat} />
+            ))}
+          </motion.div>
+
           {/* Features Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 px-2 sm:px-0">
             {features.map((feature, index) => (
@@ -631,155 +521,6 @@ function HomePage() {
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </motion.div>
-
-          {/* 4D Framework Categories */}
-          <section className="py-16 bg-gray-900">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white mb-4">Khung Năng Lực 4D Framework</h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Phát triển toàn diện 4 chiều: Kiến thức, Kỹ năng, Phẩm chất và Tư duy Meta theo chuẩn quốc tế của Center for Curriculum Redesign
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-4 gap-6">
-                {frameworkCategories.map((category, index) => (
-                  <motion.div 
-                    key={index}
-                    className="bg-gray-800 rounded-xl overflow-hidden"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <div className={`${category.color} h-2`}></div>
-                    <div className="p-6">
-                      <div className={`${category.color} bg-opacity-20 w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
-                        <category.icon className={`h-6 w-6 ${category.color.replace('bg-', 'text-')}`} />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-3 text-white">{category.title}</h3>
-                      <p className="text-gray-400 mb-4">{category.description}</p>
-                      <ul className="space-y-2">
-                        {category.items.map((item, i) => (
-                          <li key={i} className="flex items-start">
-                            <CheckCircle2 className={`h-5 w-5 ${category.color.replace('bg-', 'text-')} mr-2 flex-shrink-0`} />
-                            <span className="text-gray-300">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Đánh Giá Năng Lực Section */}
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white mb-4">Hệ Thống Đánh Giá Năng Lực</h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Nền tảng đánh giá toàn diện dựa trên Common Assessment Framework, giúp học sinh phát triển theo đúng tiềm năng
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                {assessmentFrameworks.map((framework, index) => (
-                  <motion.div 
-                    key={index}
-                    className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <h3 className="text-xl font-semibold mb-3 text-white">{framework.title}</h3>
-                    <p className="text-gray-400 mb-4">{framework.description}</p>
-                    <ul className="space-y-3">
-                      {framework.features.map((feature, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle2 className="h-5 w-5 text-[#3b82f6] mr-2 flex-shrink-0" />
-                          <span className="text-gray-300">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-6">
-                      <Link 
-                        href={`/assessment/${framework.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="inline-flex items-center text-[#3b82f6] hover:text-[#60a5fa] font-medium"
-                      >
-                        Tìm hiểu thêm
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Course Categories */}
-          <section className="py-16 bg-gray-900">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-white mb-4">Khóa Học Theo Chủ Đề</h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Đa dạng khóa học phát triển toàn diện năng lực cho học sinh THPT
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-8">
-                {courseCategories.map((category, index) => (
-                  <motion.div 
-                    key={index}
-                    className="bg-gray-800 rounded-xl overflow-hidden shadow-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <div className="h-48 bg-gray-700 relative">
-                      {isClient && (
-                        <Image 
-                          src={category.image || `/images/course-${index + 1}.jpg`}
-                          alt={category.title}
-                          fill
-                          className="object-cover opacity-80"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
-                      <div className="absolute bottom-4 left-4">
-                        <h3 className="text-xl font-semibold text-white">{category.title}</h3>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <p className="text-gray-300 mb-4">{category.description}</p>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {category.items.slice(0, 4).map((item, i) => (
-                          <span key={i} className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
-                            {item}
-                          </span>
-                        ))}
-                        {category.items.length > 4 && (
-                          <span className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
-                            +{category.items.length - 4}
-                          </span>
-                        )}
-                      </div>
-                      <Link 
-                        href={`/courses/${category.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="inline-flex items-center text-[#3b82f6] hover:text-[#60a5fa] font-medium"
-                      >
-                        Xem các khóa học
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
         </div>
 
         {/* Thêm padding dưới cùng để có khoảng cách với bottom navigation trên mobile */}
