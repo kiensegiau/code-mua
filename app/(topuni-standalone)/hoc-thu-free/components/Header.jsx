@@ -136,7 +136,7 @@ const Header = () => {
               className="flex items-center space-x-1 text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors"
             >
               <FaPhone className="text-xs animate-pulse" />
-              <span>0967.180.038</span>
+              
             </a>
             <motion.a
               href="#dang-ky"
@@ -209,7 +209,7 @@ const Header = () => {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <FaPhone className="text-xs" />
-                  <span>0967.180.038</span>
+                
                 </a>
                 <motion.a
                   href="#dang-ky" 
