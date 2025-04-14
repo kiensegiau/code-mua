@@ -66,9 +66,6 @@ function Layout({ children }) {
             </main>
           </div>
         </div>
-
-        {/* Spacer for bottom navigation on mobile */}
-        <div className="h-16 md:h-0"></div>
       </div>
     </MobileMenuProvider>
   );

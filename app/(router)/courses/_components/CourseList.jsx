@@ -393,7 +393,7 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
           </div>
           
           {filteredCourses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredCourses.map((course, index) => (
                 <LazyLoadedCourseItem 
                   key={course.id || course._id} 
@@ -465,39 +465,27 @@ const CourseList = React.memo(function CourseList({ grade = null, subject = null
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-5">
-              {displayedCourses
-                .slice(
-                  0,
-                  displayedCourses.length - (hasMore && !isExpanded ? 1 : 0)
-                )
-                .map((course, courseIndex) => (
-                  <LazyLoadedCourseItem
-                    key={course.id}
-                    course={course}
-                    index={courseIndex}
-                  />
-                ))}
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-5">
+              {displayedCourses.map((course, courseIndex) => (
+                <LazyLoadedCourseItem
+                  key={course.id}
+                  course={course}
+                  index={courseIndex}
+                />
+              ))}
+            </div>
 
-              {hasMore && !isExpanded && (
+            {hasMore && !isExpanded && (
+              <div className="flex justify-center mt-6">
                 <button
                   onClick={() => toggleSubject(subject.value)}
-                  className="group h-full bg-gradient-to-br from-[#1f1f1f] to-[#252525] rounded-xl overflow-hidden border border-dashed border-gray-700 hover:border-[#ff4d4f] transition-colors duration-300 flex flex-col items-center justify-center gap-3 cursor-pointer hover-scale"
+                  className="flex items-center gap-2 text-white bg-[#ff4d4f] hover:bg-[#ff4d4f]/90 px-4 py-2 rounded-full text-sm font-medium shadow-md hover-scale"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#ff4d4f]/10 flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-[#ff4d4f]" />
-                  </div>
-                  <div className="text-center px-4">
-                    <p className="text-sm text-[#ff4d4f] font-medium">
-                      Xem thêm {category.courses.length - itemsPerPage} khóa học
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Nhấn để mở rộng danh sách
-                    </p>
-                  </div>
+                  Xem thêm {category.courses.length - itemsPerPage} khóa học
+                  <ChevronDown className="w-4 h-4" />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {isExpanded && (
               <div className="flex justify-center mt-6">

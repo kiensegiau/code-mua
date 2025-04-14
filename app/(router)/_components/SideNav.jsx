@@ -209,48 +209,6 @@ function SideNav() {
           </Link>
         )}
       </div>
-
-      {/* Hiển thị bottom navigation trên thiết bị di động */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--sidebar-background)] border-t border-[var(--border-color)] flex justify-around items-center p-2 z-50">
-        {menuItems.slice(0, 4).map((item, index) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-
-          if (item.requireAuth && !user) return null;
-
-          return (
-            <Link
-              key={index}
-              href={item.href}
-              className="p-2 flex flex-col items-center"
-              onClick={() => {
-                if (window.innerWidth < 768) {
-                  closeMobileMenu();
-                }
-              }}
-            >
-              <div
-                className={`p-1.5 rounded-md ${
-                  active ? "bg-[#ff4d4f]/10" : "bg-transparent"
-                }`}
-              >
-                <Icon
-                  className={`h-5 w-5 ${
-                    active ? "text-[#ff4d4f]" : "text-gray-400"
-                  }`}
-                />
-              </div>
-              <span
-                className={`text-[10px] mt-1 ${
-                  active ? "text-[#ff4d4f]" : "text-gray-400"
-                }`}
-              >
-                {item.title}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
     </div>
   );
 }
