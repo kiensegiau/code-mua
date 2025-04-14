@@ -26,8 +26,6 @@ const TOKEN_EXPIRY_TIME = 60 * 60 * 1000; // 1 giờ tính bằng ms
 const REFRESH_TIME_BEFORE_EXPIRY = 5 * 60 * 1000; // 5 phút tính bằng ms
 // Thời hạn cookie: 1 năm
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 năm tính bằng giây
-// Thời gian học thử VIP: 24 giờ
-const VIP_TRIAL_PERIOD = 24 * 60 * 60 * 1000; // 24 giờ tính bằng ms
 
 // Danh sách các đường dẫn công khai
 const PUBLIC_PATHS = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password', '/sign-out'];
@@ -37,8 +35,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isActivatingVip, setIsActivatingVip] = useState(false);
-  const [vipActivationError, setVipActivationError] = useState(null);
   const refreshTimerRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -216,52 +212,6 @@ export function AuthProvider({ children }) {
       }
     }, timeUntilRefresh);
   }, [refreshToken]);
-
-  // Hàm kích hoạt VIP bằng key
-  const activateVipWithKey = useCallback(async (trialKey) => {
-    try {
-      setIsActivatingVip(true);
-      setVipActivationError(null);
-      
-      // Đảm bảo người dùng đã đăng nhập
-      if (!user) {
-        throw new Error('Vui lòng đăng nhập để kích hoạt khóa học');
-      }
-      
-      // Gọi API kiểm tra và kích hoạt key
-      const response = await fetch("/api/vip/activate-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          key: trialKey,
-          userId: user.uid 
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Không thể kích hoạt key');
-      }
-      
-      const data = await response.json();
-      
-      // Cập nhật profile với quyền VIP
-      setProfile(prev => ({
-        ...prev,
-        isVip: true,
-        vipExpiresAt: data.vipExpiresAt,
-        vipActivatedBy: 'trial-key'
-      }));
-      
-      return { success: true, expiresAt: data.vipExpiresAt };
-    } catch (error) {
-      console.error("Lỗi khi kích hoạt VIP với key:", error);
-      setVipActivationError(error.message);
-      return { success: false, error: error.message };
-    } finally {
-      setIsActivatingVip(false);
-    }
-  }, [user]);
 
   // Kiểm tra trạng thái VIP
   const checkVipStatus = useCallback(() => {
@@ -447,12 +397,9 @@ export function AuthProvider({ children }) {
       // Các chức năng liên quan đến VIP
       isVip: checkVipStatus(),
       vipExpiresAt: profile?.vipExpiresAt || null,
-      activateVipWithKey,
-      isActivatingVip,
-      vipActivationError,
       getVipTimeRemaining,
     }),
-    [user, profile, loading, logout, refreshToken, verifyTokenServer, checkVipStatus, activateVipWithKey, isActivatingVip, vipActivationError, getVipTimeRemaining]
+    [user, profile, loading, logout, refreshToken, verifyTokenServer, checkVipStatus, getVipTimeRemaining]
   );
 
   return (
