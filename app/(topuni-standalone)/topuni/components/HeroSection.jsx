@@ -102,14 +102,46 @@ const HeroSection = () => {
       // Tự động đăng nhập vào tài khoản mới tạo
       await signInWithCustomToken(auth, data.customToken);
       
+      // Lấy ID token từ người dùng đã đăng nhập và lưu vào cookie
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        // Lấy ID token từ tài khoản đã đăng nhập
+        const idToken = await currentUser.getIdToken(true);
+        
+        // Lưu token vào cookie thông qua API
+        const tokenResponse = await fetch('/api/auth/set-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ idToken })
+        });
+        
+        if (!tokenResponse.ok) {
+          console.error('Lỗi khi lưu token vào cookie');
+        } else {
+          console.log('Token đã được lưu vào cookie thành công');
+        }
+      }
+      
       // Hiển thị thông báo thành công
       setShowTrialSuccess(true);
       
+      // Chuyển hướng sau khi đăng nhập thành công
       setTimeout(() => {
         setShowTrialSuccess(false);
         setIsModalOpen(false);
-        router.push('/khoa-hoc-vip');
-      }, 3000);
+        
+        try {
+          console.log('🔄 Chuyển hướng đến trang chủ');
+          // Sử dụng window.location.href thay vì router để đảm bảo trang được tải lại hoàn toàn
+          window.location.href = '/';
+        } catch (navigateError) {
+          console.error('❌ Lỗi khi chuyển hướng:', navigateError);
+          // Phương án dự phòng
+          router.push('/');
+        }
+      }, 5000); // Tăng thời gian lên 5 giây để đảm bảo token đã được lưu
       
     } catch (error) {
       console.error("Lỗi khi tạo tài khoản học thử:", error);
