@@ -29,6 +29,7 @@ const HeroSection = () => {
   const [keyInput, setKeyInput] = useState("");
   const [keyError, setKeyError] = useState("");
   const keyInputRef = useRef(null);
+  const [hasTriedVip, setHasTriedVip] = useState(false);
   
   // Countdown timer từ phiên bản cũ
   const [timeLeft, setTimeLeft] = useState({
@@ -40,6 +41,13 @@ const HeroSection = () => {
 
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [trialAccountInfo, setTrialAccountInfo] = useState(null);
+
+  // Kiểm tra xem người dùng đã từng học thử chưa
+  useEffect(() => {
+    // Kiểm tra localStorage khi component được mount
+    const triedVipBefore = localStorage.getItem('has_tried_vip') === 'true';
+    setHasTriedVip(triedVipBefore);
+  }, []);
 
   // Set deadline to end of current day (23:59:59)
   useEffect(() => {
@@ -81,6 +89,14 @@ const HeroSection = () => {
       setShowTrialSuccess(false);
       setIsCreatingAccount(true);
       
+      // Kiểm tra xem người dùng đã có tài khoản VIP test chưa
+      // Kiểm tra thông qua localStorage hoặc cookie
+      const hasTriedVip = localStorage.getItem('has_tried_vip');
+      
+      if (hasTriedVip === 'true') {
+        throw new Error("Bạn đã sử dụng tính năng học thử trước đó. Mỗi người dùng chỉ được dùng thử 1 lần.");
+      }
+      
       // Tạo tài khoản học thử tự động
       const response = await fetch("/api/auth/create-trial-account", {
         method: "POST",
@@ -95,6 +111,9 @@ const HeroSection = () => {
       }
       
       const data = await response.json();
+      
+      // Đánh dấu người dùng đã sử dụng tính năng học thử
+      localStorage.setItem('has_tried_vip', 'true');
       
       // Lưu thông tin tài khoản đã tạo
       setTrialAccountInfo(data.user);
@@ -589,11 +608,37 @@ const HeroSection = () => {
                             className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 px-6 rounded-full text-sm shadow-lg"
                             onClick={() => {
                               setIsModalOpen(false);
-                              router.push('/khoa-hoc-vip');
+                              window.location.href = '/';
                             }}
                           >
                             Tiếp tục học ngay
                           </button>
+                        </div>
+                      </div>
+                    ) : hasTriedVip ? (
+                      <div className="py-5">
+                        <div className="flex flex-col items-center text-white">
+                          <div className="mb-3 flex items-center">
+                            <FaLock className="text-red-400 text-xl mr-2" />
+                            <h3 className="text-xl font-bold">Đã sử dụng tính năng học thử</h3>
+                          </div>
+                          <p className="text-white/80 text-center mb-4">
+                            Bạn đã sử dụng tính năng học thử trước đó. Mỗi thiết bị chỉ được dùng thử 1 lần.
+                          </p>
+                          <div className="bg-white/10 rounded-lg p-4 w-full">
+                            <p className="text-sm mb-3">Để tiếp tục truy cập đầy đủ tính năng, vui lòng chọn một trong các gói sau:</p>
+                            <div className="flex justify-center space-x-3">
+                              <button
+                                className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 px-4 rounded-full text-sm shadow-lg"
+                                onClick={() => {
+                                  setIsModalOpen(false);
+                                  // Chuyển đến trang đăng ký
+                                }}
+                              >
+                                Đăng ký ngay
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) : (
