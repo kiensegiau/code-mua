@@ -49,7 +49,7 @@ export async function POST(request) {
 
       // Thêm custom claims với vai trò và trạng thái VIP
       const expiryDate = new Date();
-      expiryDate.setHours(expiryDate.getHours() + 24); // Thời hạn 24 giờ
+      expiryDate.setHours(expiryDate.getHours() + 1); // Thời hạn 1 giờ
       
       await auth.setCustomUserClaims(userRecord.uid, {
         role: "user",

@@ -628,15 +628,15 @@ const HeroSection = () => {
                           <div className="bg-white/10 rounded-lg p-4 w-full">
                             <p className="text-sm mb-3">Để tiếp tục truy cập đầy đủ tính năng, vui lòng chọn một trong các gói sau:</p>
                             <div className="flex justify-center space-x-3">
-                              <button
-                                className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 px-4 rounded-full text-sm shadow-lg"
-                                onClick={() => {
-                                  setIsModalOpen(false);
-                                  // Chuyển đến trang đăng ký
-                                }}
+                              <a
+                                href="https://m.me/khoahoc6.0"
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 px-4 rounded-full text-sm shadow-lg flex items-center"
                               >
+                                <FaGlobe className="mr-2" />
                                 Đăng ký ngay
-                              </button>
+                              </a>
                             </div>
                           </div>
                         </div>
@@ -649,9 +649,9 @@ const HeroSection = () => {
                           </div>
                         </div>
                         <div className="text-white text-center md:text-left w-full">
-                          <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 ngày</h3>
+                          <h3 className="text-xl font-bold mb-1">Học thử VIP - Hạn 1 giờ</h3>
                           <p className="text-white/80 text-sm mb-4">
-                            Trải nghiệm đầy đủ tính năng VIP trong 24 giờ - không cần đăng ký tài khoản!
+                            Trải nghiệm đầy đủ tính năng VIP trong 1 giờ - không cần đăng ký tài khoản!
                           </p>
                           
                           <div className="rounded-full overflow-hidden">
@@ -685,7 +685,7 @@ const HeroSection = () => {
                       <div className="mt-3 bg-white/10 rounded-lg p-2 text-white/90 text-xs text-center">
                         <span className="flex items-center justify-center">
                           <FaRegClock className="mr-1" />
-                          Tài khoản học thử tự động hết hạn sau 24 giờ, không cần hủy!
+                          Tài khoản học thử tự động hết hạn sau 1 giờ, không cần hủy!
                         </span>
                       </div>
                     )}
@@ -743,6 +743,15 @@ const HeroSection = () => {
                 
                 {/* CTA buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-5">
+                  <a 
+                    href="https://m.me/khoahoc6.0"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                  >
+                    <FaGlobe className="mr-2" />
+                    Đăng ký ngay qua Messenger
+                  </a>
                   <button 
                     className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                     onClick={() => setIsModalOpen(false)}
