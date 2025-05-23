@@ -19,37 +19,11 @@ const nextConfig = {
         : false,
   },
   images: {
-    domains: [
-      "media.graphassets.com",
-      "cdn.dribbble.com",
-      "storage.googleapis.com",
-      "firebasestorage.googleapis.com",
-    ],
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-      },
-      {
-        protocol: "https",
-        hostname: "dummyimage.com",
-      },
-      {
-        protocol: "https",
-        hostname: "randomuser.me",
-      },
-    ],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    formats: ["image/webp"],
+    domains: ['randomuser.me', 'images.unsplash.com'],
+    unoptimized: true
   },
   experimental: {
-    optimizeCss: false,
-    scrollRestoration: true,
+    scrollRestoration: true
   },
   compress: true,
   webpack: (config) => {
@@ -91,6 +65,8 @@ const nextConfig = {
       },
     ];
   },
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/_next' : '',
+  poweredByHeader: false
 };
 
 module.exports = nextConfig;
