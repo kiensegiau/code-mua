@@ -359,7 +359,7 @@ export default function CoursesPage() {
   };
 
   return (
-    <main className="relative bg-gradient-to-b from-gray-50 to-white min-h-screen w-full overflow-hidden">
+    <main className="relative bg-[var(--background-color)] text-[var(--text-color)] min-h-screen w-full overflow-hidden">
       
       {/* Danh mục */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -372,11 +372,11 @@ export default function CoursesPage() {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`flex items-center px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                   selectedCategory === category.id
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                  ? 'dark:bg-[#ff4d4f] bg-indigo-600 text-white shadow-md'
+                  : 'bg-[var(--card-background)] text-[var(--text-color)] border border-[var(--border-color)] hover:bg-[var(--hover-color)]'
                 }`}
               >
-                <category.icon className={`h-5 w-5 ${selectedCategory === category.id ? 'text-white' : 'text-indigo-600'} mr-2`} />
+                <category.icon className={`h-5 w-5 ${selectedCategory === category.id ? 'text-white' : 'dark:text-[#ff4d4f] text-indigo-600'} mr-2`} />
                 {category.name}
               </button>
             ))}
@@ -385,8 +385,8 @@ export default function CoursesPage() {
 
         {/* Tiêu đề danh sách khóa học */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 px-2 md:px-0">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center mb-3 md:mb-0">
-            <AcademicCapIcon className="h-7 w-7 mr-2 text-indigo-600" />
+          <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-color)] flex items-center mb-3 md:mb-0">
+            <AcademicCapIcon className="h-7 w-7 mr-2 dark:text-[#ff4d4f] text-indigo-600" />
             {searchTerm ? `Kết quả tìm kiếm "${searchTerm}"` : 'Danh sách khóa học'}
             {cacheStatus === 'hit' && (
               <button 
@@ -399,7 +399,7 @@ export default function CoursesPage() {
                     // Xử lý lỗi im lặng
                   }
                 }}
-                className="ml-2 text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full flex items-center hover:bg-indigo-200 transition-colors"
+                className="ml-2 text-xs bg-indigo-100 dark:bg-[#ff4d4f]/20 text-indigo-800 dark:text-[#ff4d4f] px-2 py-1 rounded-full flex items-center hover:bg-indigo-200 dark:hover:bg-[#ff4d4f]/30 transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -408,10 +408,10 @@ export default function CoursesPage() {
               </button>
             )}
           </h2>
-          <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2 overflow-x-auto whitespace-nowrap">
-            <span className="text-sm font-medium text-gray-800 mr-2">Sắp xếp:</span>
+          <div className="flex items-center bg-[var(--input-background)] rounded-lg px-4 py-2 overflow-x-auto whitespace-nowrap border border-[var(--border-color)]">
+            <span className="text-sm font-medium text-[var(--text-color)] mr-2">Sắp xếp:</span>
             <select 
-              className="bg-transparent text-sm text-gray-700 focus:outline-none border-none"
+              className="bg-transparent text-sm text-[var(--text-color)] focus:outline-none border-none"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
@@ -419,8 +419,8 @@ export default function CoursesPage() {
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
             </select>
-            <div className="ml-4 pl-4 border-l border-gray-300">
-              <span className="text-sm font-medium text-gray-800">{filteredCourses.length} khóa học</span>
+            <div className="ml-4 pl-4 border-l border-[var(--border-color)]">
+              <span className="text-sm font-medium text-[var(--text-color)]">{filteredCourses.length} khóa học</span>
               {selectedCategory !== 'all' && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
                   {categories.find(c => c.id === selectedCategory)?.name}
@@ -493,97 +493,97 @@ export default function CoursesPage() {
                   const rating = getRandomRating();
                   const level = getRandomLevel();
                   const students = getRandomStudentCount();
-                const lessons = getRandomLessonCount();
+                  const lessons = getRandomLessonCount();
                   
                   return (
                     <div 
                       key={course._id} 
-                    className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full group cursor-pointer"
+                      className="bg-[var(--card-background)] border border-[var(--border-color)] rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full group cursor-pointer"
                       onClick={() => router.push(`/khoa-hoc/${course.kimvanId || course._id}`)}
-                  >
-                    <div className="h-40 bg-gradient-to-r from-indigo-600 to-purple-700 relative overflow-hidden">
-                      {/* Background pattern */}
-                      <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] opacity-20"></div>
-                      
-                      {/* Course level badge */}
-                      <div className="absolute top-3 right-3 px-3 py-1 bg-black bg-opacity-30 backdrop-blur-sm text-white text-xs rounded-full font-medium">
-                        {level}
+                    >
+                      <div className="h-40 bg-gradient-to-r from-indigo-600 to-purple-700 relative overflow-hidden">
+                        {/* Background pattern */}
+                        <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] opacity-20"></div>
+                        
+                        {/* Course level badge */}
+                        <div className="absolute top-3 right-3 px-3 py-1 bg-black bg-opacity-30 backdrop-blur-sm text-white text-xs rounded-full font-medium">
+                          {level}
                         </div>
+                        
+                        {/* Course icon */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="h-20 w-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <AcademicCapIcon className="h-10 w-10 text-white" />
+                          </div>
+                        </div>
+                        
+                        {/* Gradient overlay at bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-indigo-900 to-transparent opacity-70"></div>
+                      </div>
                       
-                      {/* Course icon */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-20 w-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                          <AcademicCapIcon className="h-10 w-10 text-white" />
+                      <div className="p-5 flex-grow">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-1">
+                            {renderStars(rating)}
+                            <span className="text-xs text-[var(--text-secondary)] ml-1">({rating.toFixed(1)})</span>
+                          </div>
+                          <span className="text-xs font-medium text-indigo-600 dark:text-[#ff4d4f] bg-indigo-50 dark:bg-[#ff4d4f]/10 px-2 py-1 rounded-full">
+                            {course.category || 'Khóa học'}
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-lg font-semibold text-[var(--text-color)] mb-2 group-hover:text-indigo-600 dark:group-hover:text-[#ff4d4f] transition-colors line-clamp-2">
+                          {course.name}
+                        </h3>
+                        
+                        <p className="text-sm text-[var(--text-secondary)] mb-4 line-clamp-2">
+                          {course.description || 'Khóa học chất lượng cao được thiết kế bởi các chuyên gia hàng đầu.'}
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div className="flex items-center text-xs text-[var(--text-secondary)]">
+                            <UserCircleIcon className="h-3.5 w-3.5 mr-1.5 text-[var(--text-secondary)]" />
+                            <span>{students.toLocaleString()} học viên</span>
+                          </div>
+                          <div className="flex items-center text-xs text-[var(--text-secondary)]">
+                            <DocumentTextIcon className="h-3.5 w-3.5 mr-1.5 text-[var(--text-secondary)]" />
+                            <span>{lessons} bài học</span>
+                          </div>
+                          <div className="flex items-center text-xs text-[var(--text-secondary)]">
+                            <ClockIcon className="h-3.5 w-3.5 mr-1.5 text-[var(--text-secondary)]" />
+                            <span>{Math.round(lessons * 0.4)} giờ học</span>
+                          </div>
+                          <div className="flex items-center text-xs text-[var(--text-secondary)]">
+                            <FireIcon className="h-3.5 w-3.5 mr-1.5 text-orange-400" />
+                            <span>Mới cập nhật</span>
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Gradient overlay at bottom */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-indigo-900 to-transparent opacity-70"></div>
-                    </div>
-                    
-                    <div className="p-5 flex-grow">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-1">
-                          {renderStars(rating)}
-                          <span className="text-xs text-gray-500 ml-1">({rating.toFixed(1)})</span>
+                      <div className="border-t border-[var(--border-color)] p-5 flex items-center justify-between bg-[var(--card-background-secondary)]">
+                        <div className="font-bold text-indigo-600 dark:text-[#ff4d4f] text-lg">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(course.price)}
                         </div>
-                        <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
-                          {course.category || 'Khóa học'}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
-                        {course.name}
-                      </h3>
-                      
-                      <p className="text-sm text-gray-500 mb-4 line-clamp-2">
-                        {course.description || 'Khóa học chất lượng cao được thiết kế bởi các chuyên gia hàng đầu.'}
-                      </p>
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div className="flex items-center text-xs text-gray-500">
-                          <UserCircleIcon className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                          <span>{students.toLocaleString()} học viên</span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <DocumentTextIcon className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                          <span>{lessons} bài học</span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <ClockIcon className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                          <span>{Math.round(lessons * 0.4)} giờ học</span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <FireIcon className="h-3.5 w-3.5 mr-1.5 text-orange-400" />
-                          <span>Mới cập nhật</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t border-gray-100 p-5 flex items-center justify-between bg-gray-50">
-                      <div className="font-bold text-indigo-600 text-lg">
-                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(course.price)}
-                      </div>
-                      
-                      <button className="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors group-hover:bg-indigo-700">
-                        <span>Chi tiết</span>
-                        <ArrowRightIcon className="ml-1.5 h-4 w-4" />
-                      </button>
+                        
+                        <button className="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-600 dark:bg-[#ff4d4f] text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-[#ff7875] transition-colors group-hover:bg-indigo-700 dark:group-hover:bg-[#ff7875]">
+                          <span>Chi tiết</span>
+                          <ArrowRightIcon className="ml-1.5 h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
-              <MagnifyingGlassIcon className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
+              <div className="text-center py-16 bg-[var(--card-background-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm">
+              <MagnifyingGlassIcon className="mx-auto h-16 w-16 text-[var(--text-secondary)] mb-4" />
+              <h3 className="text-xl font-medium text-[var(--text-color)] mb-2">
                 {searchTerm 
                   ? `Không tìm thấy khóa học nào cho "${searchTerm}"` 
                   : 'Không tìm thấy khóa học nào'
                 }
               </h3>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              <p className="text-[var(--text-secondary)] mb-6 max-w-md mx-auto">
                 {searchTerm
                   ? `Không tìm thấy khóa học phù hợp với tiêu chí tìm kiếm của bạn. Hãy thử tìm kiếm với từ khóa khác hoặc điều chỉnh bộ lọc.`
                   : 'Không tìm thấy khóa học nào trong hệ thống. Vui lòng thử lại sau.'
@@ -595,7 +595,7 @@ export default function CoursesPage() {
                     onClick={resetFilters}
                     className="inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg shadow-md text-base font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     Xóa bộ lọc
@@ -679,7 +679,7 @@ export default function CoursesPage() {
       </div>
             
       {/* Phần khuyến mãi */}
-    <div className="bg-gradient-to-r from-indigo-600 to-purple-700 py-16 md:py-24 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-indigo-600 to-purple-700 dark:from-[#ff4d4f] dark:to-[#ff7875] py-16 md:py-24 relative overflow-hidden">
       {/* Tạo mẫu nền */}
       <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] opacity-10"></div>
       
@@ -734,7 +734,7 @@ export default function CoursesPage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                   />
                 </div>
-                <button className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white py-2.5 rounded-lg font-medium hover:from-indigo-700 hover:to-indigo-800 transition-colors duration-200 shadow-md">
+                <button className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-[#ff4d4f] dark:to-[#ff7875] text-white py-2.5 rounded-lg font-medium hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-[#ff7875] dark:hover:to-[#ff4d4f] transition-colors duration-200 shadow-md">
                   Nhận ưu đãi ngay
                 </button>
               </div>
@@ -831,7 +831,7 @@ export default function CoursesPage() {
                   placeholder="Email của bạn"
                   className="px-3 py-2 w-full text-sm bg-gray-800 border border-gray-700 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
                 />
-                <button className="bg-indigo-600 px-4 rounded-r-lg hover:bg-indigo-700 transition-colors duration-200">
+                <button className="bg-indigo-600 dark:bg-[#ff4d4f] px-4 rounded-r-lg hover:bg-indigo-700 dark:hover:bg-[#ff7875] transition-colors duration-200">
                   <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -884,6 +884,86 @@ export default function CoursesPage() {
       .no-scrollbar {
         -ms-overflow-style: none;  /* IE và Edge */
         scrollbar-width: none;  /* Firefox */
+      }
+      
+      /* Đảm bảo các nút và block màu tím luôn có chữ màu trắng */
+      [data-theme="light"] .bg-indigo-600,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-indigo-700,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-purple-700 {
+        color: white !important;
+      }
+      
+      [data-theme="light"] .bg-indigo-600 *,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600 *,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-indigo-700 *,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-purple-700 * {
+        color: white !important;
+      }
+      
+      [data-theme="light"] .bg-indigo-600 svg,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600 svg,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-indigo-700 svg,
+      [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-purple-700 svg {
+        color: white !important;
+      }
+      
+      /* Đảm bảo phần khuyến mãi có văn bản trắng */
+      [data-theme="light"] .from-indigo-600.to-purple-700 h2,
+      [data-theme="light"] .from-indigo-600.to-purple-700 p,
+      [data-theme="light"] .from-indigo-600.to-purple-700 span:not(.text-yellow-300) {
+        color: white !important;
+      }
+      
+      /* Giữ nguyên màu vàng cho phần nhấn mạnh */
+      [data-theme="light"] .text-yellow-300 {
+        color: #fde047 !important;
+      }
+      
+      /* Đảm bảo nút có văn bản trắng */
+      [data-theme="light"] button.bg-indigo-600,
+      [data-theme="light"] button.hover\:bg-indigo-700,
+      [data-theme="light"] button.bg-gradient-to-r.from-indigo-600,
+      [data-theme="light"] button.bg-gradient-to-r.from-indigo-700 {
+        color: white !important;
+      }
+
+      /* Chế độ tối sử dụng màu đỏ */
+      [data-theme="dark"] .text-indigo-600 {
+        color: #ff4d4f !important;
+      }
+      
+      [data-theme="dark"] .bg-indigo-600 {
+        background-color: #ff4d4f !important;
+      }
+      
+      [data-theme="dark"] .bg-indigo-50 {
+        background-color: rgba(255, 77, 79, 0.1) !important;
+      }
+      
+      [data-theme="dark"] .bg-indigo-100 {
+        background-color: rgba(255, 77, 79, 0.2) !important;
+      }
+      
+      [data-theme="dark"] .hover\:bg-indigo-700:hover {
+        background-color: #ff7875 !important;
+      }
+      
+      [data-theme="dark"] .from-indigo-600 {
+        --tw-gradient-from: #ff4d4f !important;
+      }
+      
+      [data-theme="dark"] .to-indigo-700,
+      [data-theme="dark"] .to-purple-700 {
+        --tw-gradient-to: #ff7875 !important;
+      }
+      
+      [data-theme="dark"] .hover\:from-indigo-700:hover {
+        --tw-gradient-from: #ff7875 !important;
+      }
+      
+      [data-theme="dark"] .hover\:to-indigo-800:hover {
+        --tw-gradient-to: #ff4d4f !important;
       }
       `}</style>
   </main>

@@ -436,13 +436,13 @@ export default function CourseDetailPage({ params }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8 relative overflow-hidden">
+       <div className="min-h-screen bg-[var(--background-color)] p-6">
+        <div className="max-w-4xl mx-auto bg-[var(--card-background)] rounded-xl shadow-lg p-8 relative overflow-hidden border border-[var(--border-color)]">
           <div className="relative z-10">
           <div className="text-center py-10">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
-              <p className="text-lg text-gray-700 font-medium">Đang tải thông tin khóa học...</p>
-              <p className="text-gray-500 text-sm">Vui lòng đợi trong giây lát</p>
+              <p className="text-lg text-[var(--text-color)] font-medium">Đang tải thông tin khóa học...</p>
+              <p className="text-[var(--text-secondary)] text-sm">Vui lòng đợi trong giây lát</p>
               {cacheStatus === 'hit' && (
                 <p className="text-xs text-indigo-600 mt-2">Đang tải từ bộ nhớ đệm...</p>
               )}
@@ -456,8 +456,8 @@ export default function CourseDetailPage({ params }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8 relative">
+      <div className="min-h-screen bg-[var(--background-color)] p-6">
+        <div className="max-w-4xl mx-auto bg-[var(--card-background)] rounded-xl shadow-lg p-8 relative border border-[var(--border-color)]">
           <div className="bg-red-50 p-6 rounded-xl">
             <div className="flex flex-col sm:flex-row items-start sm:items-center">
               <div className="flex-shrink-0 bg-red-100 rounded-full p-3 mr-4 mb-4 sm:mb-0">
@@ -480,7 +480,7 @@ export default function CourseDetailPage({ params }) {
                   </button>
                   <button
                     onClick={() => router.push('/khoa-hoc')}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-md"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 dark:from-[#ff4d4f] to-indigo-800 dark:to-[#ff7875] hover:from-indigo-700 dark:hover:from-[#ff7875] hover:to-indigo-900 dark:hover:to-[#ff4d4f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-md"
                   >
                     <ArrowLeftIcon className="-ml-0.5 mr-2 h-4 w-4" />
                     Quay lại danh sách
@@ -496,19 +496,19 @@ export default function CourseDetailPage({ params }) {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8 relative">
+      <div className="min-h-screen bg-[var(--background-color)] p-6">
+        <div className="max-w-4xl mx-auto bg-[var(--card-background)] rounded-xl shadow-lg p-8 relative border border-[var(--border-color)]">
           <div className="text-center py-10">
             <div className="inline-block text-amber-500 mb-5">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy khóa học</h2>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">Khóa học bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+            <h2 className="text-2xl font-bold text-[var(--text-color)] mb-2">Không tìm thấy khóa học</h2>
+            <p className="text-[var(--text-secondary)] mb-6 max-w-md mx-auto">Khóa học bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
             <button
               onClick={() => router.push('/khoa-hoc')}
-              className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 transition-all duration-200 shadow-md"
+              className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 dark:from-[#ff4d4f] to-indigo-800 dark:to-[#ff7875] hover:from-indigo-700 dark:hover:from-[#ff7875] hover:to-indigo-900 dark:hover:to-[#ff4d4f] transition-all duration-200 shadow-md"
             >
               <ArrowLeftIcon className="-ml-0.5 mr-2 h-5 w-5" />
               Quay lại danh sách khóa học
@@ -520,26 +520,26 @@ export default function CourseDetailPage({ params }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-0">
+    <div className="min-h-screen bg-[var(--background-color)] p-0">
       {/* Loading overlay khi đang xử lý link */}
       <LoadingOverlay isVisible={processingLink} message="Đang tải tài nguyên..." />
       
-      <div className="mx-auto bg-white rounded-xl shadow-lg">
+      <div className="mx-auto bg-[var(--card-background)] rounded-xl shadow-lg border border-[var(--border-color)]">
         {/* Tiêu đề và thông tin khóa học */}
-        <div className="pt-6 px-4 sm:px-8 pb-3 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-indigo-100">
+        <div className="pt-6 px-4 sm:px-8 pb-3 border-b border-[var(--border-color)] bg-[var(--card-background-secondary)]">
           <button
             onClick={() => router.push('/khoa-hoc')}
-            className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-4 transition-colors"
+            className="inline-flex items-center text-indigo-600 dark:text-[#ff4d4f] hover:text-indigo-800 dark:hover:text-[#ff7875] mb-4 transition-colors"
           >
             <ArrowLeftIcon className="h-4 w-4 mr-1" />
             <span className="text-sm font-medium">Quay lại</span>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-[var(--text-color)] mb-2">
             {course.name || 'Chi tiết khóa học'}
           </h1>
-          <div className="flex flex-wrap gap-2 items-center text-sm text-gray-600">
+          <div className="flex flex-wrap gap-2 items-center text-sm text-[var(--text-secondary)]">
             {course._id && (
-              <div className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md">
+              <div className="bg-indigo-100 dark:bg-[#ff4d4f]/10 text-indigo-700 dark:text-[#ff4d4f] px-2 py-1 rounded-md">
                 Mã: {course._id}
               </div>
             )}
@@ -555,15 +555,14 @@ export default function CourseDetailPage({ params }) {
         {course.originalData && (
           <div className="">
             
-
             {/* Hiển thị dữ liệu dưới dạng bảng */}
             {course.originalData?.sheets && course.originalData.sheets.length > 0 && (
-              <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="mt-6 bg-[var(--card-background)] rounded-xl border border-[var(--border-color)] shadow-sm overflow-hidden">
                 {/* Chọn khóa học khi có nhiều sheet */}
                 {course.originalData?.sheets && course.originalData.sheets.length > 1 && (
-                  <div className="border-b border-gray-200 px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-50 to-white">
-                    <h3 className="text-base font-medium text-gray-800 mb-3 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="border-b border-[var(--border-color)] px-4 sm:px-6 py-4 bg-[var(--card-background-secondary)]">
+                    <h3 className="text-base font-medium text-[var(--text-color)] mb-3 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500 dark:text-[#ff4d4f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                       </svg>
                       Chọn khóa học:
@@ -576,8 +575,8 @@ export default function CourseDetailPage({ params }) {
                           className={`
                             px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap
                             ${activeSheet === index 
-                              ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md' 
-                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                              ? 'bg-gradient-to-r from-indigo-600 dark:from-[#ff4d4f] to-indigo-700 dark:to-[#ff7875] text-white shadow-md' 
+                              : 'bg-[var(--card-background)] border border-[var(--border-color)] text-[var(--text-color)] hover:bg-[var(--hover-color)]'
                             }
                           `}
                         >
@@ -585,7 +584,7 @@ export default function CourseDetailPage({ params }) {
                             <span>{getSheetTitle(index, course.originalData.sheets)}</span>
                             {sheet?.data?.[0]?.rowData && (
                               <span className={`text-xs ml-2 px-2 py-0.5 rounded-full ${
-                                activeSheet === index ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
+                                activeSheet === index ? 'bg-indigo-500 text-white' : 'bg-[var(--hover-color)] text-[var(--text-secondary)]'
                               }`}>
                                 {(sheet.data[0].rowData.length - 1) || 0}
                               </span>
@@ -600,30 +599,30 @@ export default function CourseDetailPage({ params }) {
                 <div className="overflow-x-auto">
                   {/* Hiển thị sheet được chọn */}
                   <div key={activeSheet} className="mb-0">
-                    <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-indigo-100 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2">
-                      <div className="font-medium text-gray-800 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-color)] bg-[var(--card-background-secondary)] flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2">
+                      <div className="font-medium text-[var(--text-color)] flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-600 dark:text-[#ff4d4f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        <span className="font-bold text-indigo-800">{getSheetTitle(activeSheet, course.originalData.sheets)}</span>
+                        <span className="font-bold text-indigo-800 dark:text-[#ff4d4f]">{getSheetTitle(activeSheet, course.originalData.sheets)}</span>
                       </div>
                       {course.originalData.sheets[activeSheet]?.data?.[0]?.rowData && (
-                        <div className="text-sm bg-indigo-600 text-white px-3 py-1 rounded-full font-medium shadow-sm ml-7 sm:ml-0">
+                        <div className="text-sm bg-indigo-600 dark:bg-[#ff4d4f] text-white px-3 py-1 rounded-full font-medium shadow-sm ml-7 sm:ml-0">
                           Tổng số: {(course.originalData.sheets[activeSheet].data[0].rowData.length - 1) || 0} buổi
                         </div>
                       )}
                     </div>
                     
                     {/* Chọn chế độ xem cho thiết bị di động */}
-                    <div className="md:hidden pb-2 pt-1 px-2 flex items-center justify-between border-b border-gray-200">
-                      <div className="text-sm font-medium text-gray-700">Chế độ xem:</div>
+                    <div className="md:hidden pb-2 pt-1 px-2 flex items-center justify-between border-b border-[var(--border-color)]">
+                      <div className="text-sm font-medium text-[var(--text-color)]">Chế độ xem:</div>
                       <div className="flex space-x-2">
                         <button 
                           onClick={() => setViewMode('table')}
                           className={`px-3 py-1 text-xs rounded-md flex items-center ${
                             viewMode === 'table' 
-                              ? 'bg-indigo-600 text-white' 
-                              : 'bg-gray-200 text-gray-700'
+                              ? 'bg-indigo-600 dark:bg-[#ff4d4f] text-white' 
+                              : 'bg-[var(--card-background)] text-[var(--text-color)]'
                           }`}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -635,8 +634,8 @@ export default function CourseDetailPage({ params }) {
                           onClick={() => setViewMode('list')}
                           className={`px-3 py-1 text-xs rounded-md flex items-center ${
                             viewMode === 'list' 
-                              ? 'bg-indigo-600 text-white' 
-                              : 'bg-gray-200 text-gray-700'
+                              ? 'bg-indigo-600 dark:bg-[#ff4d4f] text-white' 
+                              : 'bg-[var(--card-background)] text-[var(--text-color)]'
                           }`}
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -651,16 +650,16 @@ export default function CourseDetailPage({ params }) {
                     {viewMode === 'table' ? (
                       course.originalData.sheets[activeSheet]?.data?.[0]?.rowData && course.originalData.sheets[activeSheet].data[0].rowData.length > 1 ? (
                         <div className="relative">
-                          <div className="md:hidden bg-blue-50 p-2 border-b border-blue-100 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="md:hidden bg-[var(--card-background-secondary)] p-2 border-b border-[var(--border-color)] flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[var(--text-color)] mr-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            <span className="text-sm font-bold text-blue-700">Vuốt ngang để xem toàn bộ bảng</span>
+                            <span className="text-sm font-bold text-[var(--text-color)]">Vuốt ngang để xem toàn bộ bảng</span>
                           </div>
                           <div className="overflow-x-auto pb-2" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
-                            <table className="w-full divide-y divide-gray-200 border-collapse" style={{ tableLayout: 'auto' }}>
+                            <table className="w-full divide-y divide-[var(--border-color)] border-collapse" style={{ tableLayout: 'auto' }}>
                               <thead>
-                                <tr className="bg-gradient-to-r from-indigo-600 to-indigo-700">
+                                <tr className="bg-gradient-to-r from-indigo-600 dark:from-[#ff4d4f] to-indigo-700 dark:to-[#ff7875]">
                                   {course.originalData.sheets[activeSheet].data[0].rowData[0]?.values?.map((cell, index) => (
                                     <th 
                                       key={index} 
@@ -682,11 +681,11 @@ export default function CourseDetailPage({ params }) {
                                   ))}
                                 </tr>
                               </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
+                              <tbody className="bg-[var(--card-background)] divide-y divide-[var(--border-color)]">
                                 {course.originalData.sheets[activeSheet].data[0].rowData.slice(1).map((row, rowIndex) => (
                                   <tr 
                                     key={rowIndex} 
-                                    className="group hover:bg-indigo-50 transition-colors duration-150"
+                                    className="group hover:bg-[var(--hover-color)] transition-colors duration-150"
                                   >
                                     {row.values && row.values.map((cell, cellIndex) => {
                                       // Xác định loại link nếu có
@@ -722,10 +721,10 @@ export default function CourseDetailPage({ params }) {
                                       return (
                                         <td 
                                           key={cellIndex} 
-                                          className={`px-2 py-3 border-r border-gray-100 last:border-r-0 ${
+                                          className={`px-2 py-3 border-r border-[var(--border-color)] last:border-r-0 ${
                                             cellIndex === 0 
-                                              ? 'font-semibold text-indigo-700 text-center bg-indigo-100 group-hover:bg-indigo-200 sticky left-0 z-10 min-w-[90px] w-auto shadow-lg border-r-2 border-gray-200 break-words text-sm hyphens-auto' 
-                                              : `text-gray-700 content-cell ${
+                                              ? 'font-semibold text-indigo-700 text-center bg-indigo-100 group-hover:bg-indigo-200 sticky left-0 z-10 min-w-[90px] w-auto shadow-lg border-r-2 border-[var(--border-color)] break-words text-sm hyphens-auto' 
+                                              : `text-[var(--text-color)] content-cell ${
                                                   !cell.formattedValue || cell.formattedValue.length < 30 
                                                     ? 'short-content' 
                                                     : cell.formattedValue.length < 100 
@@ -750,7 +749,7 @@ export default function CourseDetailPage({ params }) {
                                                     }}
                                                     href="#"
                                                     data-type={linkType}
-                                                    className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-800 transition-colors duration-150 group cursor-pointer hover:underline"
+                                                    className="inline-flex items-center text-indigo-600 dark:text-[#ff4d4f] font-medium hover:text-indigo-800 dark:hover:text-[#ff7875] transition-colors duration-150 group cursor-pointer hover:underline"
                                                     title={cell.formattedValue || (linkType === 'youtube' ? 'Video' : linkType === 'pdf' ? 'PDF' : 'Tài liệu')}
                                                   >
                                                     <span className="icon-container mr-1 flex-shrink-0">
@@ -807,8 +806,8 @@ export default function CourseDetailPage({ params }) {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
                           </div>
-                          <h3 className="text-lg font-medium text-gray-800 mb-1">Không có dữ liệu</h3>
-                          <p className="text-gray-500 max-w-md mx-auto">
+                          <h3 className="text-lg font-medium text-[var(--text-color)] mb-1">Không có dữ liệu</h3>
+                          <p className="text-[var(--text-secondary)] max-w-md mx-auto">
                             Hiện không có thông tin buổi học nào được tìm thấy trong hệ thống.
                           </p>
                         </div>
@@ -845,16 +844,16 @@ export default function CourseDetailPage({ params }) {
         />
 
         {/* Footer */}
-        <div className="mt-6 border-t border-gray-200 pt-6 pb-2 px-4 sm:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
+        <div className="mt-6 border-t border-[var(--border-color)] pt-6 pb-2 px-4 sm:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-[var(--text-secondary)]">
             <div className="mb-4 sm:mb-0">
               <p>© {new Date().getFullYear()} Khoá học 6.0. Hệ thống quản lý học tập.</p>
             </div>
             <div className="flex space-x-4">
-              <button onClick={() => router.push('/khoa-hoc')} className="text-indigo-600 hover:text-indigo-800 transition-colors">
+              <button onClick={() => router.push('/khoa-hoc')} className="text-[var(--text-color)] hover:text-indigo-800 dark:hover:text-[#ff7875] transition-colors">
                 Danh sách khóa học
               </button>
-              <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-indigo-600 hover:text-indigo-800 transition-colors">
+              <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-[var(--text-color)] hover:text-indigo-800 dark:hover:text-[#ff7875] transition-colors">
                 Lên đầu trang
               </button>
             </div>
@@ -967,6 +966,105 @@ export default function CourseDetailPage({ params }) {
         }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Đảm bảo các nút và block màu tím luôn có chữ màu trắng */
+        [data-theme="light"] .bg-indigo-600,
+        [data-theme="light"] .bg-gradient-to-r.from-indigo-600,
+        [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-indigo-700,
+        [data-theme="light"] .from-indigo-600.to-indigo-700,
+        [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-purple-700 {
+          color: white !important;
+        }
+        
+        [data-theme="light"] .bg-indigo-600 *,
+        [data-theme="light"] .bg-gradient-to-r.from-indigo-600 *,
+        [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-indigo-700 *,
+        [data-theme="light"] .from-indigo-600.to-indigo-700 *,
+        [data-theme="light"] .bg-gradient-to-r.from-indigo-600.to-purple-700 * {
+          color: white !important;
+        }
+        
+        /* Đảm bảo các header trong bảng giữ màu chữ trắng */
+        [data-theme="light"] tr.from-indigo-600 th,
+        [data-theme="light"] tr.from-indigo-600.to-indigo-700 th,
+        [data-theme="light"] tr.bg-gradient-to-r.from-indigo-600 th,
+        [data-theme="light"] tr.bg-gradient-to-r.from-indigo-600.to-indigo-700 th {
+          color: white !important;
+        }
+        
+        /* Đảm bảo nút có văn bản trắng */
+        [data-theme="light"] button.bg-indigo-600,
+        [data-theme="light"] button.hover\:bg-indigo-700,
+        [data-theme="light"] button.bg-gradient-to-r.from-indigo-600,
+        [data-theme="light"] button.bg-gradient-to-r.from-indigo-700 {
+          color: white !important;
+        }
+        
+        /* Đảm bảo số lượng buổi học trên nền indigo có chữ trắng */
+        [data-theme="light"] .bg-indigo-600.text-white {
+          color: white !important;
+        }
+        
+        /* Đảm bảo chữ trắng trên nút khi hover */
+        [data-theme="light"] .hover\:bg-indigo-700:hover {
+          color: white !important;
+        }
+        
+        /* Theme support */
+        [data-theme="light"] table {
+          background-color: var(--card-background);
+        }
+        
+        [data-theme="light"] th {
+          color: var(--text-color);
+        }
+        
+        [data-theme="light"] td {
+          border-color: var(--border-color);
+        }
+        
+        [data-theme="light"] tr:hover {
+          background-color: var(--hover-color);
+        }
+
+        /* Chế độ tối sử dụng màu đỏ */
+        [data-theme="dark"] .text-indigo-600,
+        [data-theme="dark"] .text-indigo-700,
+        [data-theme="dark"] .text-indigo-800 {
+          color: #ff4d4f !important;
+        }
+        
+        [data-theme="dark"] .bg-indigo-600 {
+          background-color: #ff4d4f !important;
+        }
+        
+        [data-theme="dark"] .bg-indigo-100 {
+          background-color: rgba(255, 77, 79, 0.1) !important;
+        }
+        
+        [data-theme="dark"] .hover\:bg-indigo-700:hover {
+          background-color: #ff7875 !important;
+        }
+        
+        [data-theme="dark"] .from-indigo-600 {
+          --tw-gradient-from: #ff4d4f !important;
+        }
+        
+        [data-theme="dark"] .to-indigo-700 {
+          --tw-gradient-to: #ff7875 !important;
+        }
+        
+        [data-theme="dark"] .hover\:from-indigo-700:hover {
+          --tw-gradient-from: #ff7875 !important;
+        }
+        
+        [data-theme="dark"] .hover\:to-indigo-900:hover {
+          --tw-gradient-to: #ff4d4f !important;
+        }
+        
+        [data-theme="dark"] tr.from-indigo-600.to-indigo-700 th {
+          color: white !important;
         }
       `}</style>
     </div>
