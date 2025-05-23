@@ -520,7 +520,7 @@ export default function CourseDetailPage({ params }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-2 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-0">
       {/* Loading overlay khi đang xử lý link */}
       <LoadingOverlay isVisible={processingLink} message="Đang tải tài nguyên..." />
       
