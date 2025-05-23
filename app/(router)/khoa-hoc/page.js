@@ -361,175 +361,6 @@ export default function CoursesPage() {
   return (
     <main className="relative bg-gradient-to-b from-gray-50 to-white min-h-screen w-full overflow-hidden">
       
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] opacity-10"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative z-10">
-          <div className="text-center md:text-left md:flex md:items-center md:justify-between">
-            <div className="mb-8 md:mb-0 md:max-w-2xl">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 tracking-tight">
-                Khám phá kho tàng <span className="text-yellow-300">kiến thức</span> cùng chúng tôi
-              </h1>
-              <p className="text-indigo-100 text-lg md:text-xl max-w-2xl mx-auto md:mx-0">
-                Hàng trăm khóa học chất lượng cao trong nhiều lĩnh vực khác nhau. Bắt đầu hành trình học tập của bạn ngay hôm nay!
-              </p>
-            </div>
-            <div className="hidden lg:block relative w-64 h-64">
-              <div className="absolute inset-0 bg-white bg-opacity-20 rounded-full animate-pulse"></div>
-              <div className="absolute inset-4 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
-                <AcademicCapIcon className="h-24 w-24 text-white" />
-              </div>
-            </div>
-          </div>
-
-          {/* Thanh tìm kiếm */}
-          <div className="mt-8 md:mt-12 relative max-w-3xl mx-auto">
-            <div className="bg-white shadow-lg rounded-xl overflow-hidden p-1 flex flex-col sm:flex-row">
-              <div className="flex-grow flex items-center px-4 py-3">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 mr-3" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm khóa học..."
-                  className="flex-grow focus:outline-none text-gray-600"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                />
-              </div>
-              
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-4 py-3 text-indigo-700 hover:bg-indigo-50 rounded-lg sm:border-l sm:border-gray-200 transition-colors duration-150"
-              >
-                <FunnelIcon className="h-5 w-5 mr-2" />
-                <span className="text-sm font-medium">Bộ lọc</span>
-                <ChevronDownIcon className={`h-4 w-4 ml-1 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
-              </button>
-              
-              <button 
-                onClick={handleSearch}
-                className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-md"
-              >
-                Tìm kiếm
-              </button>
-            </div>
-            
-            {/* Bộ lọc mở rộng */}
-            {showFilters && (
-              <div className="absolute z-30 mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-100 p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Danh mục</label>
-                  <select 
-                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="all">Tất cả danh mục</option>
-                    <option value="programming">Tin học</option>
-                    <option value="language">Ngoại ngữ</option>
-                    <option value="softskill">Kỹ năng mềm</option>
-                    <option value="science">Khoa học tự nhiên</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cấp độ</label>
-                  <select 
-                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    value={selectedLevel}
-                    onChange={(e) => setSelectedLevel(e.target.value)}
-                  >
-                    <option value="all">Tất cả cấp độ</option>
-                    <option value="Cơ bản">Cơ bản</option>
-                    <option value="Trung cấp">Trung cấp</option>
-                    <option value="Nâng cao">Nâng cao</option>
-                    <option value="Chuyên sâu">Chuyên sâu</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sắp xếp theo</label>
-                  <select 
-                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
-                    {sortOptions.map(option => (
-                      <option key={option.id} value={option.id}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Khoảng giá (VNĐ)</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <input
-                        type="number" 
-                        min="0"
-                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        placeholder="Từ"
-                        value={priceRange[0]}
-                        onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="number"
-                        min="0"
-                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        placeholder="Đến"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 10000000])}
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-3 flex justify-between mt-4">
-                  <button 
-                    onClick={resetFilters}
-                    className="text-gray-600 text-sm font-medium hover:text-indigo-600 flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Đặt lại bộ lọc
-                  </button>
-                  <button 
-                    onClick={() => {
-                      handleSearch();
-                      setShowFilters(false);
-                    }}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700"
-                  >
-                    Áp dụng bộ lọc
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Các con số thống kê */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold text-white">20+</div>
-              <div className="text-indigo-100 text-sm">Danh mục</div>
-            </div>
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold text-white">300+</div>
-              <div className="text-indigo-100 text-sm">Khóa học</div>
-            </div>
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold text-white">50K+</div>
-              <div className="text-indigo-100 text-sm">Học viên</div>
-            </div>
-            <div className="bg-white bg-opacity-10 rounded-lg p-4">
-              <div className="text-2xl md:text-3xl font-bold text-white">4.8</div>
-              <div className="text-indigo-100 text-sm">Đánh giá trung bình</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Danh mục */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Tabs danh mục */}
@@ -558,7 +389,23 @@ export default function CoursesPage() {
             <AcademicCapIcon className="h-7 w-7 mr-2 text-indigo-600" />
             {searchTerm ? `Kết quả tìm kiếm "${searchTerm}"` : 'Danh sách khóa học'}
             {cacheStatus === 'hit' && (
-              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Đã tải từ bộ nhớ đệm</span>
+              <button 
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('courses-list');
+                    setCacheStatus('cleared');
+                    fetchCourses();
+                  } catch (error) {
+                    // Xử lý lỗi im lặng
+                  }
+                }}
+                className="ml-2 text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full flex items-center hover:bg-indigo-200 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Làm mới dữ liệu
+              </button>
             )}
           </h2>
           <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2 overflow-x-auto whitespace-nowrap">
@@ -637,9 +484,6 @@ export default function CoursesPage() {
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-5"></div>
             <p className="text-gray-500 text-lg font-medium">Đang tải dữ liệu khóa học...</p>
-            {cacheStatus === 'hit' && (
-              <p className="text-xs text-green-600 mt-2">Đang tải từ bộ nhớ đệm...</p>
-            )}
           </div>
           ) : (
           <div className="overflow-visible">
