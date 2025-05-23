@@ -6,6 +6,10 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
+// Định nghĩa cấu hình route
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 export async function POST(request) {
   try {
     // Lấy form data từ request
@@ -151,12 +155,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-}
-
-// Tùy chọn cấu hình cho việc xử lý dữ liệu
-export const config = {
-  api: {
-    // Tắt bodyParser mặc định vì chúng ta xử lý formData
-    bodyParser: false,
-  },
-}; 
+} 
