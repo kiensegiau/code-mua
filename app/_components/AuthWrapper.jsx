@@ -10,10 +10,11 @@ const AuthWrapper = memo(function AuthWrapper({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Chỉ điều hướng khi loading đã hoàn tất và không có user
-    if (!loading && !user) {
-      router.push("/sign-in");
-    }
+    // Tạm thời vô hiệu hóa chuyển hướng tự động để tránh vòng lặp redirect
+    // if (!loading && !user) {
+    //   router.push("/sign-in");
+    // }
+    console.log("AuthWrapper: loading =", loading, "user =", user);
   }, [user, loading, router]);
 
   // Hiển thị loading spinner khi đang tải
@@ -33,8 +34,8 @@ const AuthWrapper = memo(function AuthWrapper({ children }) {
     );
   }
 
-  // Chỉ render children khi đã có user
-  return user ? children : null;
+  // Tạm thời luôn hiển thị nội dung, bất kể có user hay không
+  return children;
 });
 
 export default AuthWrapper;

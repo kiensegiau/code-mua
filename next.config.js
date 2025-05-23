@@ -49,20 +49,21 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_REFRESH_TOKEN_SECRET,
     MONGODB_URI: process.env.MONGODB_URI,
   },
+  // Tạm thời tắt redirects để tránh vòng lặp chuyển hướng
   async redirects() {
     return [
-      // Thay thế middleware bằng cách dùng redirects để bảo vệ routes
-      {
-        source: '/((?!sign-in|sign-up|forgot-password|reset-password|api|_next|favicon.ico|static|public|hoc-thu-free).*)',
-        missing: [
-          {
-            type: 'cookie',
-            key: 'firebaseToken',
-          },
-        ],
-        destination: '/sign-in',
-        permanent: false,
-      },
+      // Đã tắt tạm thời để khắc phục vấn đề vòng lặp chuyển hướng
+      // {
+      //   source: '/((?!sign-in|sign-up|forgot-password|reset-password|api|_next|favicon.ico|static|public|hoc-thu-free).*)',
+      //   missing: [
+      //     {
+      //       type: 'cookie',
+      //       key: 'firebaseToken',
+      //     },
+      //   ],
+      //   destination: '/sign-in',
+      //   permanent: false,
+      // },
     ];
   },
   poweredByHeader: false
