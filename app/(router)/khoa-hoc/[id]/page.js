@@ -16,8 +16,7 @@ const CACHE_DURATION = 12 * 60 * 60 * 1000;
 
 export default function CourseDetailPage({ params }) {
   const router = useRouter();
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
   
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
