@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon, CloudArrowDownIcon, ExclamationCircleIcon, XMarkIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CloudArrowDownIcon, ExclamationCircleIcon, XMarkIcon, ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { use } from 'react';
 import YouTubeModal from '../components/YouTubeModal';
 import PDFModal from '../components/PDFModal';
@@ -225,6 +225,21 @@ export default function CourseDetailPage({ params }) {
     } catch (error) {
       // Xử lý lỗi im lặng
     }
+    fetchCourseDetail();
+  };
+
+  // Hàm làm mới dữ liệu
+  const handleRefresh = () => {
+    // Xóa cache
+    try {
+      localStorage.removeItem(`course-${id}`);
+      setCacheStatus('cleared');
+    } catch (error) {
+      // Xử lý lỗi im lặng
+    }
+    // Tải lại dữ liệu
+    setLoading(true);
+    setCourse(null);
     fetchCourseDetail();
   };
 
@@ -527,17 +542,37 @@ export default function CourseDetailPage({ params }) {
       <div className="mx-auto bg-[var(--card-background)] rounded-xl shadow-lg border border-[var(--border-color)]">
         {/* Tiêu đề và thông tin khóa học */}
         <div className="pt-6 px-4 sm:px-8 pb-3 border-b border-[var(--border-color)] bg-[var(--card-background-secondary)]">
-          <button
-            onClick={() => router.push('/khoa-hoc')}
-            className="inline-flex items-center text-indigo-600 dark:text-[#ff4d4f] hover:text-indigo-800 dark:hover:text-[#ff7875] mb-4 transition-colors"
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-1" />
-            <span className="text-sm font-medium">Quay lại</span>
-          </button>
+          <div className="flex justify-between items-start">
+            <button
+              onClick={() => router.push('/khoa-hoc')}
+              className="inline-flex items-center text-indigo-600 dark:text-[#ff4d4f] hover:text-indigo-800 dark:hover:text-[#ff7875] mb-4 transition-colors"
+            >
+              <ArrowLeftIcon className="h-4 w-4 mr-1" />
+              <span className="text-sm font-medium">Quay lại</span>
+            </button>
+            
+            <button
+              onClick={handleRefresh}
+              className="inline-flex items-center px-3 py-1 rounded-full text-indigo-600 dark:text-[#ff4d4f] hover:text-indigo-800 dark:hover:text-[#ff7875] border border-indigo-200 dark:border-[#ffccc7] hover:border-indigo-300 dark:hover:border-[#ff7875] transition-all mb-4"
+              title="Làm mới dữ liệu"
+            >
+              <ArrowPathIcon className="h-4 w-4 mr-1" />
+              <span className="text-sm font-medium">Làm mới</span>
+            </button>
+          </div>
+          
           <h1 className="text-2xl font-bold text-[var(--text-color)] mb-2">
             {course.name || 'Chi tiết khóa học'}
           </h1>
-         
+          
+          {cacheStatus === 'hit' && (
+            <div className="text-xs text-indigo-600 dark:text-[#ff4d4f] font-medium mb-1 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Đang sử dụng dữ liệu từ bộ nhớ đệm
+            </div>
+          )}
         </div>
         
         {/* Dữ liệu khóa học */}
