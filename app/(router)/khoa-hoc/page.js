@@ -363,25 +363,7 @@ export default function CoursesPage() {
       
       {/* Danh mục */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Tabs danh mục */}
-        <div className="mb-8 overflow-x-auto no-scrollbar">
-          <div className="flex space-x-2 md:space-x-4 min-w-max">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`flex items-center px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                  selectedCategory === category.id
-                  ? 'dark:bg-[#ff4d4f] bg-indigo-600 text-white shadow-md'
-                  : 'bg-[var(--card-background)] text-[var(--text-color)] border border-[var(--border-color)] hover:bg-[var(--hover-color)]'
-                }`}
-              >
-                <category.icon className={`h-5 w-5 ${selectedCategory === category.id ? 'text-white' : 'dark:text-[#ff4d4f] text-indigo-600'} mr-2`} />
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
+      
 
         {/* Tiêu đề danh sách khóa học */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 px-2 md:px-0">
@@ -512,13 +494,13 @@ export default function CoursesPage() {
                         
                         {/* Course icon */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="h-20 w-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                          <div className="h-20 w-20 bg-indigo-600 dark:bg-white/20 rounded-full flex items-center justify-center shadow-md">
                             <AcademicCapIcon className="h-10 w-10 text-white" />
                           </div>
                         </div>
                         
                         {/* Gradient overlay at bottom */}
-                        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-indigo-900 to-transparent opacity-70"></div>
+                        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-indigo-900 dark:from-[#d10000] to-transparent opacity-70"></div>
                       </div>
                       
                       <div className="p-5 flex-grow">

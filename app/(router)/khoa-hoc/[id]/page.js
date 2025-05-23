@@ -537,18 +537,7 @@ export default function CourseDetailPage({ params }) {
           <h1 className="text-2xl font-bold text-[var(--text-color)] mb-2">
             {course.name || 'Chi tiết khóa học'}
           </h1>
-          <div className="flex flex-wrap gap-2 items-center text-sm text-[var(--text-secondary)]">
-            {course._id && (
-              <div className="bg-indigo-100 dark:bg-[#ff4d4f]/10 text-indigo-700 dark:text-[#ff4d4f] px-2 py-1 rounded-md">
-                Mã: {course._id}
-              </div>
-            )}
-            {course.createdAt && (
-              <div>
-                Ngày tạo: {new Date(course.createdAt).toLocaleDateString('vi-VN')}
-              </div>
-            )}
-          </div>
+         
         </div>
         
         {/* Dữ liệu khóa học */}

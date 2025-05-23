@@ -37,31 +37,8 @@ function SideNav() {
       href: "/khoa-hoc",
       color: "text-gray-400",
     },
-    {
-      title: "Lớp 12",
-      icon: GraduationCap,
-      href: "/khoa-hoc",
-      color: "text-gray-400",
-    },
-    {
-      title: "Lớp 11",
-      icon: GraduationCap,
-      href: "/khoa-hoc",
-      color: "text-gray-400",
-    },
-    {
-      title: "Lớp 10",
-      icon: GraduationCap,
-      href: "/khoa-hoc",
-      color: "text-gray-400",
-    },
-    {
-      title: "DGNL",
-      icon: GraduationCap,
-      href: "/khoa-hoc",
-      color: "text-gray-400",
-      badge: "Mới",
-    },
+   
+    
     {
       title: "Khóa học của tôi",
       icon: BookMarked,
