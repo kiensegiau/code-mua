@@ -65,7 +65,6 @@ const nextConfig = {
       },
     ];
   },
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/_next' : '',
   poweredByHeader: false
 };
 
