@@ -34,6 +34,7 @@
     "firebase": "^10.13.1",
     "firebase-admin": "^13.2.0",
     "framer-motion": "^11.18.2",
+    "googleapis": "^149.0.0",
     "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
     "hls.js": "^1.5.16",
