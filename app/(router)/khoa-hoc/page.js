@@ -88,7 +88,7 @@ export default function CoursesPage() {
   };
 
   // Hàm để tải danh sách khóa học từ API
-  const fetchCourses = async () => {
+  const fetchCourses = async (retryCount = 0, maxRetries = 3) => {
     try {
       setLoading(true);
       setError(null); // Reset error trước khi fetch
@@ -102,7 +102,12 @@ export default function CoursesPage() {
       }
       
       // Nếu không có cache hoặc cache hết hạn, fetch từ API
-      const response = await fetch('/api/minicourses');
+      const response = await fetch('/api/minicourses', {
+        // Thêm cache: 'no-store' để tránh cache ở phía trình duyệt
+        cache: 'no-store',
+        // Tăng timeout nếu đây là lần thử lại
+        timeout: retryCount > 0 ? 10000 : 5000,
+      });
       
       if (!response.ok) {
         // Xử lý trường hợp lỗi 401 (chưa đăng nhập)
@@ -113,8 +118,17 @@ export default function CoursesPage() {
           return;
         }
         
+        // Xử lý trường hợp lỗi 503 (Service Unavailable) - thử lại
+        if (response.status === 503 && retryCount < maxRetries) {
+          console.log(`Lỗi kết nối, đang thử lại lần ${retryCount + 1}/${maxRetries}...`);
+          setLoading(false);
+          // Đợi 2 giây trước khi thử lại và tăng dần thời gian chờ
+          await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+          return fetchCourses(retryCount + 1, maxRetries);
+        }
+        
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `Lỗi ${response.status}: ${response.statusText}`;
+        const errorMessage = errorData.message || `Lỗi ${response.status}: ${response.statusText}`;
         throw new Error(errorMessage);
       }
       
@@ -128,10 +142,20 @@ export default function CoursesPage() {
       } else {
         // Xử lý trường hợp dữ liệu không đúng định dạng
         setCourses([]);
+        throw new Error('Dữ liệu không đúng định dạng');
       }
     } catch (err) {
       setError(err.message || 'Đã xảy ra lỗi khi tải dữ liệu khóa học.');
       setCourses([]);
+      
+      // Tự động thử lại một lần nếu lỗi và chưa đạt đến số lần thử lại tối đa
+      if (retryCount < maxRetries) {
+        console.log(`Lỗi: ${err.message}, đang thử lại lần ${retryCount + 1}/${maxRetries}...`);
+        // Đợi trước khi thử lại
+        setTimeout(() => {
+          fetchCourses(retryCount + 1, maxRetries);
+        }, 3000 * (retryCount + 1));
+      }
     } finally {
       setLoading(false);
     }

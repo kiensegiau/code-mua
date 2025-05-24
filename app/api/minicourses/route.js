@@ -4,8 +4,15 @@ import MiniCourse from '@/models/MiniCourse';
 
 export async function GET(request) {
   try {
-    // Kết nối đến MongoDB
-    await connectDB();
+    // Kết nối đến MongoDB với thử lại nếu cần
+    try {
+      await connectDB();
+    } catch (connError) {
+      console.error('Lỗi kết nối MongoDB, đang thử lại...', connError);
+      // Đợi 1 giây và thử lại một lần nữa
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await connectDB();
+    }
     
     // Lấy tham số tìm kiếm từ URL nếu có
     const { searchParams } = new URL(request.url);
@@ -50,6 +57,24 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách minicourses:', error);
+    
+    // Xử lý các loại lỗi khác nhau
+    if (error.name === 'MongooseServerSelectionError') {
+      return NextResponse.json({
+        success: false,
+        message: 'Không thể kết nối đến máy chủ MongoDB, vui lòng thử lại sau',
+        error: error.message
+      }, { status: 503 }); // Service Unavailable
+    }
+    
+    if (error.name === 'MongooseError' && error.message.includes('different connection strings')) {
+      return NextResponse.json({
+        success: false,
+        message: 'Lỗi cấu hình kết nối cơ sở dữ liệu, vui lòng liên hệ quản trị viên',
+        error: 'Lỗi cấu hình kết nối MongoDB'
+      }, { status: 500 });
+    }
+    
     return NextResponse.json({
       success: false,
       message: 'Đã xảy ra lỗi khi lấy danh sách minicourses',
